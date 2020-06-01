@@ -1,0 +1,62 @@
+name: Jira
+ref_type: jira
+description: This is the official Jira integration for Pinpoint
+publisher:
+  name: Pinpoint
+  url: https://pinpoint.com
+  avatar_url: https://avatars0.Jirausercontent.com/u/24400526?s=200&v=4
+capabilities:
+  - work.User
+  - work.Project
+  - work.Issue
+installation:
+  modes:
+    - cloud
+    - selfmanaged
+  config:
+    cloud:
+      network:
+        hostnames:
+          - "*.atlassian.com"
+          - "*.jira.com"
+      capabilities:
+        - web.Hook
+        - auth.OAuth2
+      description: >
+          <p>
+            When you authorize Pinpoint to access your Jira account, you will grant <strong>Read and Write</strong> permissions to:
+          </p>
+          <ul>
+              <li>Projects</li>
+              <li>Users</li>
+              <li>Groups</li>
+              <li>Issues</li>
+              <li>Boards</li>
+            </ul>
+          <p>
+            You can revoke this access at any time by returning to the Settings and deleting this integration or by revoking it in your Jira administration.
+          </p>
+    selfmanaged:
+      description: >
+          <p>
+            When you authorize Pinpoint to access your Jira account, you will grant <strong>Read and Write</strong> permissions to:
+          </p>
+          <ul>
+              <li>Projects</li>
+              <li>Users</li>
+              <li>Groups</li>
+              <li>Issues</li>
+              <li>Boards</li>
+            </ul>
+          <p>
+            You can revoke this access at any time by returning to the Settings and deleting this integration or by revoking it in your Jira Enterprise server administration.
+          </p>
+      options:
+        - name: url
+          description: Please provide the URL to your Jira Server
+          type: string
+          required: true
+        - name: api_key
+          description: Please provide the APIKey to your Jira Server
+          type: string
+          required: true
