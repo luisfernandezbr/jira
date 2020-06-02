@@ -8,31 +8,33 @@ import (
 
 // JiraIntegration is an integration for Jira
 type JiraIntegration struct {
-	logger  sdk.Logger
-	config  sdk.Config
-	manager sdk.Manager
-	client  sdk.GraphQLClient
-	lock    sync.Mutex
+	logger      sdk.Logger
+	config      sdk.Config
+	manager     sdk.Manager
+	httpmanager sdk.HTTPClientManager
+	client      sdk.GraphQLClient
+	lock        sync.Mutex
 }
 
 var _ sdk.Integration = (*JiraIntegration)(nil)
 
 // Start is called when the integration is starting up
-func (g *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sdk.Manager) error {
-	g.logger = logger
-	g.config = config
-	g.manager = manager
-	sdk.LogInfo(g.logger, "starting")
+func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sdk.Manager) error {
+	i.logger = sdk.LogWith(logger, "pkg", "jira")
+	i.config = config
+	i.manager = manager
+	i.httpmanager = manager.HTTPManager()
+	sdk.LogInfo(i.logger, "starting")
 	return nil
 }
 
 // WebHook is called when a webhook is received on behalf of the integration
-func (g *JiraIntegration) WebHook(webhook sdk.WebHook) error {
+func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	return nil
 }
 
 // Stop is called when the integration is shutting down for cleanup
-func (g *JiraIntegration) Stop() error {
-	sdk.LogInfo(g.logger, "stopping")
+func (i *JiraIntegration) Stop() error {
+	sdk.LogInfo(i.logger, "stopping")
 	return nil
 }
