@@ -132,52 +132,68 @@ type issueQueryResult struct {
 	Issues []issueSource `json:"issues"`
 }
 
-type projectQueryResult struct {
-	Total    int `json:"total"`
-	Projects []struct {
-		Expand      string `json:"expand"`
+type project struct {
+	Expand      string `json:"expand"`
+	Self        string `json:"self"`
+	ID          string `json:"id"`
+	Key         string `json:"key"`
+	Description string `json:"description"`
+	IssueTypes  []struct {
 		Self        string `json:"self"`
 		ID          string `json:"id"`
-		Key         string `json:"key"`
 		Description string `json:"description"`
-		IssueTypes  []struct {
-			Self        string `json:"self"`
-			ID          string `json:"id"`
-			Description string `json:"description"`
-			IconURL     string `json:"iconUrl"`
-			Name        string `json:"name"`
-			Subtask     bool   `json:"subtask"`
-			AvatarID    int    `json:"avatarId,omitempty"`
-		} `json:"issueTypes"`
-		Name       string `json:"name"`
-		AvatarUrls struct {
-			Four8X48  string `json:"48x48"`
-			Two4X24   string `json:"24x24"`
-			One6X16   string `json:"16x16"`
-			Three2X32 string `json:"32x32"`
-		} `json:"avatarUrls"`
-		ProjectKeys     []string `json:"projectKeys"`
-		ProjectCategory struct {
-			Self        string `json:"self"`
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		} `json:"projectCategory,omitempty"`
-		ProjectTypeKey string `json:"projectTypeKey"`
-		Simplified     bool   `json:"simplified"`
-		Style          string `json:"style"`
-		IsPrivate      bool   `json:"isPrivate"`
-		Properties     struct {
-		} `json:"properties"`
-		EntityID string `json:"entityId,omitempty"`
-		UUID     string `json:"uuid,omitempty"`
-	} `json:"values"`
+		IconURL     string `json:"iconUrl"`
+		Name        string `json:"name"`
+		Subtask     bool   `json:"subtask"`
+		AvatarID    int    `json:"avatarId,omitempty"`
+	} `json:"issueTypes"`
+	Name       string `json:"name"`
+	AvatarUrls struct {
+		Four8X48  string `json:"48x48"`
+		Two4X24   string `json:"24x24"`
+		One6X16   string `json:"16x16"`
+		Three2X32 string `json:"32x32"`
+	} `json:"avatarUrls"`
+	ProjectKeys     []string `json:"projectKeys"`
+	ProjectCategory struct {
+		Self        string `json:"self"`
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	} `json:"projectCategory,omitempty"`
+	ProjectTypeKey string `json:"projectTypeKey"`
+	Simplified     bool   `json:"simplified"`
+	Style          string `json:"style"`
+	IsPrivate      bool   `json:"isPrivate"`
+	Properties     struct {
+	} `json:"properties"`
+	EntityID string `json:"entityId,omitempty"`
+	UUID     string `json:"uuid,omitempty"`
 }
 
-type priorityQueryResult struct {
+type projectQueryResult struct {
+	Total    int       `json:"total"`
+	Projects []project `json:"values"`
+}
+
+type issuePriority struct {
 	StatusColor string `json:"statusColor"`
 	Description string `json:"description"`
 	IconURL     string `json:"iconUrl"`
 	Name        string `json:"name"`
 	ID          string `json:"id"`
+}
+
+type issueType struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Icon        string `json:"iconUrl"`
+	Subtask     bool   `json:"subtask"`
+}
+
+type customFieldQueryResult struct {
+	ID   string `json:"id"`
+	Key  string `json:"key"` // this is only on cloud and not server
+	Name string `json:"name"`
 }
