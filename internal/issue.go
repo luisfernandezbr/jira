@@ -41,7 +41,7 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
+func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
 		return nil, err
@@ -94,33 +94,21 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 
 	if !fields.Creator.IsZero() {
 		issue.CreatorRefID = fields.Creator.RefID()
-		// if qc.ExportUser != nil {
-		// 	err := qc.ExportUser(fields.Creator)
-		// 	if err != nil {
-		// 		rerr = err
-		// 		return
-		// 	}
-		// }
+		if err := userManager.emit(fields.Creator); err != nil {
+			return nil, err
+		}
 	}
 	if !fields.Reporter.IsZero() {
 		issue.ReporterRefID = fields.Reporter.RefID()
-		// if qc.ExportUser != nil {
-		// 	err := qc.ExportUser(fields.Reporter)
-		// 	if err != nil {
-		// 		rerr = err
-		// 		return
-		// 	}
-		// }
+		if err := userManager.emit(fields.Reporter); err != nil {
+			return nil, err
+		}
 	}
 	if !fields.Assignee.IsZero() {
 		issue.AssigneeRefID = fields.Assignee.RefID()
-		// if qc.ExportUser != nil {
-		// 	err := qc.ExportUser(fields.Assignee)
-		// 	if err != nil {
-		// 		rerr = err
-		// 		return
-		// 	}
-		// }
+		if err := userManager.emit(fields.Assignee); err != nil {
+			return nil, err
+		}
 	}
 
 	issue.URL = issueURL(websiteURL, i.Key)
@@ -226,7 +214,6 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 		}
 		fd, ok := fieldByID[k]
 		if !ok {
-			// qc.Logger.Warn("when processing jira issues, could not find field definition by key", "project", project.Key, "key", k)
 			continue
 		}
 		v := ""
@@ -256,14 +243,12 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 		case customFieldIDs.StartDate:
 			d, err := parsePlannedDate(v)
 			if err != nil {
-				// qc.Logger.Error("could not parse field %v as date, err: %v", fd.Name, err)
 				continue
 			}
 			sdk.ConvertTimeToDateModel(d, &issue.PlannedStartDate)
 		case customFieldIDs.EndDate:
 			d, err := parsePlannedDate(v)
 			if err != nil {
-				// qc.Logger.Error("could not parse field %v as date, err: %v", fd.Name, err)
 				continue
 			}
 			sdk.ConvertTimeToDateModel(d, &issue.PlannedEndDate)
@@ -456,14 +441,16 @@ type issueIDManager struct {
 	pipe          sdk.Pipe
 	fields        map[string]customField
 	sprintManager *sprintManager
+	userManager   *userManager
 }
 
-func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, fields map[string]customField, baseurl string) *issueIDManager {
+func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, baseurl string) *issueIDManager {
 	return &issueIDManager{
 		refids:        make(map[string]string),
 		baseurl:       baseurl,
 		i:             i,
 		sprintManager: sprintManager,
+		userManager:   userManager,
 		export:        export,
 		pipe:          pipe,
 		fields:        fields,
@@ -532,7 +519,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.fields, m.baseurl)
+			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.baseurl)
 			if err != nil {
 				return nil, err
 			}
