@@ -16,7 +16,13 @@ This is a working concept prototype for the next generation of the Agent's Jira 
 You can run like this:
 
 ```
-agent.next dev . --log-level=debug
+agent.next dev . --log-level=debug --config url=$PP_JIRA_URL --config username=$PP_JIRA_USERNAME --config password=$PP_JIRA_PASSWORD
 ```
 
-This will run an export for GitHub and print all the JSON objects to the console.
+From agent.next repo:
+
+```
+go run . dev ../agent.next.jira --log-level=debug --config url=$PP_JIRA_URL --config username=$PP_JIRA_USERNAME --config password=$PP_JIRA_PASSWORD
+```
+
+This will run an export for Jira and print all the JSON objects to the console.

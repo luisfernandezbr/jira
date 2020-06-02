@@ -270,6 +270,8 @@ github.com/pinpt/go-common v9.1.78+incompatible h1:g/Qbi6EIQljUE/me/NNA8DWJM3Ttr
 github.com/pinpt/go-common v9.1.78+incompatible/go.mod h1:UNav2OONS53sU+qptYdsY8gAECXEfHEqH8p/3dJ11MM=
 github.com/pinpt/go-common v9.1.80+incompatible h1:J7YavYQFhkRKlwnzbuO0bFi1HwXIkuD1PWLnQ2gW15A=
 github.com/pinpt/go-common v9.1.80+incompatible/go.mod h1:UNav2OONS53sU+qptYdsY8gAECXEfHEqH8p/3dJ11MM=
+github.com/pinpt/go-common v9.1.81+incompatible h1:UYz+8DIHQPxM4LX9eZCX4E5CsgamtnBKQoWCkzr06wg=
+github.com/pinpt/go-common v9.1.81+incompatible/go.mod h1:UNav2OONS53sU+qptYdsY8gAECXEfHEqH8p/3dJ11MM=
 github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067 h1:GG0k6rjX7ywCwYnjVudy3OXXivcMAih8s08+sDrQiEE=
 github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
 github.com/pinpt/integration-sdk v0.0.994 h1:DLMqy9Qtxr0t2vCG5TiwiE8OD+hlxxW2wHL2gC9HYPM=
