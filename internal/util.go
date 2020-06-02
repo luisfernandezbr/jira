@@ -50,7 +50,7 @@ func issueCommentURL(websiteURL, issueKey string, commentID string) string {
 	return sdk.JoinURL(websiteURL, "browse", issueKey+fmt.Sprintf("?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Acomment-tabpanel#comment-%s", commentID, commentID))
 }
 
-var sprintRegexp = regexp.MustCompile(`com\.atlassian\.greenhopper\.service\.sprint\.Sprint@.+?\[id=(\d+)`)
+var sprintRegexp = regexp.MustCompile(`com\.atlassian\.greenhopper\.service\.sprint\.Sprint@.+?\[*id=(\d+)`)
 
 func extractPossibleSprintID(v string) string {
 	matches := sprintRegexp.FindStringSubmatch(v)

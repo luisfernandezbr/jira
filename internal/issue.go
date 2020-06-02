@@ -175,7 +175,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 
 	for k, v := range i.Fields {
 		if strings.HasPrefix(k, "customfield_") && v != nil {
-			if arr, ok := v.([]interface{}); ok {
+			if arr, ok := v.([]interface{}); ok && len(arr) != 0 {
 				for _, each := range arr {
 					str, ok := each.(string)
 					if !ok {
