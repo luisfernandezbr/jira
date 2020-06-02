@@ -41,10 +41,10 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, []customFieldValue, error) {
+func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// map of issue keys that this issue is dependent on
@@ -63,7 +63,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 		orig := fields.DueDate
 		d, err := time.ParseInLocation("2006-01-02", orig, time.UTC)
 		if err != nil {
-			return nil, nil, fmt.Errorf("could not parse duedate of jira issue: %v err: %v", orig, err)
+			return nil, fmt.Errorf("could not parse duedate of jira issue: %v err: %v", orig, err)
 		}
 		sdk.ConvertTimeToDateModel(d, &issue.DueDate)
 	}
@@ -76,12 +76,12 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 
 	created, err := parseTime(fields.Created)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	sdk.ConvertTimeToDateModel(created, &issue.CreatedDate)
 	updated, err := parseTime(fields.Updated)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	sdk.ConvertTimeToDateModel(updated, &issue.UpdatedDate)
 
@@ -179,7 +179,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 		attachment.UserRefID = user
 		created, err := parseTime(data.Created)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		sdk.ConvertTimeToDateModel(created, &attachment.CreatedDate)
 		issue.Attachments = append(issue.Attachments, attachment)
@@ -237,7 +237,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 			} else {
 				b, err := json.Marshal(d)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				v = string(b)
 			}
@@ -302,7 +302,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 
 			createdAt, err := parseTime(cl.Created)
 			if err != nil {
-				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
+				return nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
 			}
 			sdk.ConvertTimeToDateModel(createdAt, &issue.CreatedDate)
 			item.UserID = cl.Author.RefID()
@@ -411,7 +411,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 		keys := sdk.Keys(transitiveIssueKeys)
 		found, err := issueManager.getRefIDsFromKeys(keys)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		// if we have an epic key target, find it and then set it on our issue
 		if epicKey != "" {
@@ -426,26 +426,47 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, fi
 		}
 	}
 
-	return issue, customFields, nil
+	// process any sprint information on this issue
+	for _, field := range customFields {
+		if field.Name == "Sprint" {
+			if field.Value == "" {
+				continue
+			}
+			data, err := parseSprints(field.Value)
+			if err != nil {
+				return nil, err
+			}
+			for _, s := range data {
+				if err := sprintManager.emit(s); err != nil {
+					return nil, err
+				}
+			}
+			break
+		}
+	}
+
+	return issue, nil
 }
 
 type issueIDManager struct {
-	refids  map[string]string
-	baseurl string
-	i       *JiraIntegration
-	export  sdk.Export
-	pipe    sdk.Pipe
-	fields  map[string]customField
+	refids        map[string]string
+	baseurl       string
+	i             *JiraIntegration
+	export        sdk.Export
+	pipe          sdk.Pipe
+	fields        map[string]customField
+	sprintManager *sprintManager
 }
 
-func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, fields map[string]customField, baseurl string) *issueIDManager {
+func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, fields map[string]customField, baseurl string) *issueIDManager {
 	return &issueIDManager{
-		refids:  make(map[string]string),
-		baseurl: baseurl,
-		i:       i,
-		export:  export,
-		pipe:    pipe,
-		fields:  fields,
+		refids:        make(map[string]string),
+		baseurl:       baseurl,
+		i:             i,
+		sprintManager: sprintManager,
+		export:        export,
+		pipe:          pipe,
+		fields:        fields,
 	}
 }
 
@@ -511,7 +532,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, _, err := issue.ToModel(m.export.CustomerID(), m, m.fields, m.baseurl)
+			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.fields, m.baseurl)
 			if err != nil {
 				return nil, err
 			}

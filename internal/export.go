@@ -174,7 +174,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(export sdk.Export, pipe sdk.Pip
 	return nil
 }
 
-func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe, issueManager *issueIDManager, baseurl string, fromTime time.Time, customfields map[string]customField) error {
+func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe, issueManager *issueIDManager, sprintManager *sprintManager, baseurl string, fromTime time.Time, customfields map[string]customField) error {
 	theurl := sdk.JoinURL(baseurl, "/rest/api/3/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
@@ -213,7 +213,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe,
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, _, err := i.ToModel(customerID, issueManager, customfields, baseurl)
+			issue, err := i.ToModel(customerID, issueManager, sprintManager, customfields, baseurl)
 			if err != nil {
 				return err
 			}
@@ -253,8 +253,9 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
-	issueManager := newIssueIDManager(i, export, pipe, customfields, baseurl)
-	if err := i.fetchIssuesPaginated(export, pipe, issueManager, baseurl, time.Time{}, customfields); err != nil {
+	sprintManager := newSprintManager(export.CustomerID(), pipe)
+	issueManager := newIssueIDManager(i, export, pipe, sprintManager, customfields, baseurl)
+	if err := i.fetchIssuesPaginated(export, pipe, issueManager, sprintManager, baseurl, time.Time{}, customfields); err != nil {
 		return err
 	}
 	if err := pipe.Close(); err != nil {
@@ -266,5 +267,4 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 
 // TODO:
 // user manager
-// sprints
 // config for url, etc
