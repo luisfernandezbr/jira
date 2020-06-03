@@ -99,3 +99,10 @@ func adjustRenderedHTML(websiteURL, data string) string {
 	// case we need to do integration specific image handling
 	return `<div class="source-jira">` + strings.TrimSpace(data) + `</div>`
 }
+
+type managers struct {
+	sprintManager  *sprintManager
+	userManager    *userManager
+	commentManager *commentManager
+	issueIDManager *issueIDManager
+}

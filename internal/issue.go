@@ -40,7 +40,7 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
+func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, commentManager *commentManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
 		return nil, err
@@ -55,6 +55,12 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 	issue.RefType = refType
 	issue.Identifier = i.Key
 	issue.ProjectID = sdk.NewWorkProjectID(customerID, fields.Project.ID, refType)
+	issue.ID = sdk.NewWorkIssueID(customerID, i.ID, refType)
+
+	// add this issue to the comment manager to have it start processing them
+	if err := commentManager.add(issue.ProjectID, issue.ID, issue.Identifier); err != nil {
+		return nil, err
+	}
 
 	customFields := make([]customFieldValue, 0)
 
@@ -433,26 +439,28 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 }
 
 type issueIDManager struct {
-	refids        map[string]string
-	i             *JiraIntegration
-	export        sdk.Export
-	pipe          sdk.Pipe
-	fields        map[string]customField
-	sprintManager *sprintManager
-	userManager   *userManager
-	authConfig    authConfig
+	refids         map[string]string
+	i              *JiraIntegration
+	export         sdk.Export
+	pipe           sdk.Pipe
+	fields         map[string]customField
+	sprintManager  *sprintManager
+	userManager    *userManager
+	commentManager *commentManager
+	authConfig     authConfig
 }
 
-func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
+func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, commentManager *commentManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
 	return &issueIDManager{
-		refids:        make(map[string]string),
-		i:             i,
-		authConfig:    authConfig,
-		sprintManager: sprintManager,
-		userManager:   userManager,
-		export:        export,
-		pipe:          pipe,
-		fields:        fields,
+		refids:         make(map[string]string),
+		i:              i,
+		authConfig:     authConfig,
+		sprintManager:  sprintManager,
+		userManager:    userManager,
+		commentManager: commentManager,
+		export:         export,
+		pipe:           pipe,
+		fields:         fields,
 	}
 }
 
@@ -514,7 +522,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
+			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.commentManager, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
 			if err != nil {
 				return nil, err
 			}
