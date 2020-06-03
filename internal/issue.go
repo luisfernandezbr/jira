@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -435,20 +434,20 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 
 type issueIDManager struct {
 	refids        map[string]string
-	baseurl       string
 	i             *JiraIntegration
 	export        sdk.Export
 	pipe          sdk.Pipe
 	fields        map[string]customField
 	sprintManager *sprintManager
 	userManager   *userManager
+	authConfig    authConfig
 }
 
-func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, baseurl string) *issueIDManager {
+func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
 	return &issueIDManager{
 		refids:        make(map[string]string),
-		baseurl:       baseurl,
 		i:             i,
+		authConfig:    authConfig,
 		sprintManager: sprintManager,
 		userManager:   userManager,
 		export:        export,
@@ -495,7 +494,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		return found, nil
 	}
 	// we have to go to Jira and fetch the keys we don't have locally
-	theurl := sdk.JoinURL(m.baseurl, "/rest/api/3/search")
+	theurl := sdk.JoinURL(m.authConfig.APIURL, "/rest/api/3/search")
 	sdk.LogDebug(m.i.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
@@ -504,11 +503,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	var result issueQueryResult
 	client := m.i.httpmanager.New(theurl, nil)
 	for {
-		resp, err := client.Get(&result, sdk.WithGetQueryParameters(qs), func(req *sdk.HTTPRequest) error {
-			// FIXME: remove this
-			req.Request.SetBasicAuth(os.Getenv("PP_JIRA_USERNAME"), os.Getenv("PP_JIRA_PASSWORD"))
-			return nil
-		})
+		resp, err := client.Get(&result, append(m.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		if resp == nil && err != nil {
 			return nil, err
 		}
@@ -519,7 +514,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.baseurl)
+			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
 			if err != nil {
 				return nil, err
 			}

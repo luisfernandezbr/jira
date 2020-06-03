@@ -50,15 +50,15 @@ func (i *JiraIntegration) checkForRateLimit(export sdk.Export, rerr error, heade
 }
 
 func (i *JiraIntegration) fetchPriorities(export sdk.Export, pipe sdk.Pipe, auth auth) error {
-	baseurl, middleware, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err != nil {
 		return err
 	}
-	theurl := sdk.JoinURL(baseurl, "/rest/api/3/priority")
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/priority")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]issuePriority, 0)
 	ts := time.Now()
-	r, err := client.Get(&resp, middleware...)
+	r, err := client.Get(&resp, authConfig.Middleware...)
 	customerID := export.CustomerID()
 	for _, p := range resp {
 		priority, err := p.ToModel(customerID)
@@ -77,15 +77,15 @@ func (i *JiraIntegration) fetchPriorities(export sdk.Export, pipe sdk.Pipe, auth
 }
 
 func (i *JiraIntegration) fetchTypes(export sdk.Export, pipe sdk.Pipe, auth auth) error {
-	baseurl, middleware, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err != nil {
 		return err
 	}
-	theurl := sdk.JoinURL(baseurl, "/rest/api/3/issuetype")
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issuetype")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]issueType, 0)
 	ts := time.Now()
-	r, err := client.Get(&resp, middleware...)
+	r, err := client.Get(&resp, authConfig.Middleware...)
 	customerID := export.CustomerID()
 	for _, t := range resp {
 		issuetype, err := t.ToModel(customerID)
@@ -104,15 +104,15 @@ func (i *JiraIntegration) fetchTypes(export sdk.Export, pipe sdk.Pipe, auth auth
 }
 
 func (i *JiraIntegration) fetchCustomFields(export sdk.Export, auth auth) (map[string]customField, error) {
-	baseurl, middleware, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err != nil {
 		return nil, err
 	}
-	theurl := sdk.JoinURL(baseurl, "/rest/api/3/field")
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/field")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]customFieldQueryResult, 0)
 	ts := time.Now()
-	r, err := client.Get(&resp, middleware...)
+	r, err := client.Get(&resp, authConfig.Middleware...)
 	if err := i.checkForRateLimit(export, err, r.Headers); err != nil {
 		return nil, err
 	}
@@ -132,11 +132,11 @@ func (i *JiraIntegration) fetchCustomFields(export sdk.Export, auth auth) (map[s
 }
 
 func (i *JiraIntegration) fetchProjectsPaginated(export sdk.Export, pipe sdk.Pipe, auth auth) error {
-	baseurl, middleware, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err != nil {
 		return err
 	}
-	theurl := sdk.JoinURL(baseurl, "/rest/api/3/project/search")
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
 	queryParams.Set("expand", "description,url,issueTypes,projectKeys")
@@ -150,7 +150,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(export sdk.Export, pipe sdk.Pip
 		queryParams.Set("startAt", strconv.Itoa(count))
 		var resp projectQueryResult
 		ts := time.Now()
-		r, err := client.Get(&resp, append(middleware, sdk.WithGetQueryParameters(queryParams))...)
+		r, err := client.Get(&resp, append(authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
 		if err := i.checkForRateLimit(export, err, r.Headers); err != nil {
 			return err
 		}
@@ -174,11 +174,11 @@ func (i *JiraIntegration) fetchProjectsPaginated(export sdk.Export, pipe sdk.Pip
 }
 
 func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, auth auth, fromTime time.Time, customfields map[string]customField) error {
-	baseurl, middleware, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err != nil {
 		return err
 	}
-	theurl := sdk.JoinURL(baseurl, "/rest/api/3/search")
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
 	var jql string
@@ -198,7 +198,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe,
 		queryParams.Set("startAt", strconv.Itoa(count))
 		var resp issueQueryResult
 		ts := time.Now()
-		r, err := client.Get(&resp, append(middleware, sdk.WithGetQueryParameters(queryParams))...)
+		r, err := client.Get(&resp, append(authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
 		if err := i.checkForRateLimit(export, err, r.Headers); err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(export sdk.Export, pipe sdk.Pipe,
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, err := i.ToModel(customerID, issueManager, sprintManager, userManager, customfields, baseurl)
+			issue, err := i.ToModel(customerID, issueManager, sprintManager, userManager, customfields, authConfig.WebsiteURL)
 			if err != nil {
 				return err
 			}
@@ -239,11 +239,11 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		return err
 	}
 	config := export.Config()
-	auth, err := newAuth(config)
+	auth, err := newAuth(i.manager, i.httpmanager, config)
 	if err != nil {
 		return err
 	}
-	baseurl, _, err := auth.Apply()
+	authConfig, err := auth.Apply()
 	if err := i.fetchProjectsPaginated(export, pipe, auth); err != nil {
 		return err
 	}
@@ -258,8 +258,8 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		return err
 	}
 	sprintManager := newSprintManager(export.CustomerID(), pipe)
-	userManager := newUserManager(export.CustomerID(), baseurl, pipe)
-	issueManager := newIssueIDManager(i, export, pipe, sprintManager, userManager, customfields, baseurl)
+	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe)
+	issueManager := newIssueIDManager(i, export, pipe, sprintManager, userManager, customfields, authConfig)
 	if err := i.fetchIssuesPaginated(export, pipe, issueManager, sprintManager, userManager, auth, time.Time{}, customfields); err != nil {
 		return err
 	}
