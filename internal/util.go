@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pinpt/agent.next/sdk"
@@ -100,9 +101,76 @@ func adjustRenderedHTML(websiteURL, data string) string {
 	return `<div class="source-jira">` + strings.TrimSpace(data) + `</div>`
 }
 
-type managers struct {
+type stats struct {
+	issueCount    int
+	commentCount  int
+	projectCount  int
+	priorityCount int
+	typeCount     int
+	sprintCount   int
+	userCount     int
+	mu            sync.Mutex
+}
+
+func (s *stats) dump(logger sdk.Logger) {
+	sdk.LogInfo(logger, "export stats", "issues", s.issueCount, "comments", s.commentCount, "projects", s.projectCount, "priorities", s.priorityCount, "types", s.typeCount, "sprints", s.sprintCount, "users", s.userCount)
+}
+
+func (s *stats) incIssue() {
+	s.mu.Lock()
+	s.issueCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incComment() {
+	s.mu.Lock()
+	s.commentCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incProject() {
+	s.mu.Lock()
+	s.projectCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incPriority() {
+	s.mu.Lock()
+	s.priorityCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incType() {
+	s.mu.Lock()
+	s.typeCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incSprint() {
+	s.mu.Lock()
+	s.sprintCount++
+	s.mu.Unlock()
+}
+
+func (s *stats) incUser() {
+	s.mu.Lock()
+	s.userCount++
+	s.mu.Unlock()
+}
+
+// exportState is everything you ever wanted during an export ... lol
+type exportState struct {
+	logger         sdk.Logger
+	export         sdk.Export
+	pipe           sdk.Pipe
+	config         sdk.Config
+	stats          *stats
+	authConfig     authConfig
 	sprintManager  *sprintManager
 	userManager    *userManager
 	commentManager *commentManager
 	issueIDManager *issueIDManager
+	manager        sdk.Manager
+	httpmanager    sdk.HTTPClientManager
+	client         sdk.GraphQLClient
 }

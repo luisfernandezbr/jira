@@ -71,21 +71,24 @@ type commentManager struct {
 	authConfig  authConfig
 	customerID  string
 	userManager *userManager
+	stats       *stats
 	ch          chan issueForComment
 	done        chan bool
 	closing     bool
 	mu          sync.RWMutex
 }
 
-func newCommentManager(logger sdk.Logger, pipe sdk.Pipe, integration *JiraIntegration, authConfig authConfig, customerID string, userManager *userManager) *commentManager {
+func newCommentManager(logger sdk.Logger, pipe sdk.Pipe, integration *JiraIntegration, authConfig authConfig, customerID string, userManager *userManager, stats *stats) *commentManager {
 	mgr := &commentManager{
 		logger:      logger,
 		ch:          make(chan issueForComment, 1),
+		done:        make(chan bool, 1),
 		pipe:        pipe,
 		integration: integration,
 		authConfig:  authConfig,
 		customerID:  customerID,
 		userManager: userManager,
+		stats:       stats,
 	}
 	go mgr.run()
 	return mgr
@@ -118,6 +121,7 @@ func (f *commentManager) run() {
 					sdk.LogError(f.logger, "error writing issue comment model for pipe for issue", "key", item.IssueKey, "err", err)
 					continue
 				}
+				f.stats.incComment()
 			}
 			count += len(res.Comments)
 			if count >= res.Total {

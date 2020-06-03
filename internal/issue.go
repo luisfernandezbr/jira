@@ -440,6 +440,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 
 type issueIDManager struct {
 	refids         map[string]string
+	logger         sdk.Logger
 	i              *JiraIntegration
 	export         sdk.Export
 	pipe           sdk.Pipe
@@ -450,10 +451,11 @@ type issueIDManager struct {
 	authConfig     authConfig
 }
 
-func newIssueIDManager(i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, commentManager *commentManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
+func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, commentManager *commentManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
 	return &issueIDManager{
 		refids:         make(map[string]string),
 		i:              i,
+		logger:         logger,
 		authConfig:     authConfig,
 		sprintManager:  sprintManager,
 		userManager:    userManager,
@@ -503,7 +505,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	}
 	// we have to go to Jira and fetch the keys we don't have locally
 	theurl := sdk.JoinURL(m.authConfig.APIURL, "/rest/api/3/search")
-	sdk.LogDebug(m.i.logger, "fetching dependent issues", "notfound", notfound, "found", found)
+	sdk.LogDebug(m.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
 	qs.Set("expand", "changelog,fields,renderedFields")
