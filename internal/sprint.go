@@ -154,6 +154,7 @@ type sprintManager struct {
 	sprints    map[int]bool
 	customerID string
 	pipe       sdk.Pipe
+	stats      *stats
 }
 
 func (m *sprintManager) emit(s sprint) error {
@@ -163,15 +164,17 @@ func (m *sprintManager) emit(s sprint) error {
 		if err != nil {
 			return err
 		}
+		m.stats.incSprint()
 		return m.pipe.Write(o)
 	}
 	return nil
 }
 
-func newSprintManager(customerID string, pipe sdk.Pipe) *sprintManager {
+func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats) *sprintManager {
 	return &sprintManager{
 		sprints:    make(map[int]bool),
 		customerID: customerID,
 		pipe:       pipe,
+		stats:      stats,
 	}
 }

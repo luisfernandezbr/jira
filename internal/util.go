@@ -102,6 +102,7 @@ func adjustRenderedHTML(websiteURL, data string) string {
 }
 
 type stats struct {
+	started       time.Time
 	issueCount    int
 	commentCount  int
 	projectCount  int
@@ -113,7 +114,7 @@ type stats struct {
 }
 
 func (s *stats) dump(logger sdk.Logger) {
-	sdk.LogInfo(logger, "export stats", "issues", s.issueCount, "comments", s.commentCount, "projects", s.projectCount, "priorities", s.priorityCount, "types", s.typeCount, "sprints", s.sprintCount, "users", s.userCount)
+	sdk.LogInfo(logger, "export stats", "issues", s.issueCount, "comments", s.commentCount, "projects", s.projectCount, "priorities", s.priorityCount, "types", s.typeCount, "sprints", s.sprintCount, "users", s.userCount, "duration", time.Since(s.started))
 }
 
 func (s *stats) incIssue() {

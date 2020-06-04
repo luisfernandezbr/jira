@@ -34,6 +34,7 @@ type userManager struct {
 	customerID string
 	websiteURL string
 	pipe       sdk.Pipe
+	stats      *stats
 }
 
 func (m *userManager) emit(user user) error {
@@ -48,15 +49,17 @@ func (m *userManager) emit(user user) error {
 	if err := m.pipe.Write(object); err != nil {
 		return nil
 	}
+	m.stats.incUser()
 	m.users[refid] = true
 	return nil
 }
 
-func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe) *userManager {
+func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe, stats *stats) *userManager {
 	return &userManager{
 		users:      make(map[string]bool),
 		customerID: customerID,
 		websiteURL: websiteURL,
 		pipe:       pipe,
+		stats:      stats,
 	}
 }

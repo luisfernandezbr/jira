@@ -231,10 +231,12 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
-	stats := &stats{}
+	stats := &stats{
+		started: time.Now(),
+	}
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
-	sprintManager := newSprintManager(export.CustomerID(), pipe)
-	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe)
+	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
+	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe, stats)
 	commentManager := newCommentManager(logger, pipe, i, authConfig, export.CustomerID(), userManager, stats)
 	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, commentManager, customfields, authConfig)
 	exportState := &exportState{
