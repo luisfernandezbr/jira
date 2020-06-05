@@ -459,9 +459,10 @@ type issueIDManager struct {
 	sprintManager *sprintManager
 	userManager   *userManager
 	authConfig    authConfig
+	stats         *stats
 }
 
-func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
+func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig, stats *stats) *issueIDManager {
 	return &issueIDManager{
 		refids:        make(map[string]string),
 		i:             i,
@@ -472,6 +473,7 @@ func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export,
 		export:        export,
 		pipe:          pipe,
 		fields:        fields,
+		stats:         stats,
 	}
 }
 
@@ -544,7 +546,9 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 				if err := m.pipe.Write(comment); err != nil {
 					return nil, err
 				}
+				m.stats.incComment()
 			}
+			m.stats.incIssue()
 			if rerr := m.i.checkForRateLimit(m.export, err, resp.Headers); rerr != nil {
 				return nil, rerr
 			}

@@ -243,7 +243,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
 	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
 	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe, stats)
-	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, customfields, authConfig)
+	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, customfields, authConfig, stats)
 	exportState := &exportState{
 		export:         export,
 		pipe:           pipe,
