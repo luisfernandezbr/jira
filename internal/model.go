@@ -1,5 +1,9 @@
 package internal
 
+import (
+	"encoding/json"
+)
+
 const refType = "jira"
 
 type user struct {
@@ -49,10 +53,7 @@ type issueSource struct {
 	// Using map here instead of the Fields struct declared below,
 	// since we extract custom fields which could have keys prefixed
 	// with customfield_.
-	Fields         map[string]interface{} `json:"fields"`
-	RenderedFields struct {
-		Description string `json:"description"`
-	} `json:"renderedFields"`
+	Fields    map[string]interface{} `json:"fields"`
 	Changelog struct {
 		Histories []struct {
 			ID      string `json:"id"`
@@ -80,6 +81,10 @@ type issueFields struct {
 		ID  string `json:"id"`
 		Key string `json:"key"`
 	} `json:"project"`
+	Description json.RawMessage `json:"description"`
+	Comment     struct {
+		Comments []comment
+	} `json:"comment"`
 	Summary  string `json:"summary"`
 	DueDate  string `json:"duedate"`
 	Created  string `json:"created"`

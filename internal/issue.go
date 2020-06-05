@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pinpt/adf"
+
 	"github.com/pinpt/agent.next/sdk"
 )
 
@@ -40,10 +42,10 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, commentManager *commentManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, error) {
+func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// map of issue keys that this issue is dependent on
@@ -57,36 +59,45 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 	issue.ProjectID = sdk.NewWorkProjectID(customerID, fields.Project.ID, refType)
 	issue.ID = sdk.NewWorkIssueID(customerID, i.ID, refType)
 
-	// add this issue to the comment manager to have it start processing them
-	if err := commentManager.add(issue.ProjectID, issue.ID, issue.Identifier); err != nil {
-		return nil, err
-	}
-
 	customFields := make([]customFieldValue, 0)
 
 	if fields.DueDate != "" {
 		orig := fields.DueDate
 		d, err := time.ParseInLocation("2006-01-02", orig, time.UTC)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse duedate of jira issue: %v err: %v", orig, err)
+			return nil, nil, fmt.Errorf("could not parse duedate of jira issue: %v err: %v", i.Key, err)
 		}
 		sdk.ConvertTimeToDateModel(d, &issue.DueDate)
 	}
 
 	issue.Title = fields.Summary
 
-	if i.RenderedFields.Description != "" {
-		issue.Description = adjustRenderedHTML(websiteURL, i.RenderedFields.Description)
+	if fields.Description != nil {
+		html, err := adf.GenerateHTMLFromADF(fields.Description)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not parse description for jira issue: %v err: %v", i.Key, err)
+		}
+		issue.Description = adjustRenderedHTML(websiteURL, html)
+	}
+
+	comments := make([]*sdk.WorkIssueComment, 0)
+
+	for _, comment := range fields.Comment.Comments {
+		thecomment, err := comment.ToModel(customerID, websiteURL, userManager, issue.ProjectID, issue.ID, i.Key)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could create issue comment for jira issue: %v err: %v", i.Key, err)
+		}
+		comments = append(comments, thecomment)
 	}
 
 	created, err := parseTime(fields.Created)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	sdk.ConvertTimeToDateModel(created, &issue.CreatedDate)
 	updated, err := parseTime(fields.Updated)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	sdk.ConvertTimeToDateModel(updated, &issue.UpdatedDate)
 
@@ -100,19 +111,19 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 	if !fields.Creator.IsZero() {
 		issue.CreatorRefID = fields.Creator.RefID()
 		if err := userManager.emit(fields.Creator); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if !fields.Reporter.IsZero() {
 		issue.ReporterRefID = fields.Reporter.RefID()
 		if err := userManager.emit(fields.Reporter); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if !fields.Assignee.IsZero() {
 		issue.AssigneeRefID = fields.Assignee.RefID()
 		if err := userManager.emit(fields.Assignee); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -172,7 +183,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 		attachment.UserRefID = user
 		created, err := parseTime(data.Created)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		sdk.ConvertTimeToDateModel(created, &attachment.CreatedDate)
 		issue.Attachments = append(issue.Attachments, attachment)
@@ -229,7 +240,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 			} else {
 				b, err := json.Marshal(d)
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				v = string(b)
 			}
@@ -292,7 +303,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 
 			createdAt, err := parseTime(cl.Created)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
+				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
 			}
 			sdk.ConvertTimeToDateModel(createdAt, &issue.CreatedDate)
 			item.UserID = cl.Author.RefID()
@@ -401,7 +412,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 		keys := sdk.Keys(transitiveIssueKeys)
 		found, err := issueManager.getRefIDsFromKeys(keys)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		// if we have an epic key target, find it and then set it on our issue
 		if epicKey != "" {
@@ -424,45 +435,43 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, co
 			}
 			data, err := parseSprints(field.Value)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			for _, s := range data {
 				if err := sprintManager.emit(s); err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 			}
 			break
 		}
 	}
 
-	return issue, nil
+	return issue, comments, nil
 }
 
 type issueIDManager struct {
-	refids         map[string]string
-	logger         sdk.Logger
-	i              *JiraIntegration
-	export         sdk.Export
-	pipe           sdk.Pipe
-	fields         map[string]customField
-	sprintManager  *sprintManager
-	userManager    *userManager
-	commentManager *commentManager
-	authConfig     authConfig
+	refids        map[string]string
+	logger        sdk.Logger
+	i             *JiraIntegration
+	export        sdk.Export
+	pipe          sdk.Pipe
+	fields        map[string]customField
+	sprintManager *sprintManager
+	userManager   *userManager
+	authConfig    authConfig
 }
 
-func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, commentManager *commentManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
+func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig) *issueIDManager {
 	return &issueIDManager{
-		refids:         make(map[string]string),
-		i:              i,
-		logger:         logger,
-		authConfig:     authConfig,
-		sprintManager:  sprintManager,
-		userManager:    userManager,
-		commentManager: commentManager,
-		export:         export,
-		pipe:           pipe,
-		fields:         fields,
+		refids:        make(map[string]string),
+		i:             i,
+		logger:        logger,
+		authConfig:    authConfig,
+		sprintManager: sprintManager,
+		userManager:   userManager,
+		export:        export,
+		pipe:          pipe,
+		fields:        fields,
 	}
 }
 
@@ -508,7 +517,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	sdk.LogDebug(m.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
-	qs.Set("expand", "changelog,fields,renderedFields")
+	qs.Set("expand", "changelog,fields,comments")
 	qs.Set("fields", "*navigable,attachment")
 	var result issueQueryResult
 	client := m.i.httpmanager.New(theurl, nil)
@@ -524,15 +533,20 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, err := issue.ToModel(m.export.CustomerID(), m, m.commentManager, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
+			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
 			if err != nil {
 				return nil, err
 			}
 			if err := m.pipe.Write(issueObject); err != nil {
 				return nil, err
 			}
+			for _, comment := range comments {
+				if err := m.pipe.Write(comment); err != nil {
+					return nil, err
+				}
+			}
 			if rerr := m.i.checkForRateLimit(m.export, err, resp.Headers); rerr != nil {
-				return nil, err
+				return nil, rerr
 			}
 		}
 		res := make([]string, 0)

@@ -170,7 +170,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time
 		jql = fmt.Sprintf(`(created >= "%s" or updated >= "%s") `, s, s)
 	}
 	jql += "ORDER BY updated DESC" // search for the most recent changes first
-	queryParams.Set("expand", "changelog,fields,renderedFields")
+	queryParams.Set("expand", "changelog,fields,comments")
 	queryParams.Set("fields", "*navigable,attachment")
 	queryParams.Set("jql", jql)
 	queryParams.Set("maxResults", "100") // 100 is the max, 50 is the default
@@ -195,12 +195,18 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, err := i.ToModel(customerID, state.issueIDManager, state.commentManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
+			issue, comments, err := i.ToModel(customerID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
 			if err != nil {
 				return err
 			}
 			if err := state.pipe.Write(issue); err != nil {
 				return err
+			}
+			for _, comment := range comments {
+				if err := state.pipe.Write(comment); err != nil {
+					return err
+				}
+				state.stats.incComment()
 			}
 			state.stats.incIssue()
 		}
@@ -237,8 +243,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
 	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
 	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe, stats)
-	commentManager := newCommentManager(logger, pipe, i, authConfig, export.CustomerID(), userManager, stats)
-	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, commentManager, customfields, authConfig)
+	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, customfields, authConfig)
 	exportState := &exportState{
 		export:         export,
 		pipe:           pipe,
@@ -246,7 +251,6 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		authConfig:     authConfig,
 		sprintManager:  sprintManager,
 		userManager:    userManager,
-		commentManager: commentManager,
 		issueIDManager: issueIDManager,
 		stats:          stats,
 		logger:         logger,
@@ -261,9 +265,6 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		return err
 	}
 	if err := i.fetchIssuesPaginated(exportState, time.Time{}, customfields); err != nil {
-		return err
-	}
-	if err := commentManager.Close(); err != nil {
 		return err
 	}
 	if err := pipe.Close(); err != nil {

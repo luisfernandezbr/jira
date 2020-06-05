@@ -169,7 +169,6 @@ type exportState struct {
 	authConfig     authConfig
 	sprintManager  *sprintManager
 	userManager    *userManager
-	commentManager *commentManager
 	issueIDManager *issueIDManager
 	manager        sdk.Manager
 	httpmanager    sdk.HTTPClientManager
