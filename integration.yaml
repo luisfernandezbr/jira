@@ -5,6 +5,7 @@ publisher:
   name: Pinpoint
   url: https://pinpoint.com
   avatar_url: https://avatars0.Jirausercontent.com/u/24400526?s=200&v=4
+  identifier: pinpt
 capabilities:
   - work.User
   - work.Project
