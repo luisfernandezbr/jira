@@ -210,7 +210,11 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time
 			}
 			state.stats.incIssue()
 		}
-		sdk.LogDebug(state.logger, "fetched issues", "len", len(resp.Issues), "total", resp.Total, "count", count, "first", resp.Issues[0].Key, "last", resp.Issues[len(resp.Issues)-1].Key, "duration", time.Since(ts))
+		if len(resp.Issues) > 0 {
+			sdk.LogDebug(state.logger, "fetched issues", "len", len(resp.Issues), "total", resp.Total, "count", count, "first", resp.Issues[0].Key, "last", resp.Issues[len(resp.Issues)-1].Key, "duration", time.Since(ts))
+		} else {
+			sdk.LogDebug(state.logger, "fetched issues", "len", len(resp.Issues), "total", resp.Total, "count", count, "duration", time.Since(ts))
+		}
 		count += len(resp.Issues)
 		if count >= resp.Total {
 			break
