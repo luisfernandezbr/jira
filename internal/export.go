@@ -253,6 +253,9 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	if fromTimeStr != "" {
 		fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
+		sdk.LogInfo(logger, "will start from a specific timestamp", "time", fromTime)
+	} else {
+		sdk.LogInfo(logger, "no specific timestamp found, will start from now")
 	}
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
 	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
