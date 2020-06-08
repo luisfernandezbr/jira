@@ -284,9 +284,6 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err := i.fetchIssuesPaginated(exportState, fromTime, customfields); err != nil {
 		return err
 	}
-	if err := pipe.Close(); err != nil {
-		return err
-	}
 	if err := export.State().Set(configKeyLastExportTimestamp, stats.started.Format(time.RFC3339Nano)); err != nil {
 		return err
 	}
