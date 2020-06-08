@@ -220,11 +220,13 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time
 	return nil
 }
 
+const configKeyLastExportTimestamp = "last_export_ts"
+
 // Export is called to tell the integration to run an export
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
-	pipe, err := export.Start()
+	pipe, err := export.Pipe()
 	if err != nil {
 		return err
 	}
@@ -239,6 +241,10 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	stats := &stats{
 		started: time.Now(),
+	}
+	var fromTime time.Time
+	if _, err := export.State().Get(refType, configKeyLastExportTimestamp, &fromTime); err != nil {
+		return err
 	}
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
 	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
@@ -264,13 +270,15 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err := i.fetchTypes(exportState); err != nil {
 		return err
 	}
-	if err := i.fetchIssuesPaginated(exportState, time.Time{}, customfields); err != nil {
+	if err := i.fetchIssuesPaginated(exportState, fromTime, customfields); err != nil {
 		return err
 	}
 	if err := pipe.Close(); err != nil {
 		return err
 	}
-	export.Completed(nil)
+	if err := export.State().Set(refType, configKeyLastExportTimestamp, stats.started); err != nil {
+		return err
+	}
 	exportState.stats.dump(logger)
 	return nil
 }
