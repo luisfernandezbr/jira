@@ -243,8 +243,12 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		started: time.Now(),
 	}
 	var fromTime time.Time
-	if _, err := export.State().Get(refType, configKeyLastExportTimestamp, &fromTime); err != nil {
+	var fromTimeStr string
+	if _, err := export.State().Get(refType, configKeyLastExportTimestamp, &fromTimeStr); err != nil {
 		return err
+	}
+	if fromTimeStr != "" {
+		fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
 	}
 	customfields, err := i.fetchCustomFields(logger, export, authConfig)
 	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
@@ -276,7 +280,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err := pipe.Close(); err != nil {
 		return err
 	}
-	if err := export.State().Set(refType, configKeyLastExportTimestamp, stats.started); err != nil {
+	if err := export.State().Set(refType, configKeyLastExportTimestamp, stats.started.Format(time.RFC3339Nano)); err != nil {
 		return err
 	}
 	exportState.stats.dump(logger)
