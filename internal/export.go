@@ -235,7 +235,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		return err
 	}
 	config := export.Config()
-	auth, err := newAuth(i.manager, i.httpmanager, config)
+	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
 	if err != nil {
 		return err
 	}

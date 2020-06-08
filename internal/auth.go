@@ -76,7 +76,7 @@ func (a *oauth2Auth) Apply() (authConfig, error) {
 	}, nil
 }
 
-func newOAuth2Auth(manager sdk.Manager, httpmanager sdk.HTTPClientManager, url string, accessToken string, refreshToken string) (*oauth2Auth, error) {
+func newOAuth2Auth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPClientManager, url string, accessToken string, refreshToken string) (*oauth2Auth, error) {
 	var sites []struct {
 		ID  string
 		URL string
@@ -90,6 +90,7 @@ func newOAuth2Auth(manager sdk.Manager, httpmanager sdk.HTTPClientManager, url s
 		resp, err := client.Get(&sites)
 		if err != nil {
 			if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+				sdk.LogDebug(logger, "oauth2 token accessible-resource failed", "err", err, "attempts", attempts, "status", resp.StatusCode)
 				if attempts == 0 {
 					attempts++
 					newToken, err := manager.RefreshOAuth2Token(refType, refreshToken)
@@ -97,6 +98,7 @@ func newOAuth2Auth(manager sdk.Manager, httpmanager sdk.HTTPClientManager, url s
 						accessToken = newToken
 						continue
 					}
+					sdk.LogDebug(logger, "oauth2 refresh token failed", "err", err)
 				}
 				return nil, errors.New("Auth token provided is not correct. Getting status 401 (Unauthorized) when trying to call api.atlassian.com/oauth/token/accessible-resources")
 			}
@@ -139,7 +141,7 @@ func fixURLPath(theurl string) (string, error) {
 	return u.String(), nil
 }
 
-func newAuth(manager sdk.Manager, httpmanager sdk.HTTPClientManager, config sdk.Config) (auth, error) {
+func newAuth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPClientManager, config sdk.Config) (auth, error) {
 	ok, url := config.GetString("url")
 	if ok {
 		theurl, err := fixURLPath(url)
@@ -151,7 +153,7 @@ func newAuth(manager sdk.Manager, httpmanager sdk.HTTPClientManager, config sdk.
 			if !ok {
 				return nil, fmt.Errorf("missing required refresh_token config")
 			}
-			return newOAuth2Auth(manager, httpmanager, theurl, accessToken, refreshToken)
+			return newOAuth2Auth(logger, manager, httpmanager, theurl, accessToken, refreshToken)
 		}
 		ok, username := config.GetString("username")
 		if ok {
