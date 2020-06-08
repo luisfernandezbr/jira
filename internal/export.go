@@ -248,7 +248,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	var fromTime time.Time
 	var fromTimeStr string
-	if _, err := export.State().Get(refType, configKeyLastExportTimestamp, &fromTimeStr); err != nil {
+	if _, err := export.State().Get(configKeyLastExportTimestamp, &fromTimeStr); err != nil {
 		return err
 	}
 	if fromTimeStr != "" {
@@ -287,7 +287,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err := pipe.Close(); err != nil {
 		return err
 	}
-	if err := export.State().Set(refType, configKeyLastExportTimestamp, stats.started.Format(time.RFC3339Nano)); err != nil {
+	if err := export.State().Set(configKeyLastExportTimestamp, stats.started.Format(time.RFC3339Nano)); err != nil {
 		return err
 	}
 	exportState.stats.dump(logger)
