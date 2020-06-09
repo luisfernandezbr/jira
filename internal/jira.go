@@ -28,6 +28,19 @@ func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sd
 	return nil
 }
 
+// Enroll is called when a new integration instance is added
+func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
+	// FIXME: do the work status config
+	// FIXME: add the web hook for this integration
+	return nil
+}
+
+// Dismiss is called when an existing integration instance is removed
+func (i *JiraIntegration) Dismiss(instance sdk.Instance) error {
+	// FIXME: remove integration
+	return nil
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	return nil

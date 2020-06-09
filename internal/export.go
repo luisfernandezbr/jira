@@ -49,7 +49,7 @@ func (i *JiraIntegration) checkForRateLimit(export sdk.Export, rerr error, heade
 	return rerr
 }
 
-func (i *JiraIntegration) fetchPriorities(state *exportState) error {
+func (i *JiraIntegration) fetchPriorities(state *state) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/priority")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]issuePriority, 0)
@@ -73,7 +73,7 @@ func (i *JiraIntegration) fetchPriorities(state *exportState) error {
 	return nil
 }
 
-func (i *JiraIntegration) fetchTypes(state *exportState) error {
+func (i *JiraIntegration) fetchTypes(state *state) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issuetype")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]issueType, 0)
@@ -121,7 +121,7 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, export sdk.Export
 	return customfields, nil
 }
 
-func (i *JiraIntegration) fetchProjectsPaginated(state *exportState) error {
+func (i *JiraIntegration) fetchProjectsPaginated(state *state) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
@@ -160,7 +160,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *exportState) error {
 	return nil
 }
 
-func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time.Time, customfields map[string]customField) error {
+func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
@@ -224,26 +224,35 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *exportState, fromTime time
 	return nil
 }
 
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config) (*state, error) {
+	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
+	if err != nil {
+		return nil, err
+	}
+	authConfig, err := auth.Apply()
+	if err != nil {
+		return nil, err
+	}
+	return &state{
+		pipe:       pipe,
+		config:     config,
+		authConfig: authConfig,
+		logger:     logger,
+	}, nil
+}
+
 const configKeyLastExportTimestamp = "last_export_ts"
 
 // Export is called to tell the integration to run an export
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
-	pipe, err := export.Pipe()
+	state, err := i.newState(logger, export.Pipe(), export.Config())
 	if err != nil {
 		return err
 	}
-	config := export.Config()
-	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
-	if err != nil {
-		return err
-	}
-	authConfig, err := auth.Apply()
-	if err != nil {
-		return err
-	}
-	stats := &stats{
+	state.export = export
+	state.stats = &stats{
 		started: time.Now(),
 	}
 	var fromTime time.Time
@@ -257,36 +266,28 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	} else {
 		sdk.LogInfo(logger, "no specific timestamp found, will start from now")
 	}
-	customfields, err := i.fetchCustomFields(logger, export, authConfig)
-	sprintManager := newSprintManager(export.CustomerID(), pipe, stats)
-	userManager := newUserManager(export.CustomerID(), authConfig.WebsiteURL, pipe, stats)
-	issueIDManager := newIssueIDManager(logger, i, export, pipe, sprintManager, userManager, customfields, authConfig, stats)
-	exportState := &exportState{
-		export:         export,
-		pipe:           pipe,
-		config:         config,
-		authConfig:     authConfig,
-		sprintManager:  sprintManager,
-		userManager:    userManager,
-		issueIDManager: issueIDManager,
-		stats:          stats,
-		logger:         logger,
-	}
-	if err := i.fetchProjectsPaginated(exportState); err != nil {
+	customfields, err := i.fetchCustomFields(logger, state.export, state.authConfig)
+	if err != nil {
 		return err
 	}
-	if err := i.fetchPriorities(exportState); err != nil {
+	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats)
+	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats)
+	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
+	if err := i.fetchProjectsPaginated(state); err != nil {
 		return err
 	}
-	if err := i.fetchTypes(exportState); err != nil {
+	if err := i.fetchPriorities(state); err != nil {
 		return err
 	}
-	if err := i.fetchIssuesPaginated(exportState, fromTime, customfields); err != nil {
+	if err := i.fetchTypes(state); err != nil {
 		return err
 	}
-	if err := export.State().Set(configKeyLastExportTimestamp, stats.started.Format(time.RFC3339Nano)); err != nil {
+	if err := i.fetchIssuesPaginated(state, fromTime, customfields); err != nil {
 		return err
 	}
-	exportState.stats.dump(logger)
+	if err := export.State().Set(configKeyLastExportTimestamp, state.stats.started.Format(time.RFC3339Nano)); err != nil {
+		return err
+	}
+	state.stats.dump(logger)
 	return nil
 }

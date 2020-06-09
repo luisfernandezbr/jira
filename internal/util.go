@@ -159,8 +159,8 @@ func (s *stats) incUser() {
 	s.mu.Unlock()
 }
 
-// exportState is everything you ever wanted during an export ... lol
-type exportState struct {
+// state is everything you ever wanted during an export ... lol
+type state struct {
 	logger         sdk.Logger
 	export         sdk.Export
 	pipe           sdk.Pipe
