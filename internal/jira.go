@@ -30,7 +30,6 @@ func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sd
 
 // Enroll is called when a new integration instance is added
 func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
-	// FIXME: do the work status config
 	// FIXME: add the web hook for this integration
 	return nil
 }

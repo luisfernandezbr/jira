@@ -273,6 +273,9 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats)
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
+	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID()); err != nil {
+		return err
+	}
 	if err := i.fetchProjectsPaginated(state); err != nil {
 		return err
 	}
