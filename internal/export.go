@@ -215,6 +215,10 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		} else {
 			sdk.LogDebug(state.logger, "fetched issues", "len", len(resp.Issues), "total", resp.Total, "count", count, "duration", time.Since(ts))
 		}
+		// after the first page, go ahead and flush the data
+		if count == 0 {
+			state.pipe.Flush()
+		}
 		count += len(resp.Issues)
 		if count >= resp.Total {
 			break
