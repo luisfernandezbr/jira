@@ -20,10 +20,10 @@ type status struct {
 
 const cacheKeyWorkConfig = "work_config"
 
-func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationID string) error {
+func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationID string, historical bool) error {
 	logger := sdk.LogWith(i.logger, "customer_id", customerID, "integration_id", integrationID)
 	sdk.LogInfo(logger, "processing work config started")
-	state, err := i.newState(logger, pipe, config)
+	state, err := i.newState(logger, pipe, config, historical)
 	if err != nil {
 		return err
 	}
@@ -58,13 +58,9 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 			}
 		}
 	}
-	wc.TopLevelIssue = sdk.WorkConfigTopLevelIssue{
-		Name: "Epic",
-		Type: "Issue",
-	}
 	var existingWorkConfigHashCode string
 	// only send any changes either (a) not in cache OR (b) the hash codes are different indicating a change
-	if found, _ := istate.Get(cacheKeyWorkConfig, &existingWorkConfigHashCode); !found || existingWorkConfigHashCode != wc.Hash() {
+	if found, _ := istate.Get(cacheKeyWorkConfig, &existingWorkConfigHashCode); historical || !found || existingWorkConfigHashCode != wc.Hash() {
 		if err := pipe.Write(&wc); err != nil {
 			return fmt.Errorf("error writing work status config to pipe: %w", err)
 		}

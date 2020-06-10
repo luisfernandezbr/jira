@@ -173,4 +173,5 @@ type state struct {
 	manager        sdk.Manager
 	httpmanager    sdk.HTTPClientManager
 	client         sdk.GraphQLClient
+	historical     bool
 }

@@ -224,7 +224,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 	return nil
 }
 
-func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config) (*state, error) {
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool) (*state, error) {
 	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
 	if err != nil {
 		return nil, err
@@ -247,7 +247,7 @@ const configKeyLastExportTimestamp = "last_export_ts"
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
-	state, err := i.newState(logger, export.Pipe(), export.Config())
+	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical())
 	if err != nil {
 		return err
 	}
@@ -257,14 +257,18 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	var fromTime time.Time
 	var fromTimeStr string
-	if _, err := export.State().Get(configKeyLastExportTimestamp, &fromTimeStr); err != nil {
-		return err
-	}
-	if fromTimeStr != "" {
-		fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
-		sdk.LogInfo(logger, "will start from a specific timestamp", "time", fromTime)
+	if export.Historical() {
+		sdk.LogInfo(logger, "historical has been requested")
 	} else {
-		sdk.LogInfo(logger, "no specific timestamp found, will start from now")
+		if _, err := export.State().Get(configKeyLastExportTimestamp, &fromTimeStr); err != nil {
+			return err
+		}
+		if fromTimeStr != "" {
+			fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
+			sdk.LogInfo(logger, "will start from a specific timestamp", "time", fromTime)
+		} else {
+			sdk.LogInfo(logger, "no specific timestamp found, will start from now")
+		}
 	}
 	customfields, err := i.fetchCustomFields(logger, state.export, state.authConfig)
 	if err != nil {
@@ -273,7 +277,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats)
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
-	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID()); err != nil {
+	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID(), export.Historical()); err != nil {
 		return err
 	}
 	if err := i.fetchProjectsPaginated(state); err != nil {
