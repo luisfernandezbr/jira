@@ -62,6 +62,10 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 	var existingWorkConfigHashCode string
 	// only send any changes either (a) not in cache OR (b) the hash codes are different indicating a change
 	if found, _ := istate.Get(cacheKeyWorkConfig, &existingWorkConfigHashCode); historical || !found || existingWorkConfigHashCode != wc.Hash() {
+		if !found {
+			wc.CreatedAt = sdk.EpochNow()
+		}
+		wc.UpdatedAt = sdk.EpochNow()
 		if err := pipe.Write(&wc); err != nil {
 			return fmt.Errorf("error writing work status config to pipe: %w", err)
 		}
