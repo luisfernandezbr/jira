@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/pinpt/adf v1.1.0
-	github.com/pinpt/agent.next v0.0.0-20200609204832-13edd3a62e01
+	github.com/pinpt/agent.next v0.0.0-20200610015633-4eae609d5bf4
 )
 
 // TODO: this is only set while we're in rapid dev. once we get out of that we should remove
