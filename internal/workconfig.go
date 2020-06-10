@@ -37,6 +37,7 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 	}
 	var wc sdk.WorkConfig
 	wc.ID = sdk.NewWorkConfigID(customerID, refType, integrationID)
+	wc.IntegrationID = integrationID
 	wc.CustomerID = customerID
 	wc.RefType = refType
 	wc.Statuses = sdk.WorkConfigStatuses{
