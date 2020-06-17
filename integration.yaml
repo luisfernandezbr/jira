@@ -1,11 +1,7 @@
 name: Jira
 ref_type: jira
 description: This is the official Jira integration for Pinpoint
-publisher:
-  name: Pinpoint
-  url: https://pinpoint.com
-  avatar_url: https://avatars0.Jirausercontent.com/u/24400526?s=200&v=4
-  identifier: pinpt
+avatar_url: https://img.icons8.com/color/144/000000/jira.png
 capabilities:
   - work.User
   - work.Project
