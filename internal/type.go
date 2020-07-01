@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"github.com/pinpt/agent.next/sdk"
-)
+import "github.com/pinpt/agent.next/sdk"
 
 func getMappedIssueType(name string, subtask bool) sdk.WorkIssueTypeMappedType {
 	if subtask {

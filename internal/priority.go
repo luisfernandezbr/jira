@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"github.com/pinpt/agent.next/sdk"
-)
+import "github.com/pinpt/agent.next/sdk"
 
 func (p issuePriority) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkIssuePriority, error) {
 	priority := &sdk.WorkIssuePriority{}

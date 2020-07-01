@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/pinpt/adf"
-
 	"github.com/pinpt/agent.next/sdk"
 )
 
