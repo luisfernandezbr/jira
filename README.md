@@ -16,13 +16,22 @@ This is a working concept prototype for the next generation of the Agent's Jira 
 You can run like this:
 
 ```
-agent.next dev . --log-level=debug --config url=$PP_JIRA_URL --config username=$PP_JIRA_USERNAME --config password=$PP_JIRA_PASSWORD
+agent.next dev . --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
 ```
 
 From agent.next repo:
 
 ```
-go run . dev ../agent.next.jira --log-level=debug --config url=$PP_JIRA_URL --config username=$PP_JIRA_USERNAME --config password=$PP_JIRA_PASSWORD
+go run . -tags dev . dev ../agent.next.jira --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
 ```
+
+Example using an OAuth2 token:
+
+```
+go run -tags dev . dev ../agent.next.jira --log-level=debug --channel edge --set "oauth2_auth={\"access_token\":\"TOKEN\",\"refresh_token\":\"REFRESH_TOKEN\"}"
+```
+
+Make sure you replace TOKEN and REFRESH_TOKEN.
+
 
 This will run an export for Jira and print all the JSON objects to the console.
