@@ -107,6 +107,9 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 	issue.TypeID = sdk.NewWorkIssueTypeID(customerID, refType, fields.IssueType.ID)
 	issue.Status = fields.Status.Name
 	issue.Resolution = fields.Resolution.Name
+	if fields.Parent != nil && fields.Parent.ID != "" {
+		issue.ParentID = sdk.NewWorkIssueID(customerID, fields.Parent.ID, refType)
+	}
 
 	if !fields.Creator.IsZero() {
 		issue.CreatorRefID = fields.Creator.RefID()

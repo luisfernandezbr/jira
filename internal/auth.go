@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sync"
-	"time"
 
 	"github.com/pinpt/agent.next/sdk"
 )
@@ -34,44 +32,27 @@ func (a basicAuth) Apply() (authConfig, error) {
 		WebsiteURL: a.url,
 		APIURL:     a.url,
 		Middleware: []sdk.WithHTTPOption{
-			func(req *sdk.HTTPRequest) error {
-				req.Request.SetBasicAuth(a.username, a.password)
-				return nil
-			},
+			sdk.WithBasicAuth(a.username, a.password),
 		},
 	}, nil
 }
 
 type oauth2Auth struct {
-	accessToken   string
-	refreshToken  string
-	websiteURL    string
-	apiURL        string
-	lastRefreshed time.Time
-	mu            sync.Mutex
+	accessToken  string
+	refreshToken string
+	websiteURL   string
+	apiURL       string
+	manager      sdk.Manager
 }
 
 var _ auth = (*oauth2Auth)(nil)
 
-func (a *oauth2Auth) refresh() error {
-	// TODO:
-	return nil
-}
-
 func (a *oauth2Auth) Apply() (authConfig, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.lastRefreshed.IsZero() || time.Since(a.lastRefreshed) > time.Hour {
-		// FIXME: refresh the token
-		if err := a.refresh(); err != nil {
-			return authConfig{}, err
-		}
-	}
 	return authConfig{
 		WebsiteURL: a.websiteURL,
 		APIURL:     a.apiURL,
 		Middleware: []sdk.WithHTTPOption{
-			sdk.WithAuthorization("Bearer " + a.accessToken),
+			sdk.WithOAuth2Refresh(a.manager, refType, a.accessToken, a.refreshToken),
 		},
 	}, nil
 }
@@ -111,7 +92,7 @@ func newOAuth2Auth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPC
 	}
 	var siteid, siteurl string
 	for _, item := range sites {
-		if item.URL == url {
+		if item.URL == url || url == "" {
 			siteid = item.ID
 			siteurl = item.URL
 			break
@@ -129,6 +110,7 @@ func newOAuth2Auth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPC
 		apiURL:       "https://api.atlassian.com/ex/jira/" + siteid,
 		accessToken:  accessToken,
 		refreshToken: refreshToken,
+		manager:      manager,
 	}, nil
 }
 
@@ -142,31 +124,29 @@ func fixURLPath(theurl string) (string, error) {
 }
 
 func newAuth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPClientManager, config sdk.Config) (auth, error) {
-	ok, url := config.GetString("url")
-	if ok {
-		theurl, err := fixURLPath(url)
+	if config.OAuth2Auth != nil {
+		var refreshToken string
+		if config.OAuth2Auth.RefreshToken != nil {
+			refreshToken = *config.OAuth2Auth.RefreshToken
+		}
+		theurl, err := fixURLPath(config.OAuth2Auth.URL)
 		if err != nil {
 			return nil, err
 		}
-		if ok, accessToken := config.GetString("access_token"); ok {
-			ok, refreshToken := config.GetString("refresh_token")
-			if !ok {
-				return nil, fmt.Errorf("missing required refresh_token config")
-			}
-			return newOAuth2Auth(logger, manager, httpmanager, theurl, accessToken, refreshToken)
-		}
-		ok, username := config.GetString("username")
-		if ok {
-			ok, password := config.GetString("password")
-			if ok {
-				return &basicAuth{
-					url:      theurl,
-					username: username,
-					password: password,
-				}, nil
-			}
-		}
-		return nil, fmt.Errorf("no authentication provided")
+		sdk.LogInfo(logger, "using oauth2 authentication")
+		return newOAuth2Auth(logger, manager, httpmanager, theurl, config.OAuth2Auth.AccessToken, refreshToken)
 	}
-	return nil, fmt.Errorf("no url provided")
+	if config.BasicAuth != nil {
+		theurl, err := fixURLPath(config.BasicAuth.URL)
+		if err != nil {
+			return nil, err
+		}
+		sdk.LogInfo(logger, "using basic authentication")
+		return &basicAuth{
+			url:      theurl,
+			username: config.BasicAuth.Username,
+			password: config.BasicAuth.Password,
+		}, nil
+	}
+	return nil, fmt.Errorf("authentication provided is not supported. tried oauth2 and basic authentication")
 }

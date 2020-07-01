@@ -85,10 +85,14 @@ type issueFields struct {
 	Comment     struct {
 		Comments []comment
 	} `json:"comment"`
-	Summary  string `json:"summary"`
-	DueDate  string `json:"duedate"`
-	Created  string `json:"created"`
-	Updated  string `json:"updated"`
+	Summary string `json:"summary"`
+	DueDate string `json:"duedate"`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
+	Parent  *struct {
+		ID  string `json:"id"`
+		Key string `json:"key"`
+	} `json:"parent,omitempty"`
 	Priority struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
