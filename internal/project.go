@@ -13,5 +13,7 @@ func (p project) ToModel(customerID string, integrationInstanceID string) (*sdk.
 	project.Active = true
 	project.Identifier = p.Key
 	project.ID = sdk.NewWorkProjectID(customerID, p.ID, refType)
+	project.Affiliation = sdk.WorkProjectAffiliationOrganization
+	project.Visibility = sdk.WorkProjectVisibilityPrivate
 	return project, nil
 }
