@@ -4,9 +4,10 @@ import (
 	"github.com/pinpt/agent.next/sdk"
 )
 
-func (p issuePriority) ToModel(customerID string) (*sdk.WorkIssuePriority, error) {
+func (p issuePriority) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkIssuePriority, error) {
 	priority := &sdk.WorkIssuePriority{}
 	priority.CustomerID = customerID
+	priority.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	priority.RefID = p.ID
 	priority.RefType = refType
 	priority.Name = p.Name

@@ -161,17 +161,18 @@ func (s *stats) incUser() {
 
 // state is everything you ever wanted during an export ... lol
 type state struct {
-	logger         sdk.Logger
-	export         sdk.Export
-	pipe           sdk.Pipe
-	config         sdk.Config
-	stats          *stats
-	authConfig     authConfig
-	sprintManager  *sprintManager
-	userManager    *userManager
-	issueIDManager *issueIDManager
-	manager        sdk.Manager
-	httpmanager    sdk.HTTPClientManager
-	client         sdk.GraphQLClient
-	historical     bool
+	logger                sdk.Logger
+	export                sdk.Export
+	pipe                  sdk.Pipe
+	config                sdk.Config
+	stats                 *stats
+	authConfig            authConfig
+	sprintManager         *sprintManager
+	userManager           *userManager
+	issueIDManager        *issueIDManager
+	manager               sdk.Manager
+	httpmanager           sdk.HTTPClientManager
+	client                sdk.GraphQLClient
+	historical            bool
+	integrationInstanceID string
 }

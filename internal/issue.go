@@ -42,7 +42,7 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
+func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
 		return nil, nil, err
@@ -83,7 +83,7 @@ func (i issueSource) ToModel(customerID string, issueManager *issueIDManager, sp
 	comments := make([]*sdk.WorkIssueComment, 0)
 
 	for _, comment := range fields.Comment.Comments {
-		thecomment, err := comment.ToModel(customerID, websiteURL, userManager, issue.ProjectID, issue.ID, i.Key)
+		thecomment, err := comment.ToModel(customerID, integrationInstanceID, websiteURL, userManager, issue.ProjectID, issue.ID, i.Key)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could create issue comment for jira issue: %v err: %v", i.Key, err)
 		}
@@ -538,7 +538,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
+			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m.export.IntegrationID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
 			if err != nil {
 				return nil, err
 			}

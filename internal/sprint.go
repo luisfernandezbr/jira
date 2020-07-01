@@ -23,9 +23,10 @@ type sprint struct {
 	OriginBoardID int
 }
 
-func (s sprint) ToModel(customerID string) (*sdk.WorkSprint, error) {
+func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkSprint, error) {
 	sprint := &sdk.WorkSprint{}
 	sprint.CustomerID = customerID
+	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)
 	sprint.ID = sdk.NewWorkSprintID(customerID, sprint.RefID, refType)
 	sprint.Goal = s.Goal
@@ -151,16 +152,17 @@ func parseSprintTime(ts string) (time.Time, error) {
 
 // manager for tracking sprint data as we process issues
 type sprintManager struct {
-	sprints    map[int]bool
-	customerID string
-	pipe       sdk.Pipe
-	stats      *stats
+	sprints               map[int]bool
+	customerID            string
+	pipe                  sdk.Pipe
+	stats                 *stats
+	integrationInstanceID string
 }
 
 func (m *sprintManager) emit(s sprint) error {
 	if !m.sprints[s.ID] {
 		m.sprints[s.ID] = true
-		o, err := s.ToModel(m.customerID)
+		o, err := s.ToModel(m.customerID, m.integrationInstanceID)
 		if err != nil {
 			return err
 		}
@@ -170,11 +172,12 @@ func (m *sprintManager) emit(s sprint) error {
 	return nil
 }
 
-func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats) *sprintManager {
+func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats, integrationInstanceID string) *sprintManager {
 	return &sprintManager{
-		sprints:    make(map[int]bool),
-		customerID: customerID,
-		pipe:       pipe,
-		stats:      stats,
+		sprints:               make(map[int]bool),
+		customerID:            customerID,
+		pipe:                  pipe,
+		stats:                 stats,
+		integrationInstanceID: integrationInstanceID,
 	}
 }

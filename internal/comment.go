@@ -26,12 +26,13 @@ type comment struct {
 	      }*/
 }
 
-func (c comment) ToModel(customerID string, websiteURL string, userManager *userManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
+func (c comment) ToModel(customerID string, integrationInstanceID string, websiteURL string, userManager *userManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
 	if err := userManager.emit(c.Author); err != nil {
 		return nil, err
 	}
 	comment := &sdk.WorkIssueComment{}
 	comment.CustomerID = customerID
+	comment.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	comment.RefID = c.ID
 	comment.RefType = refType
 	comment.ProjectID = projectID

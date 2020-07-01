@@ -2,9 +2,10 @@ package internal
 
 import "github.com/pinpt/agent.next/sdk"
 
-func (u user) ToModel(customerID string, websiteURL string) (*sdk.WorkUser, error) {
+func (u user) ToModel(customerID string, integrationInstanceID string, websiteURL string) (*sdk.WorkUser, error) {
 	theuser := &sdk.WorkUser{}
 	theuser.CustomerID = customerID
+	theuser.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	theuser.RefID = u.RefID()
 	theuser.RefType = refType
 	theuser.Name = u.DisplayName
@@ -30,11 +31,12 @@ func (u user) ToModel(customerID string, websiteURL string) (*sdk.WorkUser, erro
 }
 
 type userManager struct {
-	users      map[string]bool
-	customerID string
-	websiteURL string
-	pipe       sdk.Pipe
-	stats      *stats
+	users                 map[string]bool
+	customerID            string
+	websiteURL            string
+	pipe                  sdk.Pipe
+	stats                 *stats
+	integrationInstanceID string
 }
 
 func (m *userManager) emit(user user) error {
@@ -42,7 +44,7 @@ func (m *userManager) emit(user user) error {
 	if m.users[refid] {
 		return nil
 	}
-	object, err := user.ToModel(m.customerID, m.websiteURL)
+	object, err := user.ToModel(m.customerID, m.websiteURL, m.integrationInstanceID)
 	if err != nil {
 		return err
 	}
@@ -54,12 +56,13 @@ func (m *userManager) emit(user user) error {
 	return nil
 }
 
-func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe, stats *stats) *userManager {
+func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe, stats *stats, integrationInstanceID string) *userManager {
 	return &userManager{
-		users:      make(map[string]bool),
-		customerID: customerID,
-		websiteURL: websiteURL,
-		pipe:       pipe,
-		stats:      stats,
+		users:                 make(map[string]bool),
+		customerID:            customerID,
+		websiteURL:            websiteURL,
+		pipe:                  pipe,
+		stats:                 stats,
+		integrationInstanceID: integrationInstanceID,
 	}
 }

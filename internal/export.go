@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pinpt/agent.next/sdk"
@@ -57,7 +58,7 @@ func (i *JiraIntegration) fetchPriorities(state *state) error {
 	r, err := client.Get(&resp, state.authConfig.Middleware...)
 	customerID := state.export.CustomerID()
 	for _, p := range resp {
-		priority, err := p.ToModel(customerID)
+		priority, err := p.ToModel(customerID, state.integrationInstanceID)
 		if err != nil {
 			return err
 		}
@@ -121,7 +122,9 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, export sdk.Export
 	return customfields, nil
 }
 
-func (i *JiraIntegration) fetchProjectsPaginated(state *state) error {
+const savedPreviousProjectsStateKey = "previous_projects"
+
+func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error) {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
@@ -132,42 +135,90 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) error {
 	var count int
 	customerID := state.export.CustomerID()
 	started := time.Now()
+	savedProjects := make(map[string]*sdk.WorkProject)
+	var hasPreviousProjects bool
+	previousProjects := make(map[string]*sdk.WorkProject)
+	if state.export.State().Exists(savedPreviousProjectsStateKey) {
+		hasPreviousProjects = true
+		if _, err := state.export.State().Get(savedPreviousProjectsStateKey, &previousProjects); err != nil {
+			return nil, fmt.Errorf("error fetching previous projects state: %w", err)
+		}
+	}
 	for {
 		queryParams.Set("startAt", strconv.Itoa(count))
 		var resp projectQueryResult
 		ts := time.Now()
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
 		if err := i.checkForRateLimit(state.export, err, r.Headers); err != nil {
-			return err
+			return nil, err
 		}
 		sdk.LogDebug(state.logger, "fetched projects", "len", len(resp.Projects), "total", resp.Total, "count", count, "first", resp.Projects[0].Key, "last", resp.Projects[len(resp.Projects)-1].Key, "duration", time.Since(ts))
-		count += len(resp.Projects)
 		for _, p := range resp.Projects {
-			project, err := p.ToModel(customerID)
+			count++
+			project, err := p.ToModel(customerID, state.integrationInstanceID)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			if err := state.pipe.Write(project); err != nil {
-				return err
+			if state.config.Exclusions != nil {
+				if state.config.Exclusions.Matches("jira", p.Name) || state.config.Exclusions.Matches("jira", p.Key) || state.config.Exclusions.Matches("jira", p.ID) {
+					sdk.LogInfo(state.logger, "marking excluded project inactive: "+p.Name, "id", p.ID, "key", p.Key)
+					project.Active = false
+				}
 			}
-			state.stats.incProject()
+			if state.config.Inclusions != nil {
+				if !state.config.Inclusions.Matches("jira", p.Name) && !state.config.Inclusions.Matches("jira", p.Key) && !state.config.Inclusions.Matches("jira", p.ID) {
+					sdk.LogInfo(state.logger, "marking not included project inactive: "+p.Name, "id", p.ID, "key", p.Key)
+					project.Active = false
+				}
+			}
+			savedProjects[p.ID] = project
 		}
 		if count >= resp.Total {
 			break
 		}
 	}
-	sdk.LogInfo(state.logger, "export projects completed", "duration", time.Since(started), "count", count)
-	return nil
+	if hasPreviousProjects {
+		for id, project := range previousProjects {
+			p := savedProjects[id]
+			if p == nil {
+				// not found or now it's excluded, in either case we need to deactivate it
+				project.Active = false
+				sdk.LogInfo(state.logger, "marking project as inactive since it was exported previously but not included now", "id", id, "key", project.Identifier)
+			}
+		}
+	}
+	// we have to do this after we pull all the projects so we can determine if we have old projects
+	// that are no longer active
+	keys := make([]string, 0)
+	var active int
+	for key, project := range savedProjects {
+		if err := state.pipe.Write(project); err != nil {
+			return nil, err
+		}
+		if project.Active {
+			keys = append(keys, key)
+			state.stats.incProject()
+			active++
+		}
+	}
+
+	// save the state so we can check the next time
+	if err := state.export.State().Set(savedPreviousProjectsStateKey, savedProjects); err != nil {
+		return nil, fmt.Errorf("error saving projects state: %w", err)
+	}
+
+	sdk.LogInfo(state.logger, "export projects completed", "duration", time.Since(started), "count", len(savedProjects), "active", active)
+	return keys, nil
 }
 
-func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField) error {
+func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField, projectKeys []string) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
-	var jql string
+	jql := "project in (" + strings.Join(projectKeys, ",") + ") "
 	if !fromTime.IsZero() {
 		s := relativeDuration(time.Since(fromTime))
-		jql = fmt.Sprintf(`(created >= "%s" or updated >= "%s") `, s, s)
+		jql += fmt.Sprintf(`AND (created >= "%s" or updated >= "%s") `, s, s)
 	}
 	jql += "ORDER BY updated DESC" // search for the most recent changes first
 	queryParams.Set("expand", "changelog,fields,comments")
@@ -195,7 +246,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, comments, err := i.ToModel(customerID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
+			issue, comments, err := i.ToModel(customerID, state.integrationInstanceID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
 			if err != nil {
 				return err
 			}
@@ -228,7 +279,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 	return nil
 }
 
-func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool) (*state, error) {
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool, integrationInstanceID string) (*state, error) {
 	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
 	if err != nil {
 		return nil, err
@@ -251,7 +302,7 @@ const configKeyLastExportTimestamp = "last_export_ts"
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
-	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical())
+	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationID())
 	if err != nil {
 		return err
 	}
@@ -278,23 +329,28 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
-	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats)
-	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats)
+	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationID())
+	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationID())
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
 	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID(), export.Historical()); err != nil {
 		return err
 	}
-	if err := i.fetchProjectsPaginated(state); err != nil {
+	projectKeys, err := i.fetchProjectsPaginated(state)
+	if err != nil {
 		return err
 	}
-	if err := i.fetchPriorities(state); err != nil {
-		return err
-	}
-	if err := i.fetchTypes(state); err != nil {
-		return err
-	}
-	if err := i.fetchIssuesPaginated(state, fromTime, customfields); err != nil {
-		return err
+	if len(projectKeys) == 0 {
+		sdk.LogWarn(logger, "no projects found to export")
+	} else {
+		if err := i.fetchPriorities(state); err != nil {
+			return err
+		}
+		if err := i.fetchTypes(state); err != nil {
+			return err
+		}
+		if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {
+			return err
+		}
 	}
 	if err := export.State().Set(configKeyLastExportTimestamp, state.stats.started.Format(time.RFC3339Nano)); err != nil {
 		return err

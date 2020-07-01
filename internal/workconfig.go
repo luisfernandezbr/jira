@@ -20,10 +20,10 @@ type status struct {
 
 const cacheKeyWorkConfig = "work_config"
 
-func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationID string, historical bool) error {
-	logger := sdk.LogWith(i.logger, "customer_id", customerID, "integration_id", integrationID)
+func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationInstanceID string, historical bool) error {
+	logger := sdk.LogWith(i.logger, "customer_id", customerID, "integration_instance_id", integrationInstanceID)
 	sdk.LogInfo(logger, "processing work config started")
-	state, err := i.newState(logger, pipe, config, historical)
+	state, err := i.newState(logger, pipe, config, historical, integrationInstanceID)
 	if err != nil {
 		return err
 	}
@@ -36,8 +36,9 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 		return err
 	}
 	var wc sdk.WorkConfig
-	wc.ID = sdk.NewWorkConfigID(customerID, refType, integrationID)
-	wc.IntegrationID = integrationID
+	wc.ID = sdk.NewWorkConfigID(customerID, refType, integrationInstanceID)
+	wc.IntegrationID = integrationInstanceID // TODO: remove from model?
+	wc.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	wc.CustomerID = customerID
 	wc.RefType = refType
 	wc.Statuses = sdk.WorkConfigStatuses{
