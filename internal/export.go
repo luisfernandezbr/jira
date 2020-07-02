@@ -23,6 +23,9 @@ func (i *JiraIntegration) checkForRateLimit(export sdk.Export, rerr error, heade
 		}
 		return nil
 	}
+
+	//TODO: check this against the new HTTP changes
+
 	// check for rate limit headers
 	limit := header.Get("X-RateLimit-Limit")
 	total := header.Get("X-RateLimit-Remaining")
@@ -306,6 +309,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
+	state.manager = i.manager
 	state.export = export
 	state.stats = &stats{
 		started: time.Now(),
@@ -329,10 +333,13 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
-	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationID())
+	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationID(), state.authConfig.SupportsAgileAPI)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationID())
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
 	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID(), export.Historical()); err != nil {
+		return err
+	}
+	if err := state.sprintManager.init(state); err != nil {
 		return err
 	}
 	projectKeys, err := i.fetchProjectsPaginated(state)

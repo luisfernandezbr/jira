@@ -429,22 +429,24 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		}
 	}
 
-	// process any sprint information on this issue
-	for _, field := range customFields {
-		if field.Name == "Sprint" {
-			if field.Value == "" {
-				continue
-			}
-			data, err := parseSprints(field.Value)
-			if err != nil {
-				return nil, nil, err
-			}
-			for _, s := range data {
-				if err := sprintManager.emit(s); err != nil {
+	if !sprintManager.usingAgileAPI {
+		// process any sprint information on this issue
+		for _, field := range customFields {
+			if field.Name == "Sprint" {
+				if field.Value == "" {
+					continue
+				}
+				data, err := parseSprints(field.Value)
+				if err != nil {
 					return nil, nil, err
 				}
+				for _, s := range data {
+					if err := sprintManager.emit(s); err != nil {
+						return nil, nil, err
+					}
+				}
+				break
 			}
-			break
 		}
 	}
 

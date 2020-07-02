@@ -51,6 +51,16 @@ func issueCommentURL(websiteURL, issueKey string, commentID string) string {
 	return sdk.JoinURL(websiteURL, "browse", issueKey+fmt.Sprintf("?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Acomment-tabpanel#comment-%s", commentID, commentID))
 }
 
+func completedSprintURL(websiteURL string, boardID int, projectKey string, sprintID int) string {
+	//https://pinpt-hq.atlassian.net/secure/RapidBoard.jspa?rapidView=28&projectKey=APP&view=reporting&chart=sprintRetrospective&sprint=164
+	return sdk.JoinURL(websiteURL, fmt.Sprintf("secure/RapidBoard.jspa?rapidView=%d&projectKey=%s&view=reporting&chart=sprintRetrospective&sprint=%v", boardID, projectKey, sprintID))
+}
+
+func boardURL(websiteURL string, boardID int, projectKey string) string {
+	//looks like: https://pinpt-hq.atlassian.net/secure/RapidBoard.jspa?rapidView=80
+	return sdk.JoinURL(websiteURL, fmt.Sprintf("secure/RapidBoard.jspa?rapidView=%d&projectKey=%s", boardID, projectKey))
+}
+
 var sprintRegexp = regexp.MustCompile(`com\.atlassian\.greenhopper\.service\.sprint\.Sprint@.+?\[*id=(\d+)`)
 
 func extractPossibleSprintID(v string) string {

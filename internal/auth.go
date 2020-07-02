@@ -10,9 +10,10 @@ import (
 )
 
 type authConfig struct {
-	WebsiteURL string
-	APIURL     string
-	Middleware []sdk.WithHTTPOption
+	WebsiteURL       string
+	APIURL           string
+	Middleware       []sdk.WithHTTPOption
+	SupportsAgileAPI bool
 }
 
 type auth interface {
@@ -34,6 +35,7 @@ func (a basicAuth) Apply() (authConfig, error) {
 		Middleware: []sdk.WithHTTPOption{
 			sdk.WithBasicAuth(a.username, a.password),
 		},
+		SupportsAgileAPI: true,
 	}, nil
 }
 
@@ -54,6 +56,7 @@ func (a *oauth2Auth) Apply() (authConfig, error) {
 		Middleware: []sdk.WithHTTPOption{
 			sdk.WithOAuth2Refresh(a.manager, refType, a.accessToken, a.refreshToken),
 		},
+		SupportsAgileAPI: false,
 	}, nil
 }
 

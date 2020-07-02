@@ -21,7 +21,36 @@ func TestSprintRegexp(t *testing.T) {
 	for _, c := range cases {
 		got := extractPossibleSprintID(c.In)
 		if got != c.Want {
-			t.Errorf("case %v wanted %v got %v data %v", c.Label, c.Want, got, c.In)
+			t.Errorf("case '%v' wanted `%v` got `%v`", c.Label, c.Want, got)
+		}
+	}
+}
+
+func TestSprintFieldsRegexp(t *testing.T) {
+
+	cases := []struct {
+		Label string
+		In    string
+		Want  string
+	}{
+		{`goal`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "Code Complete for Agent 4.0, and something else"},
+		{`state`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "ACTIVE"},
+		{`endDate`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "2020-07-06T16:16:00.000Z"},
+		{`startDate`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "2020-06-22T16:16:28.226Z"},
+		{`rapidViewId`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "75"},
+		{`sequence`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "190"},
+		{`name`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "Gold Sprint 2"},
+		{`id`, `com.atlassian.greenhopper.service.sprint.Sprint@4ec59d6[completeDate=<null>,endDate=2020-07-06T16:16:00.000Z,goal=Code Complete for Agent 4.0, and something else,id=190,name=Gold Sprint 2,rapidViewId=75,sequence=190,startDate=2020-06-22T16:16:28.226Z,state=ACTIVE]`, "190"},
+	}
+
+	for _, c := range cases {
+		kv, err := parseSprintIntoKV(c.In)
+		if err != nil {
+			t.Error("errored: %w", err)
+		}
+		got := kv[c.Label]
+		if got != c.Want {
+			t.Errorf("case '%v' wanted `%v` got `%v`", c.Label, c.Want, got)
 		}
 	}
 }
