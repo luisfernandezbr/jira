@@ -305,7 +305,7 @@ const configKeyLastExportTimestamp = "last_export_ts"
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
-	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationID())
+	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationInstanceID())
 	if err != nil {
 		return err
 	}
@@ -333,10 +333,10 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err != nil {
 		return err
 	}
-	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationID(), state.authConfig.SupportsAgileAPI)
-	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationID())
+	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
+	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationInstanceID())
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
-	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationID(), export.Historical()); err != nil {
+	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationInstanceID(), export.Historical()); err != nil {
 		return err
 	}
 	if err := state.sprintManager.init(state); err != nil {

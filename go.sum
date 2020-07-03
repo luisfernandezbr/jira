@@ -246,6 +246,8 @@ github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-b
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
+github.com/mailru/easyjson v0.7.1 h1:mdxE1MF9o53iCb2Ghj1VfWvh7ZOwHpnVG/xwXrV90U8=
+github.com/mailru/easyjson v0.7.1/go.mod h1:KAzv3t3aY1NaHWoQz1+4F1ccyAH66Jk7yos7ldAVICs=
 github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2/go.mod h1:Ld9puTsIW75CHf65OeIOkyKbteujpZVXDpWK6YGZbxE=
 github.com/markbates/safe v1.0.1/go.mod h1:nAqgmRi7cY2nqMc92/bSEeQA+R4OheNU2T1kNSCBdG0=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
@@ -332,6 +334,8 @@ github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648 h1:hkfjX+KJmcSLpF
 github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
 github.com/pinpt/integration-sdk v0.0.1053 h1:mNm72GsvN9Mp3hzR7cKWzTx1OcBsvYwzU33j7uyuqhs=
 github.com/pinpt/integration-sdk v0.0.1053/go.mod h1:GvEOhGTIbb2cYGBL/dvtxd/2/ocMPKewWDLaAhr9m1M=
+github.com/pinpt/integration-sdk v0.0.1054 h1:DRJzyRtFjaN2n4EJ7ZEtKp6pGfmju91obo7i7icHsZs=
+github.com/pinpt/integration-sdk v0.0.1054/go.mod h1:GvEOhGTIbb2cYGBL/dvtxd/2/ocMPKewWDLaAhr9m1M=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 h1:49lOXmGaUpV9Fz3gd7TFZY106KVlPVa5jcYD1gaQf98=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

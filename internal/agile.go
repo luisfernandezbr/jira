@@ -347,7 +347,7 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardProjectKeys
 	}
 	var sprint sdk.WorkSprint
 	sprint.CustomerID = state.export.CustomerID()
-	sprint.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationID())
+	sprint.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
 	sprint.RefID = strconv.Itoa(sprintID)
 	sprint.RefType = refType
 	sprint.Name = s.Name
@@ -553,7 +553,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				} else {
 					var kanban sdk.WorkKanbanBoard
 					kanban.CustomerID = customerID
-					kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationID())
+					kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
 					kanban.RefID = strconv.Itoa(board.ID)
 					kanban.RefType = refType
 					kanban.Name = board.Name

@@ -539,7 +539,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m.export.IntegrationID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
+			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m.export.IntegrationInstanceID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
 			if err != nil {
 				return nil, err
 			}
