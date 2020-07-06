@@ -3,17 +3,59 @@
 </div>
 
 <p align="center" color="#6a737d">
-	<strong>This repo contains a working prototype for the next gen agent Jira integration</strong>
+	<strong>This repo contains the official Jira integration for Pinpoint</strong>
 </p>
 
 
 ## Overview
 
-This is a working concept prototype for the next generation of the Agent's Jira integration.  It's meant to experiment with some different design choices and to validate some potential architectural decisions.
+This project contains the source code for the official Jira integration for Pinpoint.
 
-## Running
+## Features
 
-You can run like this:
+The following features are supported by this integration:
+
+| Feature             | Export | WebHook | Notes                         |
+|---------------------|:------:|:-------:|-------------------------------|
+| Cloud               |   ✅   |    ✅   |                              |
+| Self Service        |   ✅   |    ✅   |                              |
+| Auth: Basic         |   ✅   |    ✅   |                              |
+| Auth: API Key       |   🛑   |    🛑   |                              |
+| Auth: OAuth2        |   ✅   |    ✅   |                              |
+| Repo                |   🛑   |    🛑   |                              |
+| Pull Request        |   🛑   |    🛑   |                              |
+| Pull Comment        |   🛑   |    🛑   |                              |
+| Pull Request Review |   🛑   |    🛑   |                              |
+| Project             |   ✅   |    ✅   |                              |
+| Epic                |   ✅   |    ✅   |                              |
+| Sprint              |   ✅   |    ✅   |                              |
+| Kanban              |   ✅   |    ✅   |                              |
+| Issue               |   ✅   |    ✅   |                              |
+| Issue Comment       |   ✅   |    ✅   |                              |
+| Issue Type          |   ✅   |    ✅   |                              |
+| Issue Status        |   ✅   |    ✅   |                              |
+| Issue Priority      |   ✅   |    ✅   |                              |
+| Issue Resolution    |   ✅   |    ✅   |                              |
+| Issue Parent/Child  |   ✅   |    ✅   |                              |
+| Work Config         |   ✅   |    -    |                              |
+| Mutations           |   -    |    ✅   | only with Basic Auth         |
+| Feed Notifications  |   🗓   |    🗓   | TODO                         |
+| Builds              |   🛑   |    🛑   |                              |
+| Deployments         |   🛑   |    🛑   |                              |
+| Releases            |   🗓   |    🗓   | TODO                         |
+| Security Events     |   🛑   |    🛑   |                              |
+
+## Requirements
+
+You will need the following to build and run locally:
+
+- [Pinpoint Agent SDK](https://github.com/pinpt/agent)
+- [Golang](https://golang.org) 1.14+ or later
+- [NodeJS](https://nodejs.org) 12+ or later (only if modifying/running the Integration UI)
+
+## Running Locally
+
+You can run locally to test against a repo with the following command (assuming you already have the Agent SDK installed):
 
 ```
 agent.next dev . --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
@@ -33,5 +75,10 @@ go run -tags dev . dev ../agent.next.jira --log-level=debug --channel edge --set
 
 Make sure you replace TOKEN and REFRESH_TOKEN.
 
+## Contributions
 
-This will run an export for Jira and print all the JSON objects to the console.
+We ♥️ open source and would love to see your contributions (documentation, questions, pull requests, isssue, etc). Please open an Issue or PullRequest!  If you have any questions or issues, please do not hesitate to let us know.
+
+## License
+
+This code is open source and licensed under the terms of the MIT License. Copyright &copy; 2020 by Pinpoint Software, Inc.
