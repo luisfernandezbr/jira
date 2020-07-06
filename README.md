@@ -75,6 +75,28 @@ go run -tags dev . dev ../agent.next.jira --log-level=debug --channel edge --set
 
 Make sure you replace TOKEN and REFRESH_TOKEN.
 
+
+### Test Mutations
+
+You can run a specific mutation from the dev command like this:
+
+```
+agent.next dev mutation ../agent.next.jira  --input '{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"20297","action":"update","model":"work.Issue","payload":{"transition":{"id":"11"},"resolution":{"name":"Done"}},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}'
+```
+
+Make sure you update the `--input` values.
+
+### Test WebHooks
+
+You can run a specific webhook from the dev command like this:
+
+```
+agent.next dev webhook ../agent.next.jira --header customer_id=a8a78d9c16839b97 --header ref_type=jira --header location=CLOUD  --input '{"customer_id":"a8a78d9c16839b97","integration_instance_id":"c0b35e2adea4fd37","id":"1234","payload":{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"71abd3b10639575c","action":"update","model":"work.Issue","payload":{"title":"Hi"},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}}'
+```
+
+Make sure you update the `--input` values.
+
+
 ## Contributions
 
 We ♥️ open source and would love to see your contributions (documentation, questions, pull requests, isssue, etc). Please open an Issue or PullRequest!  If you have any questions or issues, please do not hesitate to let us know.
