@@ -553,7 +553,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 				m.stats.incComment()
 			}
 			m.stats.incIssue()
-			if rerr := m.i.checkForRateLimit(m.export, err, resp.Headers); rerr != nil {
+			if rerr := m.i.checkForRateLimit(m.export, m.export.CustomerID(), err, resp.Headers); rerr != nil {
 				return nil, rerr
 			}
 		}
@@ -564,4 +564,81 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		// return in the order in which they came in
 		return res, nil
 	}
+}
+
+const epicCustomFieldIDCacheKey = "epic_id_custom_field"
+
+func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event *sdk.WorkIssueUpdateMutation) error {
+	started := time.Now()
+	var hasMutation bool
+	updateMutation := newMutation()
+	if event.Title != nil {
+		updateMutation.Update["summary"] = []setMutationOperation{
+			setMutationOperation{
+				Set: event.Title,
+			},
+		}
+		hasMutation = true
+	}
+	if event.Priority != nil {
+		updateMutation.Update["priority"] = []setMutationOperation{
+			setMutationOperation{
+				Set: idValue{*event.Priority.ID},
+			},
+		}
+		hasMutation = true
+	}
+	if event.Epic != nil {
+		var epicFieldID string
+		if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
+			// fetch the custom fields and find the custom field value for the Epic Link
+			customfields, err := i.fetchCustomFields(state.logger, mutation, mutation.CustomerID(), state.authConfig)
+			if err != nil {
+				return fmt.Errorf("error fetching custom fields for setting the epic id. %w", err)
+			}
+			for _, field := range customfields {
+				if field.Name == "Epic Link" {
+					epicFieldID = field.ID
+					mutation.State().Set(epicCustomFieldIDCacheKey, epicFieldID)
+					break
+				}
+			}
+		}
+		updateMutation.Update[epicFieldID] = []setMutationOperation{
+			setMutationOperation{
+				Set: *event.Epic.Name, // we use the name which should be set to the identifier in the case of an epic
+			},
+		}
+		hasMutation = true
+	}
+	sdk.LogDebug(state.logger, "sending mutation", "payload", sdk.Stringify(updateMutation))
+	if hasMutation {
+		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
+		client := i.httpmanager.New(theurl, nil)
+		_, err := client.Put(strings.NewReader(sdk.Stringify(updateMutation)), nil, state.authConfig.Middleware...)
+		if err != nil {
+			return fmt.Errorf("mutation failed: %w", err)
+		}
+	}
+	if event.Transition != nil {
+		updateMutation = newMutation()
+		updateMutation.Transition = &idValue{*event.Transition.ID}
+		if event.Resolution != nil {
+			if event.Resolution.Name == nil {
+				return fmt.Errorf("resolution name property must be set")
+			}
+			updateMutation.Fields = map[string]interface{}{
+				"resolution": map[string]string{"name": *event.Resolution.Name},
+			}
+		}
+		sdk.LogDebug(state.logger, "sending transition mutation", "payload", sdk.Stringify(updateMutation))
+		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID()+"/transitions")
+		client := i.httpmanager.New(theurl, nil)
+		_, err := client.Post(strings.NewReader(sdk.Stringify(updateMutation)), nil, state.authConfig.Middleware...)
+		if err != nil {
+			return fmt.Errorf("mutation failed: %w", err)
+		}
+	}
+	sdk.LogDebug(state.logger, "completed mutation response", "payload", sdk.Stringify(updateMutation), "duration", time.Since(started))
+	return nil
 }

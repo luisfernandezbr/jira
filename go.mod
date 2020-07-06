@@ -3,12 +3,11 @@ module github.com/pinpt/agent.next.jira
 go 1.14
 
 require (
-	github.com/dgryski/go-rendezvous v0.0.0-20200624174652-8d2f3be8b2d9 // indirect
+	github.com/go-redis/redis/v8 v8.0.0-beta.6 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/pinpt/adf v1.1.0
-	github.com/pinpt/agent.next v0.0.0-20200703162128-34e29560b5fb
+	github.com/pinpt/agent.next v0.0.0-20200706041006-dd1d8619392c
 	github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648 // indirect
-	go.opentelemetry.io/otel v0.7.0 // indirect
 	golang.org/x/text v0.3.3 // indirect
 )
 

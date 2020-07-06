@@ -40,11 +40,6 @@ func (i *JiraIntegration) Dismiss(instance sdk.Instance) error {
 	return nil
 }
 
-// WebHook is called when a webhook is received on behalf of the integration
-func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
-	return nil
-}
-
 // Stop is called when the integration is shutting down for cleanup
 func (i *JiraIntegration) Stop() error {
 	sdk.LogInfo(i.logger, "stopping")

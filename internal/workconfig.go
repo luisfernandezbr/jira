@@ -32,7 +32,7 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 	resp := make([]status, 0)
 	ts := time.Now()
 	r, err := client.Get(&resp, state.authConfig.Middleware...)
-	if err := i.checkForRateLimit(state.export, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
 		return err
 	}
 	var wc sdk.WorkConfig
