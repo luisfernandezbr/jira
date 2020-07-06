@@ -572,23 +572,23 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 	started := time.Now()
 	var hasMutation bool
 	updateMutation := newMutation()
-	if event.Title != nil {
+	if event.Set.Title != nil {
 		updateMutation.Update["summary"] = []setMutationOperation{
 			setMutationOperation{
-				Set: event.Title,
+				Set: event.Set.Title,
 			},
 		}
 		hasMutation = true
 	}
-	if event.Priority != nil {
+	if event.Set.Priority != nil {
 		updateMutation.Update["priority"] = []setMutationOperation{
 			setMutationOperation{
-				Set: idValue{*event.Priority.ID},
+				Set: idValue{*event.Set.Priority.ID},
 			},
 		}
 		hasMutation = true
 	}
-	if event.Epic != nil {
+	if event.Set.Epic != nil || event.Unset.Epic {
 		var epicFieldID string
 		if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
 			// fetch the custom fields and find the custom field value for the Epic Link
@@ -604,10 +604,18 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 				}
 			}
 		}
-		updateMutation.Update[epicFieldID] = []setMutationOperation{
-			setMutationOperation{
-				Set: *event.Epic.Name, // we use the name which should be set to the identifier in the case of an epic
-			},
+		if event.Unset.Epic {
+			updateMutation.Update[epicFieldID] = []setMutationOperation{
+				setMutationOperation{
+					Set: "",
+				},
+			}
+		} else {
+			updateMutation.Update[epicFieldID] = []setMutationOperation{
+				setMutationOperation{
+					Set: *event.Set.Epic.Name, // we use the name which should be set to the identifier in the case of an epic
+				},
+			}
 		}
 		hasMutation = true
 	}
@@ -620,15 +628,15 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 			return fmt.Errorf("mutation failed: %w", err)
 		}
 	}
-	if event.Transition != nil {
+	if event.Set.Transition != nil {
 		updateMutation = newMutation()
-		updateMutation.Transition = &idValue{*event.Transition.ID}
-		if event.Resolution != nil {
-			if event.Resolution.Name == nil {
+		updateMutation.Transition = &idValue{*event.Set.Transition.ID}
+		if event.Set.Resolution != nil {
+			if event.Set.Resolution.Name == nil {
 				return fmt.Errorf("resolution name property must be set")
 			}
 			updateMutation.Fields = map[string]interface{}{
-				"resolution": map[string]string{"name": *event.Resolution.Name},
+				"resolution": map[string]string{"name": *event.Set.Resolution.Name},
 			}
 		}
 		sdk.LogDebug(state.logger, "sending transition mutation", "payload", sdk.Stringify(updateMutation))

@@ -40,6 +40,9 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 	if err != nil {
 		return err
 	}
+	// TODO:
+	// create/update sprint
+	// create issue
 	switch mutation.Action() {
 	case sdk.CreateAction:
 		break
