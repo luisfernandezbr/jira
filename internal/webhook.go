@@ -90,7 +90,7 @@ type webhookEvent struct {
 	Event string `json:"webhookEvent"`
 }
 
-func (i *JiraIntegration) upsertIssue(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
 	var changelog struct {
 		Issue struct {
 			ID string `json:"id"`
@@ -110,7 +110,7 @@ func (i *JiraIntegration) upsertIssue(customerID string, integrationInstanceID s
 	if err := json.Unmarshal(rawdata, &changelog); err != nil {
 		return fmt.Errorf("error parsing json for changelog: %w", err)
 	}
-	val := sdk.WorkIssueUpsert{}
+	val := sdk.WorkIssueUpdate{}
 	for _, change := range changelog.Changelog.Items {
 		switch change.Field {
 		case "summary":
@@ -124,9 +124,9 @@ func (i *JiraIntegration) upsertIssue(customerID string, integrationInstanceID s
 			}
 		}
 	}
-	upsert := sdk.NewWorkIssueUpsert(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
-	sdk.LogDebug(i.logger, "sending issue upsert", "data", sdk.Stringify(upsert))
-	return pipe.Write(upsert)
+	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
+	sdk.LogDebug(i.logger, "sending issue update", "data", sdk.Stringify(update))
+	return pipe.Write(update)
 }
 
 // WebHook is called when a webhook is received on behalf of the integration
@@ -142,7 +142,7 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	pipe := webhook.Pipe()
 	switch event.Event {
 	case "jira:issue_updated":
-		return i.upsertIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		return i.webhookUpdateIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
