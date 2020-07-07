@@ -1,0 +1,202 @@
+{
+	"timestamp": 1594081763632,
+	"webhookEvent": "jira:issue_deleted",
+	"user": {
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+		"accountId": "5af9bec4d95cfc55bfb77e36",
+		"avatarUrls": {
+			"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+		},
+		"displayName": "Jeff Haynie",
+		"active": true,
+		"timeZone": "America/Los_Angeles",
+		"accountType": "atlassian"
+	},
+	"issue": {
+		"id": "20733",
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/20733",
+		"key": "TIGR-361",
+		"fields": {
+			"statuscategorychangedate": "2020-07-06T17:28:31.784-0700",
+			"issuetype": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+				"id": "10103",
+				"description": "A problem which impairs or prevents the functions of the product.",
+				"iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+				"name": "Bug",
+				"subtask": false,
+				"avatarId": 10303
+			},
+			"timespent": null,
+			"project": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10633",
+				"id": "10633",
+				"key": "TIGR",
+				"name": "Tiger Kings",
+				"projectTypeKey": "software",
+				"simplified": false,
+				"avatarUrls": {
+					"48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10633&avatarId=10990",
+					"24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10633&avatarId=10990",
+					"16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10633&avatarId=10990",
+					"32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10633&avatarId=10990"
+				}
+			},
+			"fixVersions": [],
+			"aggregatetimespent": null,
+			"resolution": null,
+			"customfield_10510": null,
+			"customfield_10104": null,
+			"customfield_10501": null,
+			"customfield_10105": null,
+			"customfield_10502": null,
+			"customfield_10106": null,
+			"customfield_10503": null,
+			"customfield_10107": null,
+			"customfield_10108": "0|i01biv:",
+			"customfield_10504": null,
+			"customfield_10505": null,
+			"customfield_10109": null,
+			"customfield_10506": null,
+			"resolutiondate": null,
+			"customfield_10507": null,
+			"customfield_10508": null,
+			"workratio": -1,
+			"customfield_10509": null,
+			"issuerestriction": {
+				"issuerestrictions": {},
+				"shouldDisplay": false
+			},
+			"lastViewed": "2020-07-06T17:29:19.861-0700",
+			"watches": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TIGR-361/watchers",
+				"watchCount": 1,
+				"isWatching": true
+			},
+			"created": "2020-07-06T17:28:31.492-0700",
+			"priority": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+				"iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+				"name": "Not Prioritized",
+				"id": "5"
+			},
+			"customfield_10100": null,
+			"customfield_10101": null,
+			"customfield_10102": null,
+			"customfield_10300": null,
+			"labels": [],
+			"customfield_10301": null,
+			"customfield_10103": [],
+			"aggregatetimeoriginalestimate": null,
+			"timeestimate": null,
+			"versions": [],
+			"issuelinks": [],
+			"assignee": null,
+			"updated": "2020-07-06T17:28:31.492-0700",
+			"status": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/1",
+				"description": "",
+				"iconUrl": "https://pinpt-hq.atlassian.net/images/icons/statuses/open.png",
+				"name": "Work Required",
+				"id": "1",
+				"statusCategory": {
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+					"id": 2,
+					"key": "new",
+					"colorName": "blue-gray",
+					"name": "To Do"
+				}
+			},
+			"components": [],
+			"timeoriginalestimate": null,
+			"description": "test",
+			"customfield_10210": null,
+			"timetracking": {},
+			"customfield_10006": null,
+			"customfield_10007": {
+				"hasEpicLinkFieldDependency": false,
+				"showField": false,
+				"nonEditableReason": {
+					"reason": "PLUGIN_LICENSE_ERROR",
+					"message": "The Parent Link is only available to Jira Premium users."
+				}
+			},
+			"security": null,
+			"attachment": [],
+			"aggregatetimeestimate": null,
+			"customfield_10208": null,
+			"customfield_10209": null,
+			"summary": "Test - delete",
+			"creator": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+				"accountId": "5af9bec4d95cfc55bfb77e36",
+				"avatarUrls": {
+					"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+				},
+				"displayName": "Jeff Haynie",
+				"active": true,
+				"timeZone": "America/Los_Angeles",
+				"accountType": "atlassian"
+			},
+			"subtasks": [],
+			"reporter": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+				"accountId": "5af9bec4d95cfc55bfb77e36",
+				"avatarUrls": {
+					"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+				},
+				"displayName": "Jeff Haynie",
+				"active": true,
+				"timeZone": "America/Los_Angeles",
+				"accountType": "atlassian"
+			},
+			"customfield_10000": "{}",
+			"aggregateprogress": {
+				"progress": 0,
+				"total": 0
+			},
+			"customfield_10001": null,
+			"customfield_10002": null,
+			"customfield_10400": null,
+			"customfield_10511": null,
+			"customfield_10512": null,
+			"customfield_10513": null,
+			"environment": null,
+			"customfield_10514": null,
+			"duedate": null,
+			"customfield_10517": null,
+			"customfield_10518": null,
+			"customfield_10519": null,
+			"progress": {
+				"progress": 0,
+				"total": 0
+			},
+			"votes": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TIGR-361/votes",
+				"votes": 0,
+				"hasVoted": false
+			},
+			"comment": {
+				"comments": [],
+				"maxResults": 0,
+				"total": 0,
+				"startAt": 0
+			},
+			"worklog": {
+				"startAt": 0,
+				"maxResults": 20,
+				"total": 0,
+				"worklogs": []
+			}
+		}
+	}
+}

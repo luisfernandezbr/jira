@@ -282,20 +282,26 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 	return nil
 }
 
-func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool, integrationInstanceID string) (*state, error) {
+func (i *JiraIntegration) createAuthConfig(logger sdk.Logger, config sdk.Config) (authConfig, error) {
 	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
 	if err != nil {
-		return nil, err
+		return authConfig{}, err
 	}
-	authConfig, err := auth.Apply()
+	return auth.Apply()
+}
+
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool, integrationInstanceID string) (*state, error) {
+	authConfig, err := i.createAuthConfig(logger, config)
 	if err != nil {
 		return nil, err
 	}
 	return &state{
-		pipe:       pipe,
-		config:     config,
-		authConfig: authConfig,
-		logger:     logger,
+		pipe:                  pipe,
+		config:                config,
+		authConfig:            authConfig,
+		logger:                logger,
+		historical:            historical,
+		integrationInstanceID: integrationInstanceID,
 	}, nil
 }
 
@@ -303,7 +309,7 @@ const configKeyLastExportTimestamp = "last_export_ts"
 
 // Export is called to tell the integration to run an export
 func (i *JiraIntegration) Export(export sdk.Export) error {
-	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID())
+	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID(), "integration_instance_id", export.IntegrationInstanceID())
 	sdk.LogInfo(logger, "export started")
 	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationInstanceID())
 	if err != nil {
@@ -313,6 +319,9 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	state.export = export
 	state.stats = &stats{
 		started: time.Now(),
+	}
+	if err := i.installWebHookIfNecessary(logger, export.Config(), export.State(), state.authConfig, export.CustomerID(), export.IntegrationInstanceID()); err != nil {
+		return err
 	}
 	var fromTime time.Time
 	var fromTimeStr string

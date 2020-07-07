@@ -7,6 +7,7 @@ import (
 )
 
 // JiraIntegration is an integration for Jira
+// easyjson:skip
 type JiraIntegration struct {
 	logger      sdk.Logger
 	config      sdk.Config
@@ -30,13 +31,25 @@ func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sd
 
 // Enroll is called when a new integration instance is added
 func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
-	// FIXME: add the web hook for this integration
+	authConfig, err := i.createAuthConfig(i.logger, instance.Config())
+	if err != nil {
+		return err
+	}
+	if err := i.installWebHookIfNecessary(i.logger, instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Dismiss is called when an existing integration instance is removed
 func (i *JiraIntegration) Dismiss(instance sdk.Instance) error {
-	// FIXME: remove integration
+	authConfig, err := i.createAuthConfig(i.logger, instance.Config())
+	if err != nil {
+		return err
+	}
+	if err := i.uninstallWebHookIfNecessary(i.logger, instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
+		return err
+	}
 	return nil
 }
 

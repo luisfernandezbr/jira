@@ -30,6 +30,7 @@ func (u user) ToModel(customerID string, integrationInstanceID string, websiteUR
 	return theuser, nil
 }
 
+// easyjson:skip
 type userManager struct {
 	users                 map[string]bool
 	customerID            string

@@ -1,0 +1,15 @@
+{
+	"timestamp": 1594082275703,
+	"webhookEvent": "sprint_closed",
+	"sprint": {
+		"id": 192,
+		"self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/sprint/192",
+		"state": "closed",
+		"name": "TSD Sprint 1",
+		"startDate": "2020-07-07T00:37:08.707Z",
+		"endDate": "2020-07-21T00:37:06.000Z",
+		"completeDate": "2020-07-07T00:37:55.692Z",
+		"originBoardId": 81,
+		"goal": ""
+	}
+}

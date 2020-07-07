@@ -15,6 +15,7 @@ import (
 	"github.com/pinpt/agent.next/sdk"
 )
 
+// easyjson:skip
 type sprint struct {
 	ID            int
 	Name          string
@@ -150,6 +151,7 @@ func parseSprintTime(ts string) (time.Time, error) {
 }
 
 // manager for tracking sprint data as we process issues
+// easyjson:skip
 type sprintManager struct {
 	sprints               map[int]bool
 	customerID            string
@@ -175,12 +177,14 @@ func (m *sprintManager) emit(s sprint) error {
 	return nil
 }
 
+// easyjson:skip
 type issueSprint struct {
 	ID     int
 	Goal   string
 	Closed bool
 }
 
+// easyjson:skip
 type boardIssue struct {
 	ID        string
 	RefID     string
@@ -269,6 +273,7 @@ func (m *sprintManager) fetchBoardIssues(state *state, boardID int, typestr stri
 	return issueids, nil
 }
 
+// easyjson:skip
 type sprintIssue struct {
 	ID        string
 	ProjectID string
@@ -461,6 +466,7 @@ func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey strin
 	return sprintids, nil
 }
 
+// easyjson:skip
 type boardColumn struct {
 	Name      string
 	StatusIDs []string

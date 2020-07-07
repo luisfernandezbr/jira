@@ -1,0 +1,9 @@
+{
+	"timestamp": 1594082679030,
+	"webhookEvent": "board_deleted",
+	"board": {
+		"id": 83,
+		"name": "sprintboard",
+		"type": "scrum"
+	}
+}

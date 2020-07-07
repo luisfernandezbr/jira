@@ -111,6 +111,7 @@ func adjustRenderedHTML(websiteURL, data string) string {
 	return `<div class="source-jira">` + strings.TrimSpace(data) + `</div>`
 }
 
+// easyjson:skip
 type stats struct {
 	started       time.Time
 	issueCount    int
@@ -170,6 +171,7 @@ func (s *stats) incUser() {
 }
 
 // state is everything you ever wanted during an export ... lol
+// easyjson:skip
 type state struct {
 	logger                sdk.Logger
 	export                sdk.Export

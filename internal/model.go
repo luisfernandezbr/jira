@@ -7,8 +7,7 @@ import (
 const refType = "jira"
 
 type user struct {
-	// AccountID not available in hosted jira.
-	AccountID    string  `json:"accountId"`
+	AccountID    string  `json:"accountId"` // AccountID not available in hosted jira.
 	Self         string  `json:"self"`
 	Name         string  `json:"name"`
 	Key          string  `json:"key"`

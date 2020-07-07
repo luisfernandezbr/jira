@@ -37,8 +37,7 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 	}
 	var wc sdk.WorkConfig
 	wc.ID = sdk.NewWorkConfigID(customerID, refType, integrationInstanceID)
-	wc.IntegrationID = integrationInstanceID // TODO: remove from model?
-	wc.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
+	wc.IntegrationInstanceID = integrationInstanceID
 	wc.CustomerID = customerID
 	wc.RefType = refType
 	wc.Statuses = sdk.WorkConfigStatuses{

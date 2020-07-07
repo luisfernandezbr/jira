@@ -9,6 +9,7 @@ import (
 	"github.com/pinpt/agent.next/sdk"
 )
 
+// easyjson:skip
 type authConfig struct {
 	WebsiteURL       string
 	APIURL           string
@@ -20,6 +21,7 @@ type auth interface {
 	Apply() (authConfig, error)
 }
 
+// easyjson:skip
 type basicAuth struct {
 	url      string
 	username string
@@ -39,6 +41,7 @@ func (a basicAuth) Apply() (authConfig, error) {
 	}, nil
 }
 
+// easyjson:skip
 type oauth2Auth struct {
 	accessToken  string
 	refreshToken string

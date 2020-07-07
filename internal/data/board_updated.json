@@ -1,0 +1,10 @@
+{
+	"timestamp": 1594082778962,
+	"webhookEvent": "board_updated",
+	"board": {
+		"id": 63,
+		"self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/board/63",
+		"name": "Teamoji Board (updated)",
+		"type": "kanban"
+	}
+}

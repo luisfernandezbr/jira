@@ -1,0 +1,10 @@
+{
+	"timestamp": 1594082533879,
+	"webhookEvent": "board_created",
+	"board": {
+		"id": 83,
+		"self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/board/83",
+		"name": "sprintboard",
+		"type": "scrum"
+	}
+}

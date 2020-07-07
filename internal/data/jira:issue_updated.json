@@ -1,0 +1,322 @@
+{
+	"timestamp": 1594081625284,
+	"webhookEvent": "jira:issue_updated",
+	"issue_event_type_name": "issue_updated",
+	"user": {
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+		"accountId": "5af9bec4d95cfc55bfb77e36",
+		"avatarUrls": {
+			"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+			"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+		},
+		"displayName": "Jeff Haynie",
+		"active": true,
+		"timeZone": "America/Los_Angeles",
+		"accountType": "atlassian"
+	},
+	"issue": {
+		"id": "20706",
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/20706",
+		"key": "GOLD-137",
+		"fields": {
+			"statuscategorychangedate": "2020-07-05T21:45:59.018-0700",
+			"issuetype": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10100",
+				"id": "10100",
+				"description": "A user story. Created by JIRA Software - do not edit or delete.",
+				"iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&avatarType=issuetype",
+				"name": "Story",
+				"subtask": false,
+				"avatarId": 10315
+			},
+			"timespent": null,
+			"project": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10639",
+				"id": "10639",
+				"key": "GOLD",
+				"name": "Gold Miners",
+				"projectTypeKey": "software",
+				"simplified": false,
+				"avatarUrls": {
+					"48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+					"24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+					"16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+					"32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+				},
+				"projectCategory": {
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/projectCategory/10001",
+					"id": "10001",
+					"description": "",
+					"name": "Development"
+				}
+			},
+			"fixVersions": [],
+			"aggregatetimespent": null,
+			"resolution": null,
+			"customfield_10510": null,
+			"customfield_10104": null,
+			"customfield_10105": null,
+			"customfield_10501": null,
+			"customfield_10502": null,
+			"customfield_10106": null,
+			"customfield_10107": null,
+			"customfield_10503": null,
+			"customfield_10108": "0|i01bd3:",
+			"customfield_10504": null,
+			"customfield_10505": null,
+			"customfield_10109": null,
+			"customfield_10506": null,
+			"resolutiondate": null,
+			"customfield_10507": null,
+			"customfield_10508": null,
+			"workratio": -1,
+			"customfield_10509": null,
+			"lastViewed": "2020-07-06T14:36:02.186-0700",
+			"issuerestriction": {
+				"issuerestrictions": {},
+				"shouldDisplay": false
+			},
+			"watches": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/GOLD-137/watchers",
+				"watchCount": 1,
+				"isWatching": true
+			},
+			"created": "2020-07-05T21:45:58.815-0700",
+			"customfield_10100": null,
+			"priority": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+				"iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+				"name": "Not Prioritized",
+				"id": "5"
+			},
+			"customfield_10101": null,
+			"customfield_10102": null,
+			"customfield_10300": null,
+			"customfield_10301": null,
+			"customfield_10103": [],
+			"labels": [],
+			"timeestimate": null,
+			"aggregatetimeoriginalestimate": null,
+			"versions": [],
+			"issuelinks": [],
+			"assignee": null,
+			"updated": "2020-07-06T17:27:05.239-0700",
+			"status": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/1",
+				"iconUrl": "https://pinpt-hq.atlassian.net/images/icons/statuses/open.png",
+				"name": "Work Required",
+				"id": "1",
+				"statusCategory": {
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+					"id": 2,
+					"key": "new",
+					"colorName": "blue-gray",
+					"name": "New"
+				}
+			},
+			"components": [],
+			"timeoriginalestimate": null,
+			"description": "This story is for tracking developer signup enrollment for the SDK",
+			"customfield_10210": null,
+			"timetracking": {},
+			"customfield_10006": "GOLD-4",
+			"customfield_10007": {
+				"hasEpicLinkFieldDependency": false,
+				"showField": false,
+				"nonEditableReason": {
+					"reason": "PLUGIN_LICENSE_ERROR",
+					"message": "The Parent Link is only available to Jira Premium users."
+				}
+			},
+			"security": null,
+			"aggregatetimeestimate": null,
+			"attachment": [],
+			"customfield_10208": null,
+			"customfield_10209": null,
+			"summary": "Developer Signup",
+			"creator": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+				"accountId": "5af9bec4d95cfc55bfb77e36",
+				"avatarUrls": {
+					"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+				},
+				"displayName": "Jeff Haynie",
+				"active": true,
+				"timeZone": "America/Los_Angeles",
+				"accountType": "atlassian"
+			},
+			"subtasks": [
+				{
+					"id": "20707",
+					"key": "GOLD-138",
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/20707",
+					"fields": {
+						"summary": "Create UI in the main app to enable signup",
+						"status": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+							"description": "",
+							"iconUrl": "https://pinpt-hq.atlassian.net/",
+							"name": "To Do",
+							"id": "10000",
+							"statusCategory": {
+								"self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+								"id": 2,
+								"key": "new",
+								"colorName": "blue-gray",
+								"name": "To Do"
+							}
+						},
+						"priority": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+							"iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+							"name": "Not Prioritized",
+							"id": "5"
+						},
+						"issuetype": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10102",
+							"id": "10102",
+							"description": "The sub-task of the issue",
+							"iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10316&avatarType=issuetype",
+							"name": "Sub-task",
+							"subtask": true,
+							"avatarId": 10316
+						}
+					}
+				},
+				{
+					"id": "20708",
+					"key": "GOLD-139",
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/20708",
+					"fields": {
+						"summary": "Rework DB to use data from main app",
+						"status": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+							"description": "",
+							"iconUrl": "https://pinpt-hq.atlassian.net/",
+							"name": "To Do",
+							"id": "10000",
+							"statusCategory": {
+								"self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+								"id": 2,
+								"key": "new",
+								"colorName": "blue-gray",
+								"name": "To Do"
+							}
+						},
+						"priority": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+							"iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+							"name": "Not Prioritized",
+							"id": "5"
+						},
+						"issuetype": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10102",
+							"id": "10102",
+							"description": "The sub-task of the issue",
+							"iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10316&avatarType=issuetype",
+							"name": "Sub-task",
+							"subtask": true,
+							"avatarId": 10316
+						}
+					}
+				},
+				{
+					"id": "20709",
+					"key": "GOLD-140",
+					"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/20709",
+					"fields": {
+						"summary": "Add API Key screen in app",
+						"status": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+							"description": "",
+							"iconUrl": "https://pinpt-hq.atlassian.net/",
+							"name": "To Do",
+							"id": "10000",
+							"statusCategory": {
+								"self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+								"id": 2,
+								"key": "new",
+								"colorName": "blue-gray",
+								"name": "To Do"
+							}
+						},
+						"priority": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+							"iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+							"name": "Not Prioritized",
+							"id": "5"
+						},
+						"issuetype": {
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10102",
+							"id": "10102",
+							"description": "The sub-task of the issue",
+							"iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10316&avatarType=issuetype",
+							"name": "Sub-task",
+							"subtask": true,
+							"avatarId": 10316
+						}
+					}
+				}
+			],
+			"reporter": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+				"accountId": "5af9bec4d95cfc55bfb77e36",
+				"avatarUrls": {
+					"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+					"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+				},
+				"displayName": "Jeff Haynie",
+				"active": true,
+				"timeZone": "America/Los_Angeles",
+				"accountType": "atlassian"
+			},
+			"customfield_10000": "{}",
+			"aggregateprogress": {
+				"progress": 0,
+				"total": 0
+			},
+			"customfield_10001": null,
+			"customfield_10002": null,
+			"customfield_10400": null,
+			"customfield_10511": null,
+			"customfield_10512": null,
+			"environment": null,
+			"customfield_10513": null,
+			"customfield_10514": null,
+			"customfield_10517": null,
+			"duedate": null,
+			"customfield_10518": null,
+			"customfield_10519": null,
+			"progress": {
+				"progress": 0,
+				"total": 0
+			},
+			"votes": {
+				"self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/GOLD-137/votes",
+				"votes": 0,
+				"hasVoted": false
+			}
+		}
+	},
+	"changelog": {
+		"id": "101821",
+		"items": [
+			{
+				"field": "description",
+				"fieldtype": "jira",
+				"fieldId": "description",
+				"from": null,
+				"fromString": "This story is for tracking developer signup enrollment for the SDK\n\nT",
+				"to": null,
+				"toString": "This story is for tracking developer signup enrollment for the SDK"
+			}
+		]
+	}
+}

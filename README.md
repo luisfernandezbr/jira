@@ -21,7 +21,7 @@ The following features are supported by this integration:
 | Self Service        |   ✅   |    ✅   |                              |
 | Auth: Basic         |   ✅   |    ✅   |                              |
 | Auth: API Key       |   🛑   |    🛑   |                              |
-| Auth: OAuth2        |   ✅   |    ✅   |                              |
+| Auth: OAuth2        |   ✅   |    🛑   |                              |
 | Repo                |   🛑   |    🛑   |                              |
 | Pull Request        |   🛑   |    🛑   |                              |
 | Pull Comment        |   🛑   |    🛑   |                              |
@@ -75,13 +75,12 @@ go run -tags dev . dev ../agent.next.jira --log-level=debug --channel edge --set
 
 Make sure you replace TOKEN and REFRESH_TOKEN.
 
-
 ### Test Mutations
 
 You can run a specific mutation from the dev command like this:
 
 ```
-agent.next dev mutation ../agent.next.jira  --input '{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"20297","action":"update","model":"work.Issue","payload":{"transition":{"id":"11"},"resolution":{"name":"Done"}},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}'
+agent.next dev mutation .  --input '{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"20297","action":"update","model":"work.Issue","payload":{"transition":{"id":"11"},"set":{"resolution":{"name":"Done"}}},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}'
 ```
 
 Make sure you update the `--input` values.
@@ -91,7 +90,7 @@ Make sure you update the `--input` values.
 You can run a specific webhook from the dev command like this:
 
 ```
-agent.next dev webhook ../agent.next.jira --header customer_id=a8a78d9c16839b97 --header ref_type=jira --header location=CLOUD  --input '{"customer_id":"a8a78d9c16839b97","integration_instance_id":"c0b35e2adea4fd37","id":"1234","payload":{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"71abd3b10639575c","action":"update","model":"work.Issue","payload":{"title":"Hi"},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}}'
+agent.next dev webhook . --header customer_id=a8a78d9c16839b97 --header ref_type=jira --header location=CLOUD  --input '{"customer_id":"a8a78d9c16839b97","integration_instance_id":"c0b35e2adea4fd37","id":"1234","payload":{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"71abd3b10639575c","action":"update","model":"work.Issue","payload":{"title":"Hi"},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}}'
 ```
 
 Make sure you update the `--input` values.

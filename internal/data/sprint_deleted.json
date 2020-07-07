@@ -1,0 +1,10 @@
+{
+	"timestamp": 1594082322139,
+	"webhookEvent": "sprint_deleted",
+	"sprint": {
+		"id": 193,
+		"state": "future",
+		"name": "TSD Sprint 2",
+		"originBoardId": 81
+	}
+}

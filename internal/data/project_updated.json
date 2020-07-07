@@ -1,0 +1,31 @@
+{
+	"timestamp": 1594081981123,
+	"webhookEvent": "project_updated",
+	"project": {
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10642",
+		"id": 10642,
+		"key": "TSD",
+		"name": "testproject",
+		"avatarUrls": {
+			"48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10642&avatarId=10962",
+			"24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10642&avatarId=10962",
+			"16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10642&avatarId=10962",
+			"32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10642&avatarId=10962"
+		},
+		"projectLead": {
+			"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5af9bec4d95cfc55bfb77e36",
+			"accountId": "5af9bec4d95cfc55bfb77e36",
+			"avatarUrls": {
+				"48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+				"24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+				"16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png",
+				"32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/JH-0.png"
+			},
+			"displayName": "Jeff Haynie",
+			"active": true,
+			"timeZone": "America/Los_Angeles",
+			"accountType": "atlassian"
+		},
+		"assigneeType": "admin.assignee.type.unassigned"
+	}
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/pinpt/agent.next/sdk"
 )
 
+// easyjson:skip
 type customFieldIDs struct {
 	StoryPoints string
 	Epic        string
@@ -19,12 +20,14 @@ type customFieldIDs struct {
 	EndDate     string
 }
 
+// easyjson:skip
 type customFieldValue struct {
 	ID    string
 	Name  string
 	Value string
 }
 
+// easyjson:skip
 type customField struct {
 	ID   string
 	Name string
@@ -453,6 +456,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	return issue, comments, nil
 }
 
+// easyjson:skip
 type issueIDManager struct {
 	refids        map[string]string
 	logger        sdk.Logger
@@ -623,7 +627,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 	if hasMutation {
 		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
 		client := i.httpmanager.New(theurl, nil)
-		_, err := client.Put(strings.NewReader(sdk.Stringify(updateMutation)), nil, state.authConfig.Middleware...)
+		_, err := client.Put(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
 		if err != nil {
 			return fmt.Errorf("mutation failed: %w", err)
 		}
@@ -642,7 +646,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		sdk.LogDebug(state.logger, "sending transition mutation", "payload", sdk.Stringify(updateMutation))
 		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID()+"/transitions")
 		client := i.httpmanager.New(theurl, nil)
-		_, err := client.Post(strings.NewReader(sdk.Stringify(updateMutation)), nil, state.authConfig.Middleware...)
+		_, err := client.Post(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
 		if err != nil {
 			return fmt.Errorf("mutation failed: %w", err)
 		}

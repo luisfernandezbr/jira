@@ -1,0 +1,56 @@
+{
+	"timestamp": 1594082130650,
+	"webhookEvent": "board_configuration_changed",
+	"configuration": {
+		"id": 81,
+		"name": "TSD board",
+		"type": "simple",
+		"self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/board/81/configuration",
+		"location": {
+			"type": "project",
+			"key": "TSD",
+			"id": "10642",
+			"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10642",
+			"name": "testproject"
+		},
+		"filter": {
+			"id": "10680",
+			"self": "https://pinpt-hq.atlassian.net/rest/api/2/filter/10680"
+		},
+		"columnConfig": {
+			"columns": [
+				{
+					"name": "To Do",
+					"statuses": [
+						{
+							"id": "10358",
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10358"
+						}
+					]
+				},
+				{
+					"name": "In Progress",
+					"statuses": [
+						{
+							"id": "10359",
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10359"
+						}
+					]
+				},
+				{
+					"name": "Done",
+					"statuses": [
+						{
+							"id": "10360",
+							"self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10360"
+						}
+					]
+				}
+			],
+			"constraintType": "none"
+		},
+		"ranking": {
+			"rankCustomFieldId": 10108
+		}
+	}
+}

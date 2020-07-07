@@ -1,0 +1,18 @@
+{
+	"timestamp": 1594083552330,
+	"webhookEvent": "user_updated",
+	"user": {
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5f03c8345ee2c300232945de",
+		"accountId": "5f03c8345ee2c300232945de",
+		"avatarUrls": {
+			"48x48": "https://secure.gravatar.com/avatar/a8659b9b3072a2786cea33842edaa619?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJT-6.png",
+			"24x24": "https://secure.gravatar.com/avatar/a8659b9b3072a2786cea33842edaa619?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJT-6.png",
+			"16x16": "https://secure.gravatar.com/avatar/a8659b9b3072a2786cea33842edaa619?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJT-6.png",
+			"32x32": "https://secure.gravatar.com/avatar/a8659b9b3072a2786cea33842edaa619?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FJT-6.png"
+		},
+		"displayName": "jeff haynie test",
+		"active": true,
+		"timeZone": "America/Los_Angeles",
+		"accountType": "atlassian"
+	}
+}
