@@ -65,7 +65,7 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 		sdk.LogInfo(logger, "skipping web hook install since already installed")
 		return nil
 	}
-	webhookurl, err := i.manager.WebHookManager().Create(customerID, refType, integrationInstanceID, "", sdk.WebHookScopeOrg)
+	webhookurl, err := i.manager.WebHookManager().Create(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg)
 	if err != nil {
 		return fmt.Errorf("error creating webhook url: %w", err)
 	}

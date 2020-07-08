@@ -7,7 +7,7 @@ require (
 	github.com/mailru/easyjson v0.7.1
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/pinpt/adf v1.1.0
-	github.com/pinpt/agent.next v0.0.0-20200708213031-4f8a8bda15f9
+	github.com/pinpt/agent.next v0.0.0-20200708231329-c2d0b9aa791b
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/text v0.3.3 // indirect
 )
