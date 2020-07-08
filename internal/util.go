@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -187,4 +188,17 @@ type state struct {
 	client                sdk.GraphQLClient
 	historical            bool
 	integrationInstanceID string
+}
+
+func getJiraErrorMessage(err error) string {
+	if ok, _, r := sdk.IsHTTPError(err); ok {
+		var errResp struct {
+			ErrorMessages []string `json:"errorMessages"`
+		}
+		json.NewDecoder(r).Decode(&errResp)
+		if len(errResp.ErrorMessages) > 0 {
+			return errResp.ErrorMessages[0]
+		}
+	}
+	return err.Error()
 }

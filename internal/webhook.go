@@ -92,7 +92,9 @@ type webhookEvent struct {
 
 func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
 	var changelog struct {
-		Issue struct {
+		Timestamp int64 `json:"timestamp"`
+		User      user  `json:"user"`
+		Issue     struct {
 			ID string `json:"id"`
 		}
 		Changelog struct {
@@ -110,18 +112,50 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 	if err := json.Unmarshal(rawdata, &changelog); err != nil {
 		return fmt.Errorf("error parsing json for changelog: %w", err)
 	}
+	ts := sdk.DateFromEpoch(changelog.Timestamp)
 	val := sdk.WorkIssueUpdate{}
-	for _, change := range changelog.Changelog.Items {
+	for i, change := range changelog.Changelog.Items {
+		var field sdk.WorkIssueChangeLogField
+		var skip bool
 		switch change.Field {
 		case "summary":
+			field = sdk.WorkIssueChangeLogFieldTitle
 			val.Set.Title = sdk.StringPointer(change.ToString)
 		case "description":
 			val.Set.Description = sdk.StringPointer(change.ToString)
+			skip = true // TODO: add description to the datamodel so we can send it in changelog
 		case "status":
+			field = sdk.WorkIssueChangeLogFieldStatus
 			val.Set.Status = &sdk.NameID{
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssueStatusID(customerID, refType, change.To)),
 			}
+		case "Epic Link":
+			field = sdk.WorkIssueChangeLogFieldEpicID
+			if change.To == "" {
+				val.Unset.EpicID = sdk.BoolPointer(true)
+			} else {
+				val.Set.EpicID = sdk.StringPointer(sdk.NewWorkIssueID(customerID, change.To, refType))
+			}
+		}
+		if !skip {
+			change := sdk.WorkIssueChangeLog{
+				RefID:      changelog.Changelog.ID,
+				Field:      field,
+				From:       changelog.Changelog.Items[0].From,
+				FromString: changelog.Changelog.Items[0].FromString,
+				To:         changelog.Changelog.Items[0].To,
+				ToString:   changelog.Changelog.Items[0].ToString,
+				UserID:     changelog.User.RefID(),
+				Ordinal:    changelog.Timestamp + int64(i),
+			}
+			sdk.ConvertTimeToDateModel(ts, &change.CreatedDate)
+			if val.Push.ChangeLogs == nil {
+				l := make([]sdk.WorkIssueChangeLog, 0)
+				val.Push.ChangeLogs = &l
+			}
+			cl := append(*val.Push.ChangeLogs, change)
+			val.Push.ChangeLogs = &cl
 		}
 	}
 	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
@@ -132,7 +166,6 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
-	fmt.Println(string(webhook.Bytes()))
 	var event webhookEvent
 	if err := event.UnmarshalJSON(webhook.Bytes()); err != nil {
 		return fmt.Errorf("error parsing JSON event payload for webhook: %w", err)

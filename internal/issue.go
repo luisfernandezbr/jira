@@ -611,7 +611,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		if event.Unset.Epic {
 			updateMutation.Update[epicFieldID] = []setMutationOperation{
 				setMutationOperation{
-					Set: "",
+					Set: nil,
 				},
 			}
 		} else {
@@ -623,13 +623,13 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		}
 		hasMutation = true
 	}
-	sdk.LogDebug(state.logger, "sending mutation", "payload", sdk.Stringify(updateMutation))
+	sdk.LogDebug(state.logger, "sending mutation", "payload", sdk.Stringify(updateMutation), "has_mutation", hasMutation)
 	if hasMutation {
 		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
 		client := i.httpmanager.New(theurl, nil)
 		_, err := client.Put(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
 		if err != nil {
-			return fmt.Errorf("mutation failed: %w", err)
+			return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 		}
 	}
 	if event.Set.Transition != nil {
@@ -648,7 +648,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		client := i.httpmanager.New(theurl, nil)
 		_, err := client.Post(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
 		if err != nil {
-			return fmt.Errorf("mutation failed: %w", err)
+			return fmt.Errorf("mutation transition failed: %s", getJiraErrorMessage(err))
 		}
 	}
 	sdk.LogDebug(state.logger, "completed mutation response", "payload", sdk.Stringify(updateMutation), "duration", time.Since(started))
