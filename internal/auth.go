@@ -80,7 +80,7 @@ func newOAuth2Auth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPC
 				sdk.LogDebug(logger, "oauth2 token accessible-resource failed", "err", err, "attempts", attempts, "status", resp.StatusCode)
 				if attempts == 0 {
 					attempts++
-					newToken, err := manager.RefreshOAuth2Token(refType, refreshToken)
+					newToken, err := manager.AuthManager().RefreshOAuth2Token(refType, refreshToken)
 					if err == nil {
 						accessToken = newToken
 						continue
