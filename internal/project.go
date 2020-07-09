@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"time"
+
 	"github.com/pinpt/agent.next/sdk"
 )
 
@@ -22,4 +24,37 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 	project.IssueTypes = issueTypes
 	project.IssueResolutions = resolutions
 	return project, nil
+}
+
+const projectCapabilityStateKeyPrefix = "project_capability_"
+
+func (i *JiraIntegration) createProjectCapability(state sdk.State, project *sdk.WorkProject) (*sdk.WorkProjectCapability, error) {
+	key := projectCapabilityStateKeyPrefix + project.ID
+	if state.Exists(key) {
+		return nil, nil
+	}
+	var capability sdk.WorkProjectCapability
+	capability.CustomerID = project.CustomerID
+	capability.RefID = project.RefID
+	capability.RefType = project.RefType
+	capability.ProjectID = project.ID
+	capability.IntegrationInstanceID = project.IntegrationInstanceID
+	capability.CreatedAt = sdk.EpochNow()
+	capability.Attachments = true
+	capability.ChangeLogs = true
+	capability.DueDates = true
+	capability.Epics = true
+	capability.InProgressStates = true
+	// TODO: would be nice to figure out if this project uses Kanban, Scrum or both
+	capability.KanbanBoards = true
+	capability.LinkedIssues = true
+	capability.Parents = true
+	capability.Priorities = true
+	capability.Resolutions = true
+	capability.Sprints = true
+	capability.StoryPoints = true
+	if err := state.SetWithExpires(key, 1, time.Hour*24*30); err != nil {
+		return nil, err
+	}
+	return &capability, nil
 }

@@ -161,6 +161,10 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 		}
 		sdk.LogDebug(state.logger, "fetched projects", "len", len(resp.Projects), "total", resp.Total, "count", count, "first", resp.Projects[0].Key, "last", resp.Projects[len(resp.Projects)-1].Key, "duration", time.Since(ts))
 		for _, p := range resp.Projects {
+			if p.ProjectTypeKey != "software" {
+				sdk.LogInfo(state.logger, "skipping project which isn't a software type", "key", p.Key)
+				continue
+			}
 			count++
 			issueTypes, err := i.fetchIssueTypesForProject(state, p.ID)
 			if err != nil {
@@ -180,6 +184,18 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 				if !state.config.Inclusions.Matches("jira", p.Name) && !state.config.Inclusions.Matches("jira", p.Key) && !state.config.Inclusions.Matches("jira", p.ID) {
 					sdk.LogInfo(state.logger, "marking not included project inactive: "+p.Name, "id", p.ID, "key", p.Key)
 					project.Active = false
+				}
+			}
+			if project.Active {
+				capability, err := i.createProjectCapability(state.export.State(), project)
+				if err != nil {
+					return nil, err
+				}
+				if capability != nil {
+					// possible to be nil if already processed
+					if err := state.pipe.Write(capability); err != nil {
+						return nil, err
+					}
 				}
 			}
 			savedProjects[p.ID] = project
@@ -357,20 +373,16 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationInstanceID(), export.Historical()); err != nil {
 		return err
 	}
-	if err := state.sprintManager.init(state); err != nil {
-		return err
-	}
 	projectKeys, err := i.fetchProjectsPaginated(state)
 	if err != nil {
 		return err
 	}
 	if len(projectKeys) == 0 {
-		// before we can do issues, we need to block for all the boards and sprints to finish
-		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
+		sdk.LogInfo(logger, "no projects found to export")
+	} else {
+		if err := state.sprintManager.init(state); err != nil {
 			return err
 		}
-		sdk.LogWarn(logger, "no projects found to export")
-	} else {
 		if err := i.fetchPriorities(state); err != nil {
 			return err
 		}
