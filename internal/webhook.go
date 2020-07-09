@@ -3,11 +3,10 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/pinpt/agent.next/sdk"
 )
-
-const webhookStateKey = "webhook"
 
 var webhookEvents = []string{
 	"jira:issue_created",
@@ -37,22 +36,32 @@ var webhookEvents = []string{
 	"board_configuration_changed",
 }
 
+const webhookVersion = "1" // change this to have the webhook uninstalled and reinstalled new
+
 func (i *JiraIntegration) uninstallWebHookIfNecessary(logger sdk.Logger, config sdk.Config, state sdk.State, authConfig authConfig, customerID string, integrationInstanceID string) error {
 	if config.BasicAuth == nil {
 		sdk.LogInfo(logger, "skipping web hook uninstall since not using basic auth")
 	}
-	var hookurl string
-	if ok, _ := state.Get(webhookStateKey, &hookurl); ok {
-		client := i.httpmanager.New(hookurl, nil)
-		var res interface{}
-		if _, err := client.Delete(&res, authConfig.Middleware...); err != nil {
-			return err
-		}
-		if err := state.Delete(webhookStateKey); err != nil {
-			return err
-		}
-		sdk.LogInfo(logger, "web hook removed", "url", hookurl)
+	// fetch the webhooks for this instance and delete them
+	client := i.httpmanager.New(sdk.JoinURL(config.BasicAuth.URL, "/webhooks/1.0/webhook"), nil)
+	var resp []struct {
+		Name string `json:"name"`
+		Self string `json:"self"`
 	}
+	if _, err := client.Get(&resp, authConfig.Middleware...); err == nil {
+		for _, r := range resp {
+			if r.Name == "Pinpoint/"+integrationInstanceID {
+				c := i.httpmanager.New(r.Self, nil)
+				var res interface{}
+				c.Delete(&res, authConfig.Middleware...)
+				sdk.LogDebug(logger, "removed jira webhook at "+r.Self)
+			}
+		}
+	}
+	if err := i.manager.WebHookManager().Delete(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg); err != nil {
+		return err
+	}
+	sdk.LogInfo(logger, "org web hook removed")
 	return nil
 }
 
@@ -61,11 +70,20 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 		sdk.LogInfo(logger, "skipping web hook install since not using basic auth")
 		return nil
 	}
-	if state.Exists(webhookStateKey) {
-		sdk.LogInfo(logger, "skipping web hook install since already installed")
-		return nil
+	if i.manager.WebHookManager().Exists(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg) {
+		url, err := i.manager.WebHookManager().HookURL(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg)
+		if err != nil {
+			return err
+		}
+		// check and see if we need to upgrade our webhook
+		if strings.Contains(url, "&version="+webhookVersion) {
+			sdk.LogInfo(logger, "skipping web hook install since already installed")
+			return nil
+		}
+		// we have a webhook, but it's an older version so let's remove and re-add
+		i.uninstallWebHookIfNecessary(logger, config, state, authConfig, customerID, integrationInstanceID)
 	}
-	webhookurl, err := i.manager.WebHookManager().Create(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg)
+	webhookurl, err := i.manager.WebHookManager().Create(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg, "version="+webhookVersion)
 	if err != nil {
 		return fmt.Errorf("error creating webhook url: %w", err)
 	}
@@ -80,10 +98,13 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 		Self string `json:"self"`
 	}
 	if _, err := client.Post(sdk.StringifyReader(req), &res, authConfig.Middleware...); err != nil {
-		return err
+		// mark the webhook as errored
+		sdk.LogInfo(logger, "error installing org webhook", "err", err)
+		i.manager.WebHookManager().Errored(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg, err)
+		return nil
 	}
 	sdk.LogInfo(logger, "installed webhook", "id", res.Self)
-	return state.Set(webhookStateKey, res.Self)
+	return nil
 }
 
 type webhookEvent struct {
@@ -138,6 +159,18 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 				val.Set.EpicID = sdk.StringPointer(sdk.NewWorkIssueID(customerID, change.To, refType))
 			}
 		}
+		// TODO:
+		// "ASSIGNEE_REF_ID"
+		// "DUE_DATE"
+		// "IDENTIFIER"
+		// "PARENT_ID"
+		// "PRIORITY"
+		// "PROJECT_ID"
+		// "REPORTER_REF_ID"
+		// "RESOLUTION"
+		// "SPRINT_IDS"
+		// "TAGS"
+		// "TYPE"
 		if !skip {
 			change := sdk.WorkIssueChangeLog{
 				RefID:      changelog.Changelog.ID,
