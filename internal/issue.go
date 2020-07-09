@@ -412,6 +412,18 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		}
 	}
 
+	// handle transition mapping
+	issue.Transitions = make([]sdk.WorkIssueTransitions, 0)
+	for _, t := range i.Transitions {
+		// transition will include the current status which is a bit weird so exclude that
+		if t.Name != issue.Status {
+			issue.Transitions = append(issue.Transitions, sdk.WorkIssueTransitions{
+				Name:  t.Name,
+				RefID: t.ID, // the transition id, not the issue type id
+			})
+		}
+	}
+
 	// now go in one shot and resolve all transitive issue keys
 	if len(transitiveIssueKeys) > 0 {
 		keys := sdk.Keys(transitiveIssueKeys)
@@ -527,7 +539,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	sdk.LogDebug(m.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
-	qs.Set("expand", "changelog,fields,comments")
+	qs.Set("expand", "changelog,fields,comments,transitions")
 	qs.Set("fields", "*navigable,attachment")
 	var result issueQueryResult
 	client := m.i.httpmanager.New(theurl, nil)

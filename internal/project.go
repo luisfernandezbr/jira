@@ -1,8 +1,10 @@
 package internal
 
-import "github.com/pinpt/agent.next/sdk"
+import (
+	"github.com/pinpt/agent.next/sdk"
+)
 
-func (p project) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkProject, error) {
+func (p project) ToModel(customerID string, integrationInstanceID string, websiteURL string, issueTypes []sdk.WorkProjectIssueTypes, resolutions []sdk.WorkProjectIssueResolutions) (*sdk.WorkProject, error) {
 	project := &sdk.WorkProject{}
 	project.CustomerID = customerID
 	project.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
@@ -15,5 +17,9 @@ func (p project) ToModel(customerID string, integrationInstanceID string) (*sdk.
 	project.ID = sdk.NewWorkProjectID(customerID, p.ID, refType)
 	project.Affiliation = sdk.WorkProjectAffiliationOrganization
 	project.Visibility = sdk.WorkProjectVisibilityPrivate
+	project.Name = p.Name
+	project.URL = projectURL(websiteURL, p.Key)
+	project.IssueTypes = issueTypes
+	project.IssueResolutions = resolutions
 	return project, nil
 }

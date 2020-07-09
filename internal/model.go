@@ -68,6 +68,10 @@ type issueSource struct {
 			} `json:"items"`
 		} `json:"histories"`
 	} `json:"changelog"`
+	Transitions []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"transitions"`
 }
 
 type linkedIssue struct {

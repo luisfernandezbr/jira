@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pinpt/agent.next/sdk"
@@ -159,6 +158,7 @@ type sprintManager struct {
 	stats                 *stats
 	integrationInstanceID string
 	usingAgileAPI         bool
+	async                 sdk.Async
 }
 
 func (m *sprintManager) emit(s sprint) error {
@@ -507,6 +507,15 @@ func (m *sprintManager) fetchBoardConfig(state *state, boardID int) ([]boardColu
 	return columns, nil
 }
 
+// easyjson:skip
+type boardDetail struct {
+	ID         int
+	Name       string
+	Type       string
+	ProjectKey string
+	ProjectID  string
+}
+
 func (m *sprintManager) fetchBoards(state *state) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/agile/1.0/board")
 	client := state.manager.HTTPManager().New(theurl, nil)
@@ -531,95 +540,24 @@ func (m *sprintManager) fetchBoards(state *state) error {
 	}
 	qs := make(url.Values)
 	qs.Set("maxResults", "100")
-	bg := sdk.NewAsync(4)
+	bg := sdk.NewAsync(10)
 	customerID := state.export.CustomerID()
-	sprintIds := make(map[int]bool)
 	boardProjectKeys := make(map[int]string)
-	var sprintLock sync.Mutex
+	boards := make([]boardDetail, 0)
 	for {
 		qs.Set("startAt", strconv.Itoa(startAt))
 		_, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		if err != nil {
 			return fmt.Errorf("error fetching agile boards: %w", err)
 		}
-		for _, _board := range resp.Values {
-			var board = _board
+		for _, board := range resp.Values {
 			boardProjectKeys[board.ID] = board.Location.ProjectKey
-			bg.Do(func() error {
-				if board.Type == "scrum" {
-					sids, err := m.fetchSprints(state, board.ID, board.Location.ProjectKey, sdk.NewWorkProjectID(customerID, strconv.Itoa(board.Location.ID), refType))
-					if err != nil {
-						return fmt.Errorf("error fetching sprints for board id %d. %w", board.ID, err)
-					}
-					sprintLock.Lock()
-					for _, sid := range sids {
-						sprintIds[sid] = true
-					}
-					sprintLock.Unlock()
-				} else {
-					var kanban sdk.WorkKanbanBoard
-					kanban.CustomerID = customerID
-					kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
-					kanban.RefID = strconv.Itoa(board.ID)
-					kanban.RefType = refType
-					kanban.Name = board.Name
-					kanban.BacklogIssueIds = make([]string, 0)
-					kanban.IssueIds = make([]string, 0)
-					kanban.Columns = make([]sdk.WorkKanbanBoardColumns, 0)
-					kanban.ProjectIds = make([]string, 0)
-					projectids := make(map[string]bool)
-					boardcolumns := make([]*sdk.WorkKanbanBoardColumns, 0)
-					columns, err := m.fetchBoardConfig(state, board.ID)
-					if err != nil {
-						return err
-					}
-					statusmapping := make(map[string]*sdk.WorkKanbanBoardColumns)
-					for _, c := range columns {
-						bc := &sdk.WorkKanbanBoardColumns{
-							Name:      c.Name,
-							StatusIds: c.StatusIDs,
-							IssueIds:  make([]string, 0),
-						}
-						boardcolumns = append(boardcolumns, bc)
-						for _, id := range c.StatusIDs {
-							statusmapping[id] = bc
-						}
-					}
-					// fetch all the board issues and assign them to the right columns
-					boardissues, err := m.fetchBoardIssues(state, board.ID, "issue")
-					if err != nil {
-						return fmt.Errorf("error fetching kanban issues for board id %d. %w", board.ID, err)
-					}
-					// attach each issue to the right board column
-					for _, bi := range boardissues {
-						boardcolumn := statusmapping[bi.StatusID]
-						if boardcolumn == nil {
-							sdk.LogError(state.logger, "couldn't find board column for ("+bi.StatusID+") issue", "issue", bi.ID)
-							continue
-						}
-						boardcolumn.IssueIds = append(boardcolumn.IssueIds, bi.ID)
-						kanban.IssueIds = append(kanban.IssueIds, bi.ID)
-						projectids[bi.ProjectID] = true
-					}
-					// set the project ids
-					for id := range projectids {
-						kanban.ProjectIds = append(kanban.ProjectIds, id)
-					}
-					// add the columns
-					for _, c := range boardcolumns[1:] {
-						kanban.Columns = append(kanban.Columns, *c)
-					}
-					// the first column in kanban is always the backlog
-					kanban.BacklogIssueIds = boardcolumns[0].IssueIds
-					kanban.URL = boardURL(state.authConfig.WebsiteURL, board.ID, board.Location.ProjectKey)
-					kanban.ID = sdk.NewWorkKanbanBoardID(customerID, strconv.Itoa(board.ID), refType)
-
-					// send it off 🚢
-					if err := state.pipe.Write(&kanban); err != nil {
-						return err
-					}
-				}
-				return nil
+			boards = append(boards, boardDetail{
+				ID:         board.ID,
+				Name:       board.Name,
+				Type:       board.Type,
+				ProjectKey: board.Location.ProjectKey,
+				ProjectID:  sdk.NewWorkProjectID(customerID, strconv.Itoa(board.Location.ID), refType),
 			})
 		}
 		if resp.IsLast {
@@ -628,27 +566,105 @@ func (m *sprintManager) fetchBoards(state *state) error {
 		startAt += len(resp.Values)
 		count += len(resp.Values)
 	}
-	for _sid := range sprintIds {
-		var sid = _sid
+	for _, _board := range boards {
+		var board = _board
 		bg.Do(func() error {
-			return m.fetchSprint(state, sid, boardProjectKeys)
+			if board.Type == "scrum" {
+				sids, err := m.fetchSprints(state, board.ID, board.ProjectKey, board.ProjectID)
+				if err != nil {
+					return fmt.Errorf("error fetching sprints for board id %d. %w", board.ID, err)
+				}
+				for _, sid := range sids {
+					if err := m.fetchSprint(state, sid, boardProjectKeys); err != nil {
+						return err
+					}
+				}
+			} else {
+				var kanban sdk.WorkKanbanBoard
+				kanban.CustomerID = customerID
+				kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
+				kanban.RefID = strconv.Itoa(board.ID)
+				kanban.RefType = refType
+				kanban.Name = board.Name
+				kanban.BacklogIssueIds = make([]string, 0)
+				kanban.IssueIds = make([]string, 0)
+				kanban.Columns = make([]sdk.WorkKanbanBoardColumns, 0)
+				kanban.ProjectIds = make([]string, 0)
+				projectids := make(map[string]bool)
+				boardcolumns := make([]*sdk.WorkKanbanBoardColumns, 0)
+				columns, err := m.fetchBoardConfig(state, board.ID)
+				if err != nil {
+					return err
+				}
+				statusmapping := make(map[string]*sdk.WorkKanbanBoardColumns)
+				for _, c := range columns {
+					bc := &sdk.WorkKanbanBoardColumns{
+						Name:      c.Name,
+						StatusIds: c.StatusIDs,
+						IssueIds:  make([]string, 0),
+					}
+					boardcolumns = append(boardcolumns, bc)
+					for _, id := range c.StatusIDs {
+						statusmapping[id] = bc
+					}
+				}
+				// fetch all the board issues and assign them to the right columns
+				boardissues, err := m.fetchBoardIssues(state, board.ID, "issue")
+				if err != nil {
+					return fmt.Errorf("error fetching kanban issues for board id %d. %w", board.ID, err)
+				}
+				// attach each issue to the right board column
+				for _, bi := range boardissues {
+					boardcolumn := statusmapping[bi.StatusID]
+					if boardcolumn == nil {
+						sdk.LogError(state.logger, "couldn't find board column for ("+bi.StatusID+") issue", "issue", bi.ID)
+						continue
+					}
+					boardcolumn.IssueIds = append(boardcolumn.IssueIds, bi.ID)
+					kanban.IssueIds = append(kanban.IssueIds, bi.ID)
+					projectids[bi.ProjectID] = true
+				}
+				// set the project ids
+				for id := range projectids {
+					kanban.ProjectIds = append(kanban.ProjectIds, id)
+				}
+				// add the columns
+				for _, c := range boardcolumns[1:] {
+					kanban.Columns = append(kanban.Columns, *c)
+				}
+				// the first column in kanban is always the backlog
+				kanban.BacklogIssueIds = boardcolumns[0].IssueIds
+				kanban.URL = boardURL(state.authConfig.WebsiteURL, board.ID, board.ProjectKey)
+				kanban.ID = sdk.NewWorkKanbanBoardID(customerID, strconv.Itoa(board.ID), refType)
+
+				// send it off 🚢
+				if err := state.pipe.Write(&kanban); err != nil {
+					return err
+				}
+			}
+			return nil
 		})
-	}
-	if err := bg.Wait(); err != nil {
-		return err
 	}
 	sdk.LogDebug(state.logger, "fetched agile boards", "len", count, "duration", time.Since(ts))
 	return nil
+}
+
+func (m *sprintManager) blockForFetchBoards(logger sdk.Logger) error {
+	defer sdk.LogDebug(logger, "blockForFetchBoards completed")
+	sdk.LogDebug(logger, "blockForFetchBoards")
+	return m.async.Wait()
 }
 
 func (m *sprintManager) init(state *state) error {
 	if !m.usingAgileAPI {
 		return nil
 	}
+	// if using the Agile API we can go fetch all the data from it instead of parsing issues for it
+	started := time.Now()
 	if err := m.fetchBoards(state); err != nil {
 		return err
 	}
-	// if using the Agile API we can go fetch all the data from it instead of parsing issues for it
+	sdk.LogDebug(state.logger, "fetched agile boards", "duration", time.Since(started))
 	return nil
 }
 
@@ -660,5 +676,6 @@ func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats, integratio
 		stats:                 stats,
 		integrationInstanceID: integrationInstanceID,
 		usingAgileAPI:         usingAgileAPI,
+		async:                 sdk.NewAsync(4),
 	}
 }

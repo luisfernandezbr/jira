@@ -128,6 +128,10 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, control sdk.Contr
 const savedPreviousProjectsStateKey = "previous_projects"
 
 func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error) {
+	resolutions, err := i.fetchIssueResolutions(state)
+	if err != nil {
+		return nil, err
+	}
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
@@ -158,7 +162,11 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 		sdk.LogDebug(state.logger, "fetched projects", "len", len(resp.Projects), "total", resp.Total, "count", count, "first", resp.Projects[0].Key, "last", resp.Projects[len(resp.Projects)-1].Key, "duration", time.Since(ts))
 		for _, p := range resp.Projects {
 			count++
-			project, err := p.ToModel(customerID, state.integrationInstanceID)
+			issueTypes, err := i.fetchIssueTypesForProject(state, p.ID)
+			if err != nil {
+				return nil, err
+			}
+			project, err := p.ToModel(customerID, state.integrationInstanceID, state.authConfig.WebsiteURL, issueTypes, resolutions)
 			if err != nil {
 				return nil, err
 			}
@@ -199,6 +207,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			return nil, err
 		}
 		if project.Active {
+
 			keys = append(keys, key)
 			state.stats.incProject()
 			active++
@@ -224,7 +233,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		jql += fmt.Sprintf(`AND (created >= "%s" or updated >= "%s") `, s, s)
 	}
 	jql += "ORDER BY updated DESC" // search for the most recent changes first
-	queryParams.Set("expand", "changelog,fields,comments")
+	queryParams.Set("expand", "changelog,fields,comments,transitions")
 	queryParams.Set("fields", "*navigable,attachment")
 	queryParams.Set("jql", jql)
 	queryParams.Set("maxResults", "100") // 100 is the max, 50 is the default
@@ -356,12 +365,20 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		return err
 	}
 	if len(projectKeys) == 0 {
+		// before we can do issues, we need to block for all the boards and sprints to finish
+		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
+			return err
+		}
 		sdk.LogWarn(logger, "no projects found to export")
 	} else {
 		if err := i.fetchPriorities(state); err != nil {
 			return err
 		}
 		if err := i.fetchTypes(state); err != nil {
+			return err
+		}
+		// before we can do issues, we need to block for all the boards and sprints to finish
+		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
 			return err
 		}
 		if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {

@@ -1,6 +1,10 @@
 package internal
 
-import "github.com/pinpt/agent.next/sdk"
+import (
+	"fmt"
+
+	"github.com/pinpt/agent.next/sdk"
+)
 
 func getMappedIssueType(name string, subtask bool) sdk.WorkIssueTypeMappedType {
 	if subtask {
@@ -37,4 +41,26 @@ func (t issueType) ToModel(customerID string) (*sdk.WorkIssueType, error) {
 	issuetype.MappedType = getMappedIssueType(t.Name, t.Subtask)
 	issuetype.ID = sdk.NewWorkIssueTypeID(customerID, refType, t.ID)
 	return issuetype, nil
+}
+
+type issueTypesResult struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (i *JiraIntegration) fetchIssueTypesForProject(state *state, projectRefID string) ([]sdk.WorkProjectIssueTypes, error) {
+	theurl := sdk.JoinURL(state.authConfig.APIURL, "rest/api/3/project/"+projectRefID+"/statuses")
+	client := i.httpmanager.New(theurl, nil)
+	results := make([]sdk.WorkProjectIssueTypes, 0)
+	resp := make([]issueTypesResult, 0)
+	if _, err := client.Get(&resp, state.authConfig.Middleware...); err != nil {
+		return nil, fmt.Errorf("error fetching issue types: %w", err)
+	}
+	for _, r := range resp {
+		results = append(results, sdk.WorkProjectIssueTypes{
+			Name:  r.Name,
+			RefID: r.ID,
+		})
+	}
+	return results, nil
 }
