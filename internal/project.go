@@ -28,7 +28,7 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 
 const projectCapabilityStateKeyPrefix = "project_capability_"
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, project *sdk.WorkProject) (*sdk.WorkProjectCapability, error) {
+func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
 	if state.Exists(key) {
 		return nil, nil
@@ -48,7 +48,11 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, project *sdk.
 	capability.KanbanBoards = true
 	capability.LinkedIssues = true
 	capability.Parents = true
-	capability.Priorities = true
+	if jiraProject.Simplified && jiraProject.Style == "next-gen" {
+		capability.Priorities = false // next gen project doesn't have priorities
+	} else {
+		capability.Priorities = true
+	}
 	capability.Resolutions = true
 	capability.Sprints = true
 	capability.StoryPoints = true

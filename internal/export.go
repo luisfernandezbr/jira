@@ -187,7 +187,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 				}
 			}
 			if project.Active {
-				capability, err := i.createProjectCapability(state.export.State(), project)
+				capability, err := i.createProjectCapability(state.export.State(), p, project)
 				if err != nil {
 					return nil, err
 				}
