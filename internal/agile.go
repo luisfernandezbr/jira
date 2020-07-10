@@ -33,13 +33,13 @@ func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.A
 	sprint.CustomerID = customerID
 	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)
-	sprint.BoardID = sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType)
+	sprint.BoardID = sdk.StringPointer(sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType))
 	sprint.ID = sdk.NewAgileSprintID(customerID, sprint.RefID, refType)
-	sprint.Goal = sdk.StringPointer(s.Goal)
+	sprint.Goal = s.Goal
 	sprint.Name = s.Name
-	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartDate)
-	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndDate)
-	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.ClosedDate)
+	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
+	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
+	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.CompletedDate)
 	switch s.State {
 	case "CLOSED", "closed":
 		sprint.Status = sdk.AgileSprintStatusClosed
@@ -371,11 +371,11 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 	sprint.RefType = refType
 	sprint.Name = s.Name
 	sprint.ID = sdk.NewAgileSprintID(sprint.CustomerID, sprint.RefID, refType)
-	sprint.BoardID = boardID
+	sprint.BoardID = sdk.StringPointer(boardID)
 	sprint.Active = true
-	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartDate)
-	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndDate)
-	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.ClosedDate)
+	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
+	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
+	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.CompletedDate)
 	switch s.State {
 	case "CLOSED", "closed":
 		sprint.Status = sdk.AgileSprintStatusClosed
@@ -398,8 +398,8 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		}
 	}
 	for _, issue := range issues {
-		if sprint.Goal == nil {
-			sprint.Goal = sdk.StringPointer(issue.Goal)
+		if sprint.Goal == "" {
+			sprint.Goal = issue.Goal
 		}
 		// for the status id, find the column to place it in
 		i := statusmapping[issue.Status]
