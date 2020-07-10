@@ -206,7 +206,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 					if id == "" {
 						continue
 					}
-					issue.SprintIds = append(issue.SprintIds, sdk.NewWorkSprintID(customerID, id, refType))
+					issue.SprintIds = append(issue.SprintIds, sdk.NewAgileSprintID(customerID, id, refType))
 				}
 			}
 		}
@@ -374,12 +374,12 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 				var from, to []string
 				if data.From != "" {
 					for _, s := range strings.Split(data.From, ",") {
-						from = append(from, sdk.NewWorkSprintID(customerID, strings.TrimSpace(s), refType))
+						from = append(from, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
 					}
 				}
 				if data.To != "" {
 					for _, s := range strings.Split(data.To, ",") {
-						to = append(to, sdk.NewWorkSprintID(customerID, strings.TrimSpace(s), refType))
+						to = append(to, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
 					}
 				}
 				item.From = strings.Join(from, ",")

@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pinpt/agent.next/sdk"
@@ -26,24 +28,25 @@ type sprint struct {
 	OriginBoardID int
 }
 
-func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkSprint, error) {
-	sprint := &sdk.WorkSprint{}
+func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.AgileSprint, error) {
+	sprint := &sdk.AgileSprint{}
 	sprint.CustomerID = customerID
 	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)
-	sprint.ID = sdk.NewWorkSprintID(customerID, sprint.RefID, refType)
-	sprint.Goal = s.Goal
+	sprint.BoardID = sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType)
+	sprint.ID = sdk.NewAgileSprintID(customerID, sprint.RefID, refType)
+	sprint.Goal = sdk.StringPointer(s.Goal)
 	sprint.Name = s.Name
-	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
-	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
-	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.CompletedDate)
+	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartDate)
+	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndDate)
+	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.ClosedDate)
 	switch s.State {
 	case "CLOSED", "closed":
-		sprint.Status = sdk.WorkSprintStatusClosed
+		sprint.Status = sdk.AgileSprintStatusClosed
 	case "ACTIVE", "active":
-		sprint.Status = sdk.WorkSprintStatusActive
+		sprint.Status = sdk.AgileSprintStatusActive
 	case "FUTURE", "future":
-		sprint.Status = sdk.WorkSprintStatusFuture
+		sprint.Status = sdk.AgileSprintStatusFuture
 	default:
 		return nil, fmt.Errorf("invalid status for sprint: %v", s.State)
 	}
@@ -193,7 +196,7 @@ type boardIssue struct {
 	Sprints   map[int]*issueSprint
 }
 
-func (m *sprintManager) fetchBoardIssues(state *state, boardID int, typestr string) ([]boardIssue, error) {
+func (m *sprintManager) fetchBoardIssues(state *state, boardID int, boardtype string, typestr string) ([]boardIssue, error) {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/%s", boardID, typestr))
 	client := state.manager.HTTPManager().New(theurl, nil)
 	var resp struct {
@@ -232,7 +235,8 @@ func (m *sprintManager) fetchBoardIssues(state *state, boardID int, typestr stri
 		qs.Set("startAt", strconv.Itoa(startAt))
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		// this means no issues for the sprint
-		if r != nil && r.StatusCode == http.StatusNotFound {
+		if r != nil && (r.StatusCode == http.StatusNotFound || r.StatusCode == http.StatusBadRequest) {
+			sdk.LogDebug(state.logger, fmt.Sprintf("skipping issues for board %s (%s) for id %d (status code=%d)", typestr, boardtype, boardID, r.StatusCode))
 			return nil, nil
 		}
 		if err != nil {
@@ -278,6 +282,7 @@ type sprintIssue struct {
 	ID        string
 	ProjectID string
 	Goal      string
+	Status    string
 }
 
 func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintIssue, error) {
@@ -296,6 +301,9 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 				Sprint struct {
 					Goal string `json:"goal"`
 				}
+				Status struct {
+					ID string `json:"id"`
+				} `json:"status"`
 			} `json:"fields"`
 		} `json:"issues"`
 	}
@@ -321,6 +329,7 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 				ID:        sdk.NewWorkIssueID(customerID, issue.ID, refType),
 				ProjectID: sdk.NewWorkProjectID(customerID, issue.Fields.Project.ID, refType),
 				Goal:      issue.Fields.Sprint.Goal,
+				Status:    sdk.NewWorkIssueStatusID(customerID, refType, issue.Fields.Status.ID),
 			})
 		}
 		startAt += len(resp.Issues)
@@ -333,7 +342,7 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 	return issues, nil
 }
 
-func (m *sprintManager) fetchSprint(state *state, sprintID int, boardProjectKeys map[int]string) error {
+func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, boardProjectKeys map[int]string, statusmapping map[string]*int, columncount int) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID))
 	client := state.manager.HTTPManager().New(theurl, nil)
 	var s struct {
@@ -350,55 +359,59 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardProjectKeys
 	if err != nil {
 		return err
 	}
-	var sprint sdk.WorkSprint
+	if boardProjectKeys[s.BoardID] == "" {
+		// this is an old sprint which was deleted or the board doesn't exist
+		sdk.LogDebug(state.logger, fmt.Sprintf("skipping sprint (%v/%s) since the board id (%v) couldn't be found", sprintID, s.Name, s.BoardID))
+		return nil
+	}
+	var sprint sdk.AgileSprint
 	sprint.CustomerID = state.export.CustomerID()
 	sprint.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
 	sprint.RefID = strconv.Itoa(sprintID)
 	sprint.RefType = refType
 	sprint.Name = s.Name
-	sprint.ID = sdk.NewWorkSprintID(sprint.CustomerID, sprint.RefID, refType)
-	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
-	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
-	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.CompletedDate)
+	sprint.ID = sdk.NewAgileSprintID(sprint.CustomerID, sprint.RefID, refType)
+	sprint.BoardID = boardID
+	sprint.Active = true
+	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartDate)
+	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndDate)
+	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.ClosedDate)
 	switch s.State {
 	case "CLOSED", "closed":
-		sprint.Status = sdk.WorkSprintStatusClosed
+		sprint.Status = sdk.AgileSprintStatusClosed
 	case "ACTIVE", "active":
-		sprint.Status = sdk.WorkSprintStatusActive
+		sprint.Status = sdk.AgileSprintStatusActive
 	case "FUTURE", "future":
-		sprint.Status = sdk.WorkSprintStatusFuture
+		sprint.Status = sdk.AgileSprintStatusFuture
 	default:
-	}
-	sprint.IssueIds = make([]string, 0)
-	if sprint.Status != sdk.WorkSprintStatusClosed {
-		sprint.BacklogIssueIds = make([]string, 0)
 	}
 	issues, err := m.fetchSprintIssues(state, sprintID)
 	if err != nil {
 		return err
 	}
-	projectids := make(map[string]bool)
+	sprint.IssueIds = make([]string, 0)
+	sprint.Columns = make([]sdk.AgileSprintColumns, 0)
+	columns := make([]*sdk.AgileSprintColumns, columncount)
+	for i := 0; i < columncount; i++ {
+		columns[i] = &sdk.AgileSprintColumns{
+			IssueIds: make([]string, 0),
+		}
+	}
 	for _, issue := range issues {
-		sprint.IssueIds = append(sprint.IssueIds, issue.ID)
-		if sprint.Goal == "" {
-			sprint.Goal = issue.Goal
+		if sprint.Goal == nil {
+			sprint.Goal = sdk.StringPointer(issue.Goal)
 		}
-		projectids[issue.ProjectID] = true
-	}
-	for projectid := range projectids {
-		sprint.ProjectIds = append(sprint.ProjectIds, projectid)
-	}
-	if sprint.Status != sdk.WorkSprintStatusClosed {
-		backlogids, err := m.fetchBoardIssues(state, s.BoardID, "backlog")
-		if err != nil {
-			return fmt.Errorf("error fetching the sprint %v backlog. %w", sprintID, err)
-		}
-		// only add the backlog if not closed
-		for _, bi := range backlogids {
-			sprint.BacklogIssueIds = append(sprint.BacklogIssueIds, bi.ID)
+		// for the status id, find the column to place it in
+		i := statusmapping[issue.Status]
+		if i != nil {
+			sprint.IssueIds = append(sprint.IssueIds, issue.ID)
+			columns[*i].IssueIds = append(columns[*i].IssueIds, issue.ID)
 		}
 	}
-	if sprint.Status == sdk.WorkSprintStatusClosed {
+	for _, c := range columns {
+		sprint.Columns = append(sprint.Columns, *c)
+	}
+	if sprint.Status == sdk.AgileSprintStatusClosed {
 		sprint.URL = completedSprintURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID], sprintID)
 	} else {
 		sprint.URL = boardURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID])
@@ -437,6 +450,7 @@ func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey strin
 	qs.Set("maxResults", "100")
 	qs.Set("state", "future,active,closed")
 	sprintids := make([]int, 0)
+	oldids := make([]int, 0)
 	for {
 		qs.Set("startAt", strconv.Itoa(startAt))
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
@@ -454,7 +468,11 @@ func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey strin
 					continue
 				}
 			}
-			sprintids = append(sprintids, s.ID)
+			if s.State == "closed" {
+				oldids = append(oldids, s.ID)
+			} else {
+				sprintids = append(sprintids, s.ID)
+			}
 		}
 		if resp.IsLast {
 			break
@@ -463,7 +481,8 @@ func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey strin
 		count += len(resp.Values)
 	}
 	sdk.LogDebug(state.logger, "fetched agile sprints", "board", boardID, "len", count, "duration", time.Since(ts))
-	return sprintids, nil
+	// return the newer ones before the older ones
+	return append(sprintids, oldids...), nil
 }
 
 // easyjson:skip
@@ -540,7 +559,6 @@ func (m *sprintManager) fetchBoards(state *state) error {
 	}
 	qs := make(url.Values)
 	qs.Set("maxResults", "100")
-	bg := sdk.NewAsync(10)
 	customerID := state.export.CustomerID()
 	boardProjectKeys := make(map[int]string)
 	boards := make([]boardDetail, 0)
@@ -566,81 +584,176 @@ func (m *sprintManager) fetchBoards(state *state) error {
 		startAt += len(resp.Values)
 		count += len(resp.Values)
 	}
+	// sort id in descending order since newer boards have bigger id than older ones
+	sort.Slice(boards, func(i, j int) bool {
+		left, right := boards[i], boards[j]
+		return left.ID > right.ID
+	})
+
+	var lock sync.Mutex
+	sprintids := make(map[int]bool)
+
 	for _, _board := range boards {
+		if _board.Type != "scrum" && _board.Type != "kanban" {
+			// we only support scrum and kanban boards
+			continue
+		}
+		if _board.ProjectKey == "" {
+			// this is an orphaned board (probably created by someone no longer around)
+			continue
+		}
+
 		var board = _board
-		bg.Do(func() error {
-			if board.Type == "scrum" {
+		m.async.Do(func() error {
+
+			// fetch the board config to get the columns
+			columns, err := m.fetchBoardConfig(state, board.ID)
+			if err != nil {
+				return err
+			}
+
+			var theboard sdk.AgileBoard
+			theboard.ID = sdk.NewAgileBoardID(customerID, strconv.Itoa(board.ID), refType)
+			theboard.Active = true
+			theboard.CustomerID = customerID
+			theboard.RefType = refType
+			theboard.RefID = strconv.Itoa(board.ID)
+			theboard.IntegrationInstanceID = sdk.StringPointer(state.integrationInstanceID)
+			theboard.Name = board.Name
+			theboard.Columns = make([]sdk.AgileBoardColumns, 0)
+
+			// build the kanban columnss
+			statusmapping := make(map[string]*int)
+			isScrum := board.Type == "scrum"
+			var hasBacklogColumn, fetchBacklog bool
+			var colindex, backlogIndex int
+			filteredcolumns := make([]boardColumn, 0)
+			for i, col := range columns {
+				if col.Name == "Backlog" {
+					backlogIndex = i
+					hasBacklogColumn = true
+					fetchBacklog = len(col.StatusIDs) > 0
+					if isScrum {
+						continue // we need the backlog for kanban below
+					}
+				}
+				if len(col.StatusIDs) == 0 {
+					continue
+				}
+				theboard.Columns = append(theboard.Columns, sdk.AgileBoardColumns{
+					Name: col.Name,
+				})
+				var c = colindex
+				for _, id := range col.StatusIDs {
+					statusmapping[id] = &c
+				}
+				filteredcolumns = append(filteredcolumns, col)
+				colindex++
+			}
+
+			// if we don't have a backlog column and it's scrum we can fetch the backlog
+			if !hasBacklogColumn && isScrum {
+				fetchBacklog = true
+			}
+
+			theboard.BacklogIssueIds = make([]string, 0)
+
+			if fetchBacklog {
+				// fetch the backlog for the board
+				backlogids, err := m.fetchBoardIssues(state, board.ID, board.Type, "backlog")
+				if err != nil {
+					return err
+				}
+				for _, b := range backlogids {
+					theboard.BacklogIssueIds = append(theboard.BacklogIssueIds, sdk.NewWorkIssueID(customerID, b.RefID, refType))
+				}
+			} else {
+				sdk.LogDebug(state.logger, "skipping backlog for board since its not supported", "id", board.ID)
+			}
+
+			switch board.Type {
+			case "scrum":
+				theboard.Type = sdk.AgileBoardTypeScrum
 				sids, err := m.fetchSprints(state, board.ID, board.ProjectKey, board.ProjectID)
 				if err != nil {
 					return fmt.Errorf("error fetching sprints for board id %d. %w", board.ID, err)
 				}
 				for _, sid := range sids {
-					if err := m.fetchSprint(state, sid, boardProjectKeys); err != nil {
+					lock.Lock()
+					f := sprintids[sid]
+					if !f {
+						sprintids[sid] = true
+					}
+					lock.Unlock()
+					if f {
+						// already processed it since we have same sprint pointing at other boards
+						continue
+					}
+					if err := m.fetchSprint(state, sid, theboard.ID, boardProjectKeys, statusmapping, len(filteredcolumns)); err != nil {
 						return err
 					}
 				}
-			} else {
-				var kanban sdk.WorkKanbanBoard
+			case "kanban":
+				theboard.Type = sdk.AgileBoardTypeKanban
+				var kanban sdk.AgileKanban
+				kanban.Active = true
 				kanban.CustomerID = customerID
 				kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
 				kanban.RefID = strconv.Itoa(board.ID)
 				kanban.RefType = refType
-				kanban.Name = board.Name
-				kanban.BacklogIssueIds = make([]string, 0)
 				kanban.IssueIds = make([]string, 0)
-				kanban.Columns = make([]sdk.WorkKanbanBoardColumns, 0)
-				kanban.ProjectIds = make([]string, 0)
-				projectids := make(map[string]bool)
-				boardcolumns := make([]*sdk.WorkKanbanBoardColumns, 0)
-				columns, err := m.fetchBoardConfig(state, board.ID)
-				if err != nil {
-					return err
-				}
-				statusmapping := make(map[string]*sdk.WorkKanbanBoardColumns)
-				for _, c := range columns {
-					bc := &sdk.WorkKanbanBoardColumns{
-						Name:      c.Name,
-						StatusIds: c.StatusIDs,
-						IssueIds:  make([]string, 0),
+				kanban.Columns = make([]sdk.AgileKanbanColumns, 0)
+				boardcolumns := make([]*sdk.AgileKanbanColumns, 0)
+				mappings := make(map[string]*sdk.AgileKanbanColumns)
+				for _, c := range filteredcolumns {
+					bc := &sdk.AgileKanbanColumns{
+						IssueIds: make([]string, 0),
 					}
 					boardcolumns = append(boardcolumns, bc)
 					for _, id := range c.StatusIDs {
-						statusmapping[id] = bc
+						mappings[id] = bc
 					}
 				}
 				// fetch all the board issues and assign them to the right columns
-				boardissues, err := m.fetchBoardIssues(state, board.ID, "issue")
+				boardissues, err := m.fetchBoardIssues(state, board.ID, board.Type, "issue")
 				if err != nil {
 					return fmt.Errorf("error fetching kanban issues for board id %d. %w", board.ID, err)
 				}
 				// attach each issue to the right board column
 				for _, bi := range boardissues {
-					boardcolumn := statusmapping[bi.StatusID]
+					boardcolumn := mappings[bi.StatusID]
 					if boardcolumn == nil {
 						sdk.LogError(state.logger, "couldn't find board column for ("+bi.StatusID+") issue", "issue", bi.ID)
 						continue
 					}
 					boardcolumn.IssueIds = append(boardcolumn.IssueIds, bi.ID)
 					kanban.IssueIds = append(kanban.IssueIds, bi.ID)
-					projectids[bi.ProjectID] = true
-				}
-				// set the project ids
-				for id := range projectids {
-					kanban.ProjectIds = append(kanban.ProjectIds, id)
 				}
 				// add the columns
-				for _, c := range boardcolumns[1:] {
+				var startat int
+				if hasBacklogColumn && fetchBacklog && backlogIndex == 0 {
+					// for kanban boards you can setup the column such that the first one is your backlog
+					// https://support.atlassian.com/jira-software-cloud/docs/use-your-kanban-backlog/
+					// we want to skip this column since we already have a separate backlog array
+					startat = 1
+				}
+				for _, c := range boardcolumns[startat:] {
 					kanban.Columns = append(kanban.Columns, *c)
 				}
 				// the first column in kanban is always the backlog
-				kanban.BacklogIssueIds = boardcolumns[0].IssueIds
+				theboard.BacklogIssueIds = boardcolumns[0].IssueIds
 				kanban.URL = boardURL(state.authConfig.WebsiteURL, board.ID, board.ProjectKey)
-				kanban.ID = sdk.NewWorkKanbanBoardID(customerID, strconv.Itoa(board.ID), refType)
+				kanban.ID = sdk.NewAgileKanbanID(customerID, strconv.Itoa(board.ID), refType)
+				kanban.BoardID = theboard.ID
 
 				// send it off 🚢
 				if err := state.pipe.Write(&kanban); err != nil {
 					return err
 				}
+			}
+			// now send the board details
+			if err := state.pipe.Write(&theboard); err != nil {
+				return err
 			}
 			return nil
 		})
@@ -676,6 +789,6 @@ func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats, integratio
 		stats:                 stats,
 		integrationInstanceID: integrationInstanceID,
 		usingAgileAPI:         usingAgileAPI,
-		async:                 sdk.NewAsync(4),
+		async:                 sdk.NewAsync(10),
 	}
 }

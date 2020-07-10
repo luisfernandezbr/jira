@@ -39,7 +39,6 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, project *sdk.
 	capability.RefType = project.RefType
 	capability.ProjectID = project.ID
 	capability.IntegrationInstanceID = project.IntegrationInstanceID
-	capability.CreatedAt = sdk.EpochNow()
 	capability.Attachments = true
 	capability.ChangeLogs = true
 	capability.DueDates = true
