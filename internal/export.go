@@ -383,15 +383,15 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		if err := state.sprintManager.init(state); err != nil {
 			return err
 		}
-		// if err := i.fetchPriorities(state); err != nil {
-		// 	return err
-		// }
-		// if err := i.fetchTypes(state); err != nil {
-		// 	return err
-		// }
-		// if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {
-		// 	return err
-		// }
+		if err := i.fetchPriorities(state); err != nil {
+			return err
+		}
+		if err := i.fetchTypes(state); err != nil {
+			return err
+		}
+		if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {
+			return err
+		}
 		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
 			return err
 		}

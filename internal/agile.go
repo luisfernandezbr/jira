@@ -409,6 +409,7 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		}
 	}
 	for _, c := range columns {
+		sprint.Name = c.Name
 		sprint.Columns = append(sprint.Columns, *c)
 	}
 	if sprint.Status == sdk.AgileSprintStatusClosed {
@@ -708,6 +709,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				for _, c := range filteredcolumns {
 					bc := &sdk.AgileKanbanColumns{
 						IssueIds: make([]string, 0),
+						Name:     c.Name,
 					}
 					boardcolumns = append(boardcolumns, bc)
 					for _, id := range c.StatusIDs {
