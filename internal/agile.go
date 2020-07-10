@@ -389,9 +389,11 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 	if err != nil {
 		return err
 	}
+	sprint.ProjectIds = make([]string, 0)
 	sprint.IssueIds = make([]string, 0)
 	sprint.Columns = make([]sdk.AgileSprintColumns, 0)
 	columns := make([]*sdk.AgileSprintColumns, columncount)
+	projectids := make(map[string]bool)
 	for i := 0; i < columncount; i++ {
 		columns[i] = &sdk.AgileSprintColumns{
 			IssueIds: make([]string, 0),
@@ -406,6 +408,10 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		if i != nil {
 			sprint.IssueIds = append(sprint.IssueIds, issue.ID)
 			columns[*i].IssueIds = append(columns[*i].IssueIds, issue.ID)
+		}
+		if !projectids[issue.ProjectID] {
+			projectids[issue.ProjectID] = true
+			sprint.ProjectIds = append(sprint.ProjectIds, issue.ProjectID)
 		}
 	}
 	for _, c := range columns {
