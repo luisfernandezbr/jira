@@ -30,12 +30,13 @@ func getMappedIssueType(name string, subtask bool) sdk.WorkIssueTypeMappedType {
 	return sdk.WorkIssueTypeMappedTypeUnknown
 }
 
-func (t issueType) ToModel(customerID string) (*sdk.WorkIssueType, error) {
+func (t issueType) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkIssueType, error) {
 	issuetype := &sdk.WorkIssueType{}
 	issuetype.CustomerID = customerID
 	issuetype.RefID = t.ID
 	issuetype.RefType = refType
 	issuetype.Name = t.Name
+	issuetype.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	issuetype.Description = sdk.StringPointer(t.Description)
 	issuetype.IconURL = sdk.StringPointer(t.Icon)
 	issuetype.MappedType = getMappedIssueType(t.Name, t.Subtask)

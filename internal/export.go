@@ -85,7 +85,7 @@ func (i *JiraIntegration) fetchTypes(state *state) error {
 	r, err := client.Get(&resp, state.authConfig.Middleware...)
 	customerID := state.export.CustomerID()
 	for _, t := range resp {
-		issuetype, err := t.ToModel(customerID)
+		issuetype, err := t.ToModel(customerID, state.integrationInstanceID)
 		if err != nil {
 			return err
 		}
@@ -187,7 +187,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 				}
 			}
 			if project.Active {
-				capability, err := i.createProjectCapability(state.export.State(), p, project)
+				capability, err := i.createProjectCapability(state.export.State(), p, project, state.historical)
 				if err != nil {
 					return nil, err
 				}

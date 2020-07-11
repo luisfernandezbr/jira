@@ -28,9 +28,9 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 
 const projectCapabilityStateKeyPrefix = "project_capability_"
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject) (*sdk.WorkProjectCapability, error) {
+func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, historical bool) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
-	if state.Exists(key) {
+	if !historical && state.Exists(key) {
 		return nil, nil
 	}
 	var capability sdk.WorkProjectCapability

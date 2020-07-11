@@ -54,12 +54,14 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	transitiveIssueKeys := make(map[string]bool)
 
 	issue := &sdk.WorkIssue{}
+	issue.Active = true
 	issue.CustomerID = customerID
 	issue.RefID = i.ID
 	issue.RefType = refType
 	issue.Identifier = i.Key
 	issue.ProjectID = sdk.NewWorkProjectID(customerID, fields.Project.ID, refType)
 	issue.ID = sdk.NewWorkIssueID(customerID, i.ID, refType)
+	issue.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 
 	customFields := make([]customFieldValue, 0)
 

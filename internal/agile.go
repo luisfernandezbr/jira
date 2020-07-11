@@ -30,6 +30,7 @@ type sprint struct {
 
 func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.AgileSprint, error) {
 	sprint := &sdk.AgileSprint{}
+	sprint.Active = true
 	sprint.CustomerID = customerID
 	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)

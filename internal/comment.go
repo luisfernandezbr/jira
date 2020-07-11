@@ -30,6 +30,7 @@ func (c comment) ToModel(customerID string, integrationInstanceID string, websit
 		return nil, err
 	}
 	comment := &sdk.WorkIssueComment{}
+	comment.Active = true
 	comment.CustomerID = customerID
 	comment.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	comment.RefID = c.ID
