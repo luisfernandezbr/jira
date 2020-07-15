@@ -204,7 +204,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 					if !ok {
 						continue
 					}
-					id := extractPossibleSprintID(str)
+					id := extractPossibleSprintID(sdk.Stringify(str))
 					if id == "" {
 						continue
 					}
