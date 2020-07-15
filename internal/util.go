@@ -65,7 +65,7 @@ func boardURL(websiteURL string, boardID int, projectKey string) string {
 var sprintRegexp = regexp.MustCompile(`com\.atlassian\.greenhopper\.service\.sprint\.Sprint@.+?\[*id=(\d+)`)
 
 func extractPossibleSprintID(v string) string {
-	matches := sprintRegexp.FindStringSubmatch(v)
+	matches := sprintRegexp.FindStringSubmatch(sdk.Stringify(v))
 	if len(matches) == 0 {
 		return ""
 	}
