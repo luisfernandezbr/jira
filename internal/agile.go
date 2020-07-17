@@ -713,6 +713,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				kanban.Columns = make([]sdk.AgileKanbanColumns, 0)
 				boardcolumns := make([]*sdk.AgileKanbanColumns, 0)
 				mappings := make(map[string]*sdk.AgileKanbanColumns)
+				projectids := make(map[string]bool)
 				for _, c := range filteredcolumns {
 					bc := &sdk.AgileKanbanColumns{
 						IssueIds: make([]string, 0),
@@ -735,6 +736,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 						sdk.LogError(state.logger, "couldn't find board column for ("+bi.StatusID+") issue", "issue", bi.ID)
 						continue
 					}
+					projectids[bi.ProjectID] = true
 					boardcolumn.IssueIds = append(boardcolumn.IssueIds, bi.ID)
 					kanban.IssueIds = append(kanban.IssueIds, bi.ID)
 				}
@@ -754,6 +756,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				kanban.URL = boardURL(state.authConfig.WebsiteURL, board.ID, board.ProjectKey)
 				kanban.ID = sdk.NewAgileKanbanID(customerID, strconv.Itoa(board.ID), refType)
 				kanban.BoardID = theboard.ID
+				kanban.ProjectIds = sdk.Keys(projectids)
 
 				// send it off 🚢
 				if err := state.pipe.Write(&kanban); err != nil {
