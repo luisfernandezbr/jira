@@ -416,7 +416,6 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		}
 	}
 	for _, c := range columns {
-		sprint.Name = c.Name
 		sprint.Columns = append(sprint.Columns, *c)
 	}
 	if sprint.Status == sdk.AgileSprintStatusClosed {
