@@ -708,6 +708,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				kanban.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
 				kanban.RefID = strconv.Itoa(board.ID)
 				kanban.RefType = refType
+				kanban.Name = board.Name
 				kanban.IssueIds = make([]string, 0)
 				kanban.Columns = make([]sdk.AgileKanbanColumns, 0)
 				boardcolumns := make([]*sdk.AgileKanbanColumns, 0)
