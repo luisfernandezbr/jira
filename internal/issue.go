@@ -314,7 +314,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 			if err != nil {
 				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
 			}
-			sdk.ConvertTimeToDateModel(createdAt, &issue.CreatedDate)
+			sdk.ConvertTimeToDateModel(createdAt, &item.CreatedDate)
 			item.UserID = cl.Author.RefID()
 
 			item.FromString = data.FromString + " @ " + data.From
