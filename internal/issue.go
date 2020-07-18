@@ -110,7 +110,9 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	issue.Type = fields.IssueType.Name
 	issue.TypeID = sdk.NewWorkIssueTypeID(customerID, refType, fields.IssueType.ID)
 	issue.Status = fields.Status.Name
+	issue.StatusID = sdk.NewWorkIssueStatusID(customerID, refType, fields.Status.ID)
 	issue.Resolution = fields.Resolution.Name
+
 	if fields.Parent != nil && fields.Parent.ID != "" {
 		issue.ParentID = sdk.NewWorkIssueID(customerID, fields.Parent.ID, refType)
 	}
