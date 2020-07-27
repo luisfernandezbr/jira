@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pinpt/agent.next/sdk"
 )
@@ -196,6 +197,51 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
+func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte, pipe sdk.Pipe) error {
+	// since we need transitions we have to go fetch the whole object from jira 😢
+	var created struct {
+		Issue struct {
+			ID string `json:"id"`
+		}
+	}
+	if err := json.Unmarshal(rawdata, &created); err != nil {
+		return fmt.Errorf("error parsing json for changelog: %w", err)
+	}
+	sdk.LogDebug(i.logger, "new issue webhook received", "issue", created.Issue.ID)
+
+	stats := &stats{}
+	stats.started = time.Now()
+	state, err := i.newState(i.logger, pipe, webhook.Config(), false, webhook.IntegrationInstanceID())
+	if err != nil {
+		return fmt.Errorf("unable to get state: %w", err)
+	}
+	customfields, err := i.fetchCustomFields(i.logger, state.export, webhook.CustomerID(), state.authConfig)
+	if err != nil {
+		return err
+	}
+	sprintMgr := newSprintManager(webhook.CustomerID(), pipe, stats, webhook.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
+	userMgr := newUserManager(webhook.CustomerID(), state.authConfig.WebsiteURL, pipe, stats, webhook.IntegrationInstanceID())
+	mgr := newIssueIDManager(i.logger, i, webhook, pipe, sprintMgr, userMgr, customfields, state.authConfig, stats)
+	issue, comments, err := mgr.fetchIssue(created.Issue.ID, false)
+	if err != nil {
+		return fmt.Errorf("error fetching issue: %w", err)
+	}
+	if issue == nil {
+		sdk.LogDebug(i.logger, "unable to find issue for webhook", "issue", created.Issue.ID, "customer_id", webhook.CustomerID())
+		return nil
+	}
+	sdk.LogDebug(i.logger, "sending new issue", "data", issue.Stringify())
+	if err := pipe.Write(issue); err != nil {
+		return err
+	}
+	for _, comment := range comments {
+		if err := pipe.Write(comment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -209,6 +255,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	switch event.Event {
 	case "jira:issue_updated":
 		return i.webhookUpdateIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "jira:issue_created":
+		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

@@ -274,7 +274,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, comments, err := i.ToModel(customerID, state.integrationInstanceID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
+			issue, comments, err := i.ToModel(customerID, state.integrationInstanceID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL, true)
 			if err != nil {
 				return err
 			}
