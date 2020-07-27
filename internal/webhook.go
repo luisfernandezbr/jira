@@ -242,6 +242,25 @@ func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte
 	return nil
 }
 
+func (i *JiraIntegration) webhookDeleteIssue(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var deleted struct {
+		User  user `json:"user"`
+		Issue struct {
+			ID string `json:"id"`
+		}
+	}
+	if err := json.Unmarshal(rawdata, &deleted); err != nil {
+		return fmt.Errorf("error parsing json for deletion: %w", err)
+	}
+	sdk.LogDebug(i.logger, "new issue webhook received", "issue", deleted.Issue.ID)
+	val := sdk.WorkIssueUpdate{}
+	active := false
+	val.Set.Active = &active
+	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, deleted.Issue.ID, refType, val)
+	sdk.LogDebug(i.logger, "sending issue update", "data", sdk.Stringify(update))
+	return pipe.Write(update)
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -257,6 +276,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookUpdateIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "jira:issue_created":
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
+	case "jira:issue_deleted":
+		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
