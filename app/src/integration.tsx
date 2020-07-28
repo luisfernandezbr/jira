@@ -46,22 +46,47 @@ const fetchOrgsOAuth2 = async (config: Config): Promise<orgResponse[]> => {
 	return resp[0] as orgResponse[];
 
 }
+const fetchProjectParams: string[] = [
+	'typeKey=software',
+	'status=live',
+	'maxResults=100'
+];
+
 const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promise<number> => {
-	let params = [
-		'expand=' + encodeURIComponent('description,url,issueTypes,projectKeys'),
-		'typeKey=software',
-		'status=live',
-		'maxResults=100'
-	];
-	let resp = await Http.get('https://api.atlassian.com/ex/jira/' + accountId + '/rest/api/3/project/search?' + params.join('&'), {
-		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token
-	});
-	if (resp[1] != 200) {
-		console.error('error fetching projects', 'response code', resp[1]);
-		return 0;
+	try {
+		let resp = await Http.get('https://api.atlassian.com/ex/jira/' + accountId + '/rest/api/3/project/search?' + fetchProjectParams.join('&'), {
+			'Authorization': 'Bearer ' + config.oauth2_auth!.access_token
+		});
+		if (resp[1] != 200) {
+			console.error('error fetching projects', 'response code', resp[1]);
+			return 0;
+		}
+		let projects = resp[0] as projectsResponse
+		return projects.total;
+	} catch (ex) {
+		console.error("error", ex)
 	}
-	let projects = resp[0] as projectsResponse
-	return projects.total;
+	return 0
+}
+const fetchProjectCountBasicAuth = async (auth: IAuth): Promise<number> => {
+	try {
+		let basic = auth as IAppBasicAuth
+		console.log(basic.username + ":" + basic.password)
+		console.log(btoa(basic.username + ":" + basic.password))
+
+		let resp = await Http.get(basic.url! + '/rest/api/2/project/search?' + fetchProjectParams.join('&'), {
+			'Authorization': 'Basic ' + btoa(basic.username + ":" + basic.password)
+		});
+		if (resp[1] != 200) {
+			console.error('error fetching projects', 'response code', resp[1]);
+			return 0;
+		}
+		let projects = resp[0] as projectsResponse
+		return projects.total;
+	} catch (ex) {
+		console.error("error", ex)
+	}
+	return 0
 }
 
 const AccountListOAuth2 = () => {
@@ -131,7 +156,9 @@ const LocationSelector = ({ setType }: { setType: (val: IntegrationType) => void
 const SelfManagedForm = () => {
 	async function verify(auth: IAuth): Promise<boolean> {
 		try {
-			return false;
+			auth.url = auth.url!.replace('/rest', '');
+			let res = await fetchProjectCountBasicAuth(auth)
+			return res > 0;
 		} catch (ex) {
 
 			return false;
@@ -196,7 +223,7 @@ const Integration = () => {
 		} else if (config.integration_type === IntegrationType.CLOUD && !config.oauth2_auth) {
 			content = <OAuthConnect name='Jira' />;
 		} else if (config.integration_type === IntegrationType.SELFMANAGED && !config.basic_auth && !config.apikey_auth) {
-			// content = <SelfManagedForm />;
+			content = <SelfManagedForm />;
 		} else {
 			if (config.oauth2_auth) {
 				content = <AccountListOAuth2 />;
