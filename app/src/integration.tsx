@@ -32,18 +32,18 @@ interface projectsResponse {
 const AccountListBasic = () => {
 	return (
 		<p>basic auth</p>
-	)
+	);
 }
 const fetchOrgsOAuth2 = async (config: Config): Promise<orgResponse[]> => {
 	let resp = await Http.get('https://api.atlassian.com/oauth/token/accessible-resources', {
-		"Authorization": "Bearer " + config.oauth2_auth!.access_token,
-		"Content-Type": "application/json"
-	})
+		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token,
+		'Content-Type': 'application/json'
+	});
 	if (resp[1] != 200) {
-		console.error("error fetching orgs", "response code", resp[1]);
+		console.error('error fetching orgs', 'response code', resp[1]);
 		return [];
 	}
-	return resp[0] as orgResponse[]
+	return resp[0] as orgResponse[];
 
 }
 const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promise<number> => {
@@ -52,12 +52,12 @@ const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promi
 		'typeKey=software',
 		'status=live',
 		'maxResults=100'
-	]
-	let resp = await Http.get("https://api.atlassian.com/ex/jira/" + accountId + '/rest/api/3/project/search?' + params.join('&'), {
-		"Authorization": "Bearer " + config.oauth2_auth!.access_token
-	})
+	];
+	let resp = await Http.get('https://api.atlassian.com/ex/jira/' + accountId + '/rest/api/3/project/search?' + params.join('&'), {
+		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token
+	});
 	if (resp[1] != 200) {
-		console.error("error fetching projects", "response code", resp[1]);
+		console.error('error fetching projects', 'response code', resp[1]);
 		return 0;
 	}
 	let projects = resp[0] as projectsResponse
@@ -70,16 +70,16 @@ const AccountListOAuth2 = () => {
 
 	useEffect(() => {
 		const fetch = async () => {
-			let accts: Account[] = []
+			let accts: Account[] = [];
 			let orgs = await fetchOrgsOAuth2(config);
-			if (orgs.length == 0) {
+			if (orgs.length === 0) {
 				return;
 			}
 			config.accounts = {};
 			for (var i = 0; i < orgs.length; i++) {
 				let current = orgs[i];
-				let count = await fetchProjectCountOAuth2(config, current.id)
-				if (count == 0) {
+				let count = await fetchProjectCountOAuth2(config, current.id);
+				if (count === 0) {
 					return;
 				}
 				let account: Account = {
@@ -92,7 +92,7 @@ const AccountListOAuth2 = () => {
 					public: false
 				}
 				accts.push(account);
-				config.accounts[account.id] = account
+				config.accounts[account.id] = account;
 			}
 			setInstallEnabled(installed ? true : accts.length > 0);
 			setAccounts(accts);
