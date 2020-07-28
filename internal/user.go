@@ -52,7 +52,10 @@ func (m *userManager) emit(user user) error {
 	if err := m.pipe.Write(object); err != nil {
 		return nil
 	}
-	m.stats.incUser()
+	// stats may be nil for the case of webhooks/testing
+	if m.stats != nil {
+		m.stats.incUser()
+	}
 	m.users[refid] = true
 	return nil
 }

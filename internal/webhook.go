@@ -261,6 +261,38 @@ func (i *JiraIntegration) webhookDeleteIssue(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
+// webhookUpsertComment will work for comment_created and comment_updated since they both require refetch because they dont deliver adf!
+func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var created struct {
+		Timestamp int64 `json:"timestamp"`
+		Comment   struct {
+			ID string `json:"id"`
+		} `json:"comment"`
+		Issue struct {
+			ID      string `json:"id"`
+			Key     string `json:"key"`
+			Project struct {
+				ID string `json:"id"`
+			} `json:"project"`
+		} `json:"issue"`
+	}
+	if err := json.Unmarshal(rawdata, &created); err != nil {
+		return fmt.Errorf("error parsing json for comment: %w", err)
+	}
+	sdk.LogDebug(i.logger, "new comment webhook recieved", "comment", created.Comment.ID)
+	authcfg, err := i.createAuthConfig(i.logger, config)
+	if err != nil {
+		return fmt.Errorf("error creating authconfig: %w", err)
+	}
+	um := newUserManager(customerID, authcfg.WebsiteURL, pipe, nil, integrationInstanceID)
+	comment, err := i.fetchComment(authcfg, um, integrationInstanceID, customerID, created.Issue.ID, created.Issue.Key, created.Comment.ID, created.Issue.Project.ID)
+	if err != nil {
+		return fmt.Errorf("error getting comment: %w", err)
+	}
+	sdk.LogDebug(i.logger, "sending new comment", "data", sdk.Stringify(comment))
+	return pipe.Write(comment)
+}
+
 // webhookUpsertProject will work for project_created and project_updated since they both require refetch.
 func (i *JiraIntegration) webhookUpsertProject(webhook sdk.WebHook, pipe sdk.Pipe) error {
 	var upsert struct {
@@ -309,6 +341,10 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	case "jira:issue_deleted":
 		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "comment_created":
+		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "comment_updated":
+		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "project_created":
 		return i.webhookUpsertProject(webhook, pipe)
 	case "project_updated":
