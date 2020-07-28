@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon, Loader, } from '@pinpt/uic.next';
 import {
 	useIntegration,
@@ -11,10 +11,8 @@ import {
 	Form,
 	FormType,
 	Http,
-	IOAuth2Auth,
 	Config,
 } from '@pinpt/agent.websdk';
-
 import styles from './styles.module.less';
 
 interface orgResponse {
@@ -24,6 +22,7 @@ interface orgResponse {
 	scopes: string[];
 	url: string;
 }
+
 interface projectsResponse {
 	total: number;
 	self: string;
@@ -34,18 +33,20 @@ const AccountListBasic = () => {
 		<p>basic auth</p>
 	);
 }
+
 const fetchOrgsOAuth2 = async (config: Config): Promise<orgResponse[]> => {
 	let resp = await Http.get('https://api.atlassian.com/oauth/token/accessible-resources', {
 		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token,
 		'Content-Type': 'application/json'
 	});
-	if (resp[1] != 200) {
+	if (resp[1] !== 200) {
 		console.error('error fetching orgs', 'response code', resp[1]);
 		return [];
 	}
 	return resp[0] as orgResponse[];
 
 }
+
 const fetchProjectParams: string[] = [
 	'typeKey=software',
 	'status=live',
@@ -57,7 +58,7 @@ const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promi
 		let resp = await Http.get('https://api.atlassian.com/ex/jira/' + accountId + '/rest/api/3/project/search?' + fetchProjectParams.join('&'), {
 			'Authorization': 'Bearer ' + config.oauth2_auth!.access_token
 		});
-		if (resp[1] != 200) {
+		if (resp[1] !== 200) {
 			console.error('error fetching projects', 'response code', resp[1]);
 			return 0;
 		}
@@ -68,6 +69,7 @@ const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promi
 	}
 	return 0
 }
+
 const fetchProjectCountBasicAuth = async (auth: IAuth): Promise<number> => {
 	try {
 		let basic = auth as IAppBasicAuth
@@ -77,7 +79,7 @@ const fetchProjectCountBasicAuth = async (auth: IAuth): Promise<number> => {
 		let resp = await Http.get(basic.url! + '/rest/api/2/project/search?' + fetchProjectParams.join('&'), {
 			'Authorization': 'Basic ' + btoa(basic.username + ":" + basic.password)
 		});
-		if (resp[1] != 200) {
+		if (resp[1] !== 200) {
 			console.error('error fetching projects', 'response code', resp[1]);
 			return 0;
 		}
@@ -141,12 +143,12 @@ const LocationSelector = ({ setType }: { setType: (val: IntegrationType) => void
 		<div className={styles.Location}>
 			<div className={styles.Button} onClick={() => setType(IntegrationType.CLOUD)}>
 				<Icon icon={['fas', 'cloud']} className={styles.Icon} />
-				I'm using the <strong>jira.com</strong> cloud service to manage my data
+				I'm using the <strong>Atlassian Jira Cloud</strong> service to manage my data
 			</div>
 
 			<div className={styles.Button} onClick={() => setType(IntegrationType.SELFMANAGED)}>
 				<Icon icon={['fas', 'server']} className={styles.Icon} />
-				I'm using <strong>my own systems</strong> or a <strong>third-party</strong> to manage a Jira service
+				I'm using <strong>my own systems</strong> or a <strong>third-party</strong> to manage a Jira Server
 			</div>
 		</div>
 	);
