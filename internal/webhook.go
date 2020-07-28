@@ -202,7 +202,7 @@ func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte
 	var created struct {
 		Issue struct {
 			ID string `json:"id"`
-		}
+		} `json:"issue"`
 	}
 	if err := json.Unmarshal(rawdata, &created); err != nil {
 		return fmt.Errorf("error parsing json for changelog: %w", err)
@@ -247,18 +247,48 @@ func (i *JiraIntegration) webhookDeleteIssue(customerID string, integrationInsta
 		User  user `json:"user"`
 		Issue struct {
 			ID string `json:"id"`
-		}
+		} `json:"issue"`
 	}
 	if err := json.Unmarshal(rawdata, &deleted); err != nil {
 		return fmt.Errorf("error parsing json for deletion: %w", err)
 	}
-	sdk.LogDebug(i.logger, "new issue webhook received", "issue", deleted.Issue.ID)
+	sdk.LogDebug(i.logger, "deleted issue webhook received", "issue", deleted.Issue.ID)
 	val := sdk.WorkIssueUpdate{}
 	active := false
 	val.Set.Active = &active
 	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, deleted.Issue.ID, refType, val)
-	sdk.LogDebug(i.logger, "sending issue update", "data", sdk.Stringify(update))
+	sdk.LogDebug(i.logger, "deleting issue", "issue", deleted.Issue.ID)
 	return pipe.Write(update)
+}
+
+func (i *JiraIntegration) webhookCreateProject(webhook sdk.WebHook, pipe sdk.Pipe) error {
+	var created struct {
+		Timestamp int64 `json:"timestamp"`
+		Project   struct {
+			ID  int64  `json:"id"`
+			Key string `json:"key"`
+		} `json:"project"`
+	}
+	if err := json.Unmarshal(webhook.Bytes(), &created); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	// jira webhooks (sometimes) return ids as numbers instead of strings
+	refID := fmt.Sprintf("%d", created.Project.ID)
+	state, err := i.newState(i.logger, pipe, webhook.Config(), false, webhook.IntegrationInstanceID())
+	if err != nil {
+		return fmt.Errorf("unable to get state: %w", err)
+	}
+	sdk.LogDebug(i.logger, "new project webhook received", "project", refID)
+	project, err := i.fetchProject(state, webhook.CustomerID(), refID)
+	if err != nil {
+		return err
+	}
+	if project == nil {
+		sdk.LogDebug(i.logger, "unable to find new project", "project", refID)
+		return nil
+	}
+	sdk.LogDebug(i.logger, "sending project", "data", sdk.Stringify(project))
+	return pipe.Write(project)
 }
 
 // WebHook is called when a webhook is received on behalf of the integration
@@ -278,6 +308,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	case "jira:issue_deleted":
 		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "project_created":
+		return i.webhookCreateProject(webhook, pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

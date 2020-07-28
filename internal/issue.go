@@ -544,7 +544,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	sdk.LogDebug(m.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
-	qs.Set("expand", "changelog,fields,comments,transitions")
+	setIssueExpand(qs)
 	qs.Set("fields", "*navigable,attachment")
 	var result issueQueryResult
 	client := m.i.httpmanager.New(theurl, nil)
@@ -592,7 +592,7 @@ func (m *issueIDManager) fetchIssue(refid string, fetchTransitive bool) (*sdk.Wo
 	theurl := sdk.JoinURL(m.authConfig.APIURL, "/rest/api/3/issue/", refid)
 	client := m.i.httpmanager.New(theurl, nil)
 	qs := url.Values{}
-	qs.Set("expand", "changelog,fields,comments,transitions")
+	setIssueExpand(qs)
 	qs.Set("fields", "*navigable,attachment")
 	var issue issueSource
 	resp, err := client.Get(&issue, append(m.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
@@ -603,6 +603,10 @@ func (m *issueIDManager) fetchIssue(refid string, fetchTransitive bool) (*sdk.Wo
 		return nil, nil, nil
 	}
 	return issue.ToModel(m.control.CustomerID(), m.control.IntegrationInstanceID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL, fetchTransitive)
+}
+
+func setIssueExpand(qs url.Values) {
+	qs.Set("expand", "changelog,fields,comments,transitions")
 }
 
 const epicCustomFieldIDCacheKey = "epic_id_custom_field"

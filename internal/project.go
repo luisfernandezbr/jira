@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/pinpt/agent.next/sdk"
@@ -60,4 +62,32 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 		return nil, err
 	}
 	return &capability, nil
+}
+
+func setProjectExpand(qs url.Values) {
+	qs.Set("expand", "description,url,issueTypes,projectKeys")
+}
+
+func (i *JiraIntegration) fetchProject(state *state, customerID, refID string) (*sdk.WorkProject, error) {
+	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/", refID)
+	client := i.httpmanager.New(theurl, nil)
+	qs := url.Values{}
+	setProjectExpand(qs)
+	var p project
+	resp, err := client.Get(&p, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
+	if resp == nil && err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	resolutions, err := i.fetchIssueResolutions(state)
+	if err != nil {
+		return nil, err
+	}
+	issueTypes, err := i.fetchIssueTypesForProject(state, p.ID)
+	if err != nil {
+		return nil, err
+	}
+	return p.ToModel(customerID, state.integrationInstanceID, state.authConfig.WebsiteURL, issueTypes, resolutions)
 }
