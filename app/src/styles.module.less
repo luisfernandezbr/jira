@@ -1,0 +1,34 @@
+@import (reference) '~@pinpt/uic.next/theme.less';
+
+.Wrapper {
+	padding: 4.0rem;
+}
+
+.Location {
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+	
+	.Button {
+		background: @White;
+		border: @BorderStyle;
+		padding: 4.0rem;
+		text-align: center;
+		max-width: 300px;
+		margin: 0 20px;
+		cursor: pointer;
+
+		.Icon {
+			font-size: 3.0rem;
+			margin: 0 auto 2.0rem;
+			color: @Mono400;
+			display: block;
+		}
+
+		&:hover {
+			.Icon {
+				color: @Royal500;
+			}
+		}
+	}
+}
