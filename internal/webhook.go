@@ -261,19 +261,20 @@ func (i *JiraIntegration) webhookDeleteIssue(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
-func (i *JiraIntegration) webhookCreateProject(webhook sdk.WebHook, pipe sdk.Pipe) error {
-	var created struct {
+// webhookUpsertProject will work for project_created and project_updated since they both require refetch.
+func (i *JiraIntegration) webhookUpsertProject(webhook sdk.WebHook, pipe sdk.Pipe) error {
+	var upsert struct {
 		Timestamp int64 `json:"timestamp"`
 		Project   struct {
 			ID  int64  `json:"id"`
 			Key string `json:"key"`
 		} `json:"project"`
 	}
-	if err := json.Unmarshal(webhook.Bytes(), &created); err != nil {
+	if err := json.Unmarshal(webhook.Bytes(), &upsert); err != nil {
 		return fmt.Errorf("error parsing json for created project: %w", err)
 	}
 	// jira webhooks (sometimes) return ids as numbers instead of strings
-	refID := fmt.Sprintf("%d", created.Project.ID)
+	refID := fmt.Sprintf("%d", upsert.Project.ID)
 	state, err := i.newState(i.logger, pipe, webhook.Config(), false, webhook.IntegrationInstanceID())
 	if err != nil {
 		return fmt.Errorf("unable to get state: %w", err)
@@ -309,7 +310,9 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	case "jira:issue_deleted":
 		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "project_created":
-		return i.webhookCreateProject(webhook, pipe)
+		return i.webhookUpsertProject(webhook, pipe)
+	case "project_updated":
+		return i.webhookUpsertProject(webhook, pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
