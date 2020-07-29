@@ -354,6 +354,26 @@ func (i *JiraIntegration) webhookUpsertProject(webhook sdk.WebHook, pipe sdk.Pip
 	return pipe.Write(project)
 }
 
+func (i *JiraIntegration) webhookDeleteProject(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var deleted struct {
+		Timestamp int64 `json:"timestamp"`
+		Project   struct {
+			ID int64 `json:"id"`
+		} `json:"project"`
+	}
+	if err := json.Unmarshal(rawdata, &deleted); err != nil {
+		return fmt.Errorf("error parsing json for deletion: %w", err)
+	}
+	refid := fmt.Sprintf("%d", deleted.Project.ID)
+	sdk.LogDebug(i.logger, "deleted Project webhook received", "Project", refid)
+	val := sdk.WorkProjectUpdate{}
+	active := false
+	val.Set.Active = &active
+	update := sdk.NewWorkProjectUpdate(customerID, integrationInstanceID, refid, refType, val)
+	sdk.LogDebug(i.logger, "deleting Project", "project", refid)
+	return pipe.Write(update)
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -381,6 +401,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookUpsertProject(webhook, pipe)
 	case "project_updated":
 		return i.webhookUpsertProject(webhook, pipe)
+	case "project_deleted":
+		return i.webhookDeleteProject(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

@@ -419,9 +419,9 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		sprint.Columns = append(sprint.Columns, *c)
 	}
 	if sprint.Status == sdk.AgileSprintStatusClosed {
-		sprint.URL = completedSprintURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID], sprintID)
+		sprint.URL = sdk.StringPointer(completedSprintURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID], sprintID))
 	} else {
-		sprint.URL = boardURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID])
+		sprint.URL = sdk.StringPointer(boardURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID]))
 	}
 	if err := state.export.State().Set(m.getSprintStateKey(sprintID), sdk.EpochNow()); err != nil {
 		return fmt.Errorf("error writing sprint key to state: %w", err)
@@ -753,7 +753,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 				}
 				// the first column in kanban is always the backlog
 				theboard.BacklogIssueIds = boardcolumns[0].IssueIds
-				kanban.URL = boardURL(state.authConfig.WebsiteURL, board.ID, board.ProjectKey)
+				kanban.URL = sdk.StringPointer(boardURL(state.authConfig.WebsiteURL, board.ID, board.ProjectKey))
 				kanban.ID = sdk.NewAgileKanbanID(customerID, strconv.Itoa(board.ID), refType)
 				kanban.BoardID = theboard.ID
 				kanban.ProjectIds = sdk.Keys(projectids)
