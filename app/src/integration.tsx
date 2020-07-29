@@ -86,7 +86,7 @@ const fetchProjectCountBasicAuth = async (auth: IAuth): Promise<number> => {
 		let projects = resp[0] as projectsResponse
 		return projects.total;
 	} catch (ex) {
-		console.error("error", ex)
+		throw new Error(ex.message);
 	}
 	return 0
 }
@@ -156,14 +156,15 @@ const LocationSelector = ({ setType }: { setType: (val: IntegrationType) => void
 
 // TODO:
 const SelfManagedForm = () => {
-	async function verify(auth: IAuth): Promise<boolean> {
+	async function verify(auth: IAuth) {
 		try {
 			auth.url = auth.url!.replace('/rest', '');
-			let res = await fetchProjectCountBasicAuth(auth)
-			return res > 0;
+			let count = await fetchProjectCountBasicAuth(auth)
+			if (count == 0) {
+				throw "count is 0";
+			}
 		} catch (ex) {
-
-			return false;
+			throw new Error(ex);
 		}
 	}
 	return <Form type={FormType.BASIC} name='jira' callback={verify} />;
