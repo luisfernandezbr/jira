@@ -45,7 +45,7 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
+func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
 		return nil, nil, err
@@ -120,19 +120,19 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 
 	if !fields.Creator.IsZero() {
 		issue.CreatorRefID = fields.Creator.RefID()
-		if err := userManager.emit(fields.Creator); err != nil {
+		if err := userManager.Emit(fields.Creator); err != nil {
 			return nil, nil, err
 		}
 	}
 	if !fields.Reporter.IsZero() {
 		issue.ReporterRefID = fields.Reporter.RefID()
-		if err := userManager.emit(fields.Reporter); err != nil {
+		if err := userManager.Emit(fields.Reporter); err != nil {
 			return nil, nil, err
 		}
 	}
 	if !fields.Assignee.IsZero() {
 		issue.AssigneeRefID = fields.Assignee.RefID()
-		if err := userManager.emit(fields.Assignee); err != nil {
+		if err := userManager.Emit(fields.Assignee); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -482,12 +482,12 @@ type issueIDManager struct {
 	pipe          sdk.Pipe
 	fields        map[string]customField
 	sprintManager *sprintManager
-	userManager   *userManager
+	userManager   UserManager
 	authConfig    authConfig
 	stats         *stats
 }
 
-func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, control sdk.Control, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig, stats *stats) *issueIDManager {
+func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, control sdk.Control, pipe sdk.Pipe, sprintManager *sprintManager, userManager UserManager, fields map[string]customField, authConfig authConfig, stats *stats) *issueIDManager {
 	return &issueIDManager{
 		refids:        make(map[string]string),
 		i:             i,

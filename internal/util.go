@@ -181,7 +181,7 @@ type state struct {
 	stats                 *stats
 	authConfig            authConfig
 	sprintManager         *sprintManager
-	userManager           *userManager
+	userManager           UserManager
 	issueIDManager        *issueIDManager
 	manager               sdk.Manager
 	httpmanager           sdk.HTTPClientManager

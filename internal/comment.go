@@ -27,8 +27,8 @@ type comment struct {
 	      }*/
 }
 
-func (c comment) ToModel(customerID string, integrationInstanceID string, websiteURL string, userManager *userManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
-	if err := userManager.emit(c.Author); err != nil {
+func (c comment) ToModel(customerID string, integrationInstanceID string, websiteURL string, userManager UserManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
+	if err := userManager.Emit(c.Author); err != nil {
 		return nil, err
 	}
 	comment := &sdk.WorkIssueComment{}
@@ -62,7 +62,7 @@ func (c comment) ToModel(customerID string, integrationInstanceID string, websit
 	return comment, nil
 }
 
-func (i *JiraIntegration) fetchComment(authCfg authConfig, userManager *userManager, integrationInstanceID, customerID, issueRefID, issueKey, commentRefID, projectID string) (*sdk.WorkIssueComment, error) {
+func (i *JiraIntegration) fetchComment(authCfg authConfig, userManager UserManager, integrationInstanceID, customerID, issueRefID, issueKey, commentRefID, projectID string) (*sdk.WorkIssueComment, error) {
 	theurl := sdk.JoinURL(authCfg.APIURL, fmt.Sprintf("/rest/api/3/issue/%s/comment/%s", issueRefID, commentRefID))
 	client := i.httpmanager.New(theurl, nil)
 	issueID := sdk.NewWorkIssueID(customerID, issueRefID, refType)

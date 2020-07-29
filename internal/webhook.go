@@ -287,6 +287,7 @@ func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID str
 		return fmt.Errorf("error creating authconfig: %w", err)
 	}
 	um := newUserManager(customerID, authcfg.WebsiteURL, pipe, nil, integrationInstanceID)
+	// TODO(robin): make a CommentManager interface that we pass in instead
 	comment, err := i.fetchComment(authcfg, um, integrationInstanceID, customerID, created.Issue.ID, created.Issue.Key, created.Comment.ID, created.Issue.Fields.Project.ID)
 	if err != nil {
 		return fmt.Errorf("error getting comment: %w", err)
@@ -374,6 +375,28 @@ func (i *JiraIntegration) webhookDeleteProject(customerID string, integrationIns
 	return pipe.Write(update)
 }
 
+func (i *JiraIntegration) webhookUpsertUser(webhook sdk.WebHook) error {
+	authConfig, err := i.createAuthConfig(i.logger, webhook.Config())
+	if err != nil {
+		return fmt.Errorf("error creating auth config for webhook: %w", err)
+	}
+	um := newUserManager(webhook.CustomerID(), authConfig.WebsiteURL, webhook.Pipe(), nil, webhook.IntegrationInstanceID())
+	return webhookUpsertUser(i.logger, um, webhook.Bytes())
+}
+
+func webhookUpsertUser(logger sdk.Logger, userManager UserManager, rawdata []byte) error {
+	// TODO(robin): test on premise
+	var upserted struct {
+		Timestamp int64 `json:"timestamp"`
+		User      user  `json:"user"`
+	}
+	if err := json.Unmarshal(rawdata, &upserted); err != nil {
+		return fmt.Errorf("error parsing json for user: %w", err)
+	}
+	sdk.LogDebug(logger, "upserting user")
+	return userManager.Emit(upserted.User)
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -391,18 +414,18 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	case "jira:issue_deleted":
 		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
-	case "comment_created":
-		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
-	case "comment_updated":
+	case "comment_created", "comment_updated":
 		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "comment_deleted":
 		return i.webhookDeleteComment(customerID, integrationInstanceID, webhook.Bytes(), pipe)
-	case "project_created":
-		return i.webhookUpsertProject(webhook, pipe)
-	case "project_updated":
+	case "project_created", "project_updated":
 		return i.webhookUpsertProject(webhook, pipe)
 	case "project_deleted":
 		return i.webhookDeleteProject(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "user_created", "user_updated":
+		return i.webhookUpsertUser(webhook)
+	case "user_deleted":
+		// return i.webhookDeleteUser(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
