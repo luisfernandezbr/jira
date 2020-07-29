@@ -269,11 +269,13 @@ func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID str
 			ID string `json:"id"`
 		} `json:"comment"`
 		Issue struct {
-			ID      string `json:"id"`
-			Key     string `json:"key"`
-			Project struct {
-				ID string `json:"id"`
-			} `json:"project"`
+			ID     string `json:"id"`
+			Key    string `json:"key"`
+			Fields struct {
+				Project struct {
+					ID string `json:"id"`
+				} `json:"project"`
+			} `json:"fields"`
 		} `json:"issue"`
 	}
 	if err := json.Unmarshal(rawdata, &created); err != nil {
@@ -285,12 +287,40 @@ func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID str
 		return fmt.Errorf("error creating authconfig: %w", err)
 	}
 	um := newUserManager(customerID, authcfg.WebsiteURL, pipe, nil, integrationInstanceID)
-	comment, err := i.fetchComment(authcfg, um, integrationInstanceID, customerID, created.Issue.ID, created.Issue.Key, created.Comment.ID, created.Issue.Project.ID)
+	comment, err := i.fetchComment(authcfg, um, integrationInstanceID, customerID, created.Issue.ID, created.Issue.Key, created.Comment.ID, created.Issue.Fields.Project.ID)
 	if err != nil {
 		return fmt.Errorf("error getting comment: %w", err)
 	}
 	sdk.LogDebug(i.logger, "sending new comment", "data", sdk.Stringify(comment))
 	return pipe.Write(comment)
+}
+
+func (i *JiraIntegration) webhookDeleteComment(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var deleted struct {
+		User    user `json:"user"`
+		Comment struct {
+			ID string `json:"id"`
+		} `json:"comment"`
+		Issue struct {
+			ID     string `json:"id"`
+			Key    string `json:"key"`
+			Fields struct {
+				Project struct {
+					ID string `json:"id"`
+				} `json:"project"`
+			} `json:"fields"`
+		} `json:"issue"`
+	}
+	if err := json.Unmarshal(rawdata, &deleted); err != nil {
+		return fmt.Errorf("error parsing json for deletion: %w", err)
+	}
+	sdk.LogDebug(i.logger, "deleted Comment webhook received", "Comment", deleted.Comment.ID)
+	val := sdk.WorkIssueCommentUpdate{}
+	active := false
+	val.Set.Active = &active
+	update := sdk.NewWorkIssueCommentUpdate(customerID, integrationInstanceID, deleted.Comment.ID, refType, deleted.Issue.Fields.Project.ID, val)
+	sdk.LogDebug(i.logger, "deleting Comment", "comment", deleted.Comment.ID)
+	return pipe.Write(update)
 }
 
 // webhookUpsertProject will work for project_created and project_updated since they both require refetch.
@@ -345,6 +375,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "comment_updated":
 		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "comment_deleted":
+		return i.webhookDeleteComment(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "project_created":
 		return i.webhookUpsertProject(webhook, pipe)
 	case "project_updated":

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pinpt/agent.next/sdk"
 	"github.com/pinpt/agent.next/sdk/sdktest"
+	"github.com/pinpt/integration-sdk/agent"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,4 +26,16 @@ func TestWebhookJiraIssueDeleted(t *testing.T) {
 	}
 	assert.NoError(i.webhookDeleteIssue("1234", "1", loadFile("testdata/jira:issue_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
+}
+
+func TestWebhookJiraIssueCommentDeleted(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookDeleteComment("1234", "1", loadFile("testdata/comment_deleted.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("false", update.Set["active"])
 }
