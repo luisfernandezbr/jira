@@ -184,7 +184,6 @@ type state struct {
 	userManager           UserManager
 	issueIDManager        *issueIDManager
 	manager               sdk.Manager
-	httpmanager           sdk.HTTPClientManager
 	client                sdk.GraphQLClient
 	historical            bool
 	integrationInstanceID string

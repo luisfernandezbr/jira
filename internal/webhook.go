@@ -397,6 +397,34 @@ func webhookUpsertUser(logger sdk.Logger, userManager UserManager, rawdata []byt
 	return userManager.Emit(upserted.User)
 }
 
+func (i *JiraIntegration) webhookCreateSprint(webhook sdk.WebHook) error {
+	authConfig, err := i.createAuthConfig(i.logger, webhook.Config())
+	if err != nil {
+		return fmt.Errorf("error creating auth config for webhook: %w", err)
+	}
+	api := newAgileAPI(i.logger, authConfig, webhook.CustomerID(), webhook.IntegrationInstanceID(), i.httpmanager)
+	return webhookCreateSprint(api, webhook.Bytes(), webhook.Pipe())
+}
+
+func webhookCreateSprint(api *agileAPI, rawdata []byte, pipe sdk.Pipe) error {
+	var created struct {
+		Timestamp int64 `json:"timestamp"`
+		Sprint    struct {
+			ID            int `json:"id"`
+			OriginBoardID int `json:"originBoardId"`
+		} `json:"sprint"`
+	}
+	if err := json.Unmarshal(rawdata, &created); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	sprint, err := api.fetchOneSprint(created.Sprint.ID, created.Sprint.OriginBoardID)
+	if err != nil {
+		return fmt.Errorf("error fetching sprint: %w", err)
+	}
+	fmt.Println(sprint.Stringify())
+	return pipe.Write(sprint)
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -425,7 +453,9 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	case "user_created", "user_updated":
 		return i.webhookUpsertUser(webhook)
 	case "user_deleted":
-		// return i.webhookDeleteUser(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		// TODO
+	case "sprint_created":
+		return i.webhookCreateSprint(webhook)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

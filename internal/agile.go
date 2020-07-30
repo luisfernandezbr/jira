@@ -16,6 +16,7 @@ import (
 	"github.com/pinpt/agent.next/sdk"
 )
 
+// sprint is for non-agile api, ie. issue scraping
 // easyjson:skip
 type sprint struct {
 	ID            int
@@ -181,6 +182,26 @@ func (m *sprintManager) emit(s sprint) error {
 	return nil
 }
 
+// sprintAPI is for talking to the agile api
+// easyjson:skip
+type agileAPI struct {
+	authConfig            authConfig
+	customerID            string
+	httpmanager           sdk.HTTPClientManager
+	logger                sdk.Logger
+	integrationInstanceID string
+}
+
+func newAgileAPI(logger sdk.Logger, authConfig authConfig, customerID, integrationInstanceID string, httpmanager sdk.HTTPClientManager) *agileAPI {
+	return &agileAPI{
+		authConfig:            authConfig,
+		customerID:            customerID,
+		httpmanager:           httpmanager,
+		logger:                logger,
+		integrationInstanceID: integrationInstanceID,
+	}
+}
+
 // easyjson:skip
 type issueSprint struct {
 	ID     int
@@ -197,9 +218,9 @@ type boardIssue struct {
 	Sprints   map[int]*issueSprint
 }
 
-func (m *sprintManager) fetchBoardIssues(state *state, boardID int, boardtype string, typestr string) ([]boardIssue, error) {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/%s", boardID, typestr))
-	client := state.manager.HTTPManager().New(theurl, nil)
+func (a *agileAPI) fetchBoardIssues(boardID int, boardtype string, typestr string) ([]boardIssue, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/%s", boardID, typestr))
+	client := a.httpmanager.New(theurl, nil)
 	var resp struct {
 		StartAt    int `json:"startAt"`
 		MaxResults int `json:"maxResults"`
@@ -225,7 +246,7 @@ func (m *sprintManager) fetchBoardIssues(state *state, boardID int, boardtype st
 		} `json:"issues"`
 	}
 	var startAt int
-	customerID := state.export.CustomerID()
+	customerID := a.customerID
 	ts := time.Now()
 	var count int
 	qs := make(url.Values)
@@ -234,10 +255,10 @@ func (m *sprintManager) fetchBoardIssues(state *state, boardID int, boardtype st
 	issueids := make([]boardIssue, 0)
 	for {
 		qs.Set("startAt", strconv.Itoa(startAt))
-		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
+		r, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		// this means no issues for the sprint
 		if r != nil && (r.StatusCode == http.StatusNotFound || r.StatusCode == http.StatusBadRequest) {
-			sdk.LogDebug(state.logger, fmt.Sprintf("skipping issues for board %s (%s) for id %d (status code=%d)", typestr, boardtype, boardID, r.StatusCode))
+			sdk.LogDebug(a.logger, fmt.Sprintf("skipping issues for board %s (%s) for id %d (status code=%d)", typestr, boardtype, boardID, r.StatusCode))
 			return nil, nil
 		}
 		if err != nil {
@@ -274,7 +295,7 @@ func (m *sprintManager) fetchBoardIssues(state *state, boardID int, boardtype st
 			break
 		}
 	}
-	sdk.LogDebug(state.logger, "fetched agile board issues", "board", boardID, "len", count, "duration", time.Since(ts))
+	sdk.LogDebug(a.logger, "fetched agile board issues", "board", boardID, "len", count, "duration", time.Since(ts))
 	return issueids, nil
 }
 
@@ -286,9 +307,9 @@ type sprintIssue struct {
 	Status    string
 }
 
-func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintIssue, error) {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d/issue", sprintID))
-	client := state.manager.HTTPManager().New(theurl, nil)
+func (a *agileAPI) fetchSprintIssues(sprintID int) ([]sprintIssue, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d/issue", sprintID))
+	client := a.httpmanager.New(theurl, nil)
 	var resp struct {
 		StartAt    int `json:"startAt"`
 		MaxResults int `json:"maxResults"`
@@ -314,10 +335,9 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 	qs := make(url.Values)
 	qs.Set("maxResults", "100")
 	issues := make([]sprintIssue, 0)
-	customerID := state.export.CustomerID()
 	for {
 		qs.Set("startAt", strconv.Itoa(startAt))
-		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
+		r, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		// this means no sprints for the board
 		if r != nil && r.StatusCode == http.StatusNotFound {
 			return nil, nil
@@ -327,10 +347,10 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 		}
 		for _, issue := range resp.Issues {
 			issues = append(issues, sprintIssue{
-				ID:        sdk.NewWorkIssueID(customerID, issue.ID, refType),
-				ProjectID: sdk.NewWorkProjectID(customerID, issue.Fields.Project.ID, refType),
+				ID:        sdk.NewWorkIssueID(a.customerID, issue.ID, refType),
+				ProjectID: sdk.NewWorkProjectID(a.customerID, issue.Fields.Project.ID, refType),
 				Goal:      issue.Fields.Sprint.Goal,
-				Status:    sdk.NewWorkIssueStatusID(customerID, refType, issue.Fields.Status.ID),
+				Status:    sdk.NewWorkIssueStatusID(a.customerID, refType, issue.Fields.Status.ID),
 			})
 		}
 		startAt += len(resp.Issues)
@@ -339,13 +359,13 @@ func (m *sprintManager) fetchSprintIssues(state *state, sprintID int) ([]sprintI
 			break
 		}
 	}
-	sdk.LogDebug(state.logger, "fetched agile sprint issues", "id", sprintID, "len", count, "duration", time.Since(ts))
+	sdk.LogDebug(a.logger, "fetched agile sprint issues", "id", sprintID, "len", count, "duration", time.Since(ts))
 	return issues, nil
 }
 
-func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, boardProjectKeys map[int]string, statusmapping map[string]*int, columncount int) error {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID))
-	client := state.manager.HTTPManager().New(theurl, nil)
+func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey string, statusmapping map[string]*int, columncount int) (*sdk.AgileSprint, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID))
+	client := a.httpmanager.New(theurl, nil)
 	var s struct {
 		Goal         string    `json:"goal"`
 		State        string    `json:"state"`
@@ -356,18 +376,18 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		BoardID      int       `json:"originBoardId"`
 	}
 	ts := time.Now()
-	_, err := client.Get(&s, state.authConfig.Middleware...)
+	_, err := client.Get(&s, a.authConfig.Middleware...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if boardProjectKeys[s.BoardID] == "" {
+	if boardProjectKey == "" {
 		// this is an old sprint which was deleted or the board doesn't exist
-		sdk.LogDebug(state.logger, fmt.Sprintf("skipping sprint (%v/%s) since the board id (%v) couldn't be found", sprintID, s.Name, s.BoardID))
-		return nil
+		sdk.LogDebug(a.logger, fmt.Sprintf("skipping sprint (%v/%s) since the board id (%v) couldn't be found", sprintID, s.Name, s.BoardID))
+		return nil, nil
 	}
 	var sprint sdk.AgileSprint
-	sprint.CustomerID = state.export.CustomerID()
-	sprint.IntegrationInstanceID = sdk.StringPointer(state.export.IntegrationInstanceID())
+	sprint.CustomerID = a.customerID
+	sprint.IntegrationInstanceID = sdk.StringPointer(a.integrationInstanceID)
 	sprint.RefID = strconv.Itoa(sprintID)
 	sprint.RefType = refType
 	sprint.Name = s.Name
@@ -386,9 +406,9 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		sprint.Status = sdk.AgileSprintStatusFuture
 	default:
 	}
-	issues, err := m.fetchSprintIssues(state, sprintID)
+	issues, err := a.fetchSprintIssues(sprintID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sprint.ProjectIds = make([]string, 0)
 	sprint.IssueIds = make([]string, 0)
@@ -419,24 +439,19 @@ func (m *sprintManager) fetchSprint(state *state, sprintID int, boardID string, 
 		sprint.Columns = append(sprint.Columns, *c)
 	}
 	if sprint.Status == sdk.AgileSprintStatusClosed {
-		sprint.URL = sdk.StringPointer(completedSprintURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID], sprintID))
+		sprint.URL = sdk.StringPointer(completedSprintURL(a.authConfig.WebsiteURL, s.BoardID, boardProjectKey, sprintID))
 	} else {
-		sprint.URL = sdk.StringPointer(boardURL(state.authConfig.WebsiteURL, s.BoardID, boardProjectKeys[s.BoardID]))
+		sprint.URL = sdk.StringPointer(boardURL(a.authConfig.WebsiteURL, s.BoardID, boardProjectKey))
 	}
-	if err := state.export.State().Set(m.getSprintStateKey(sprintID), sdk.EpochNow()); err != nil {
-		return fmt.Errorf("error writing sprint key to state: %w", err)
-	}
-	if err := state.pipe.Write(&sprint); err != nil {
-		return fmt.Errorf("error writing sprint to pipe: %w", err)
-	}
-	sdk.LogInfo(state.logger, "fetched sprint", "id", sprintID, "duration", time.Since(ts))
-	return nil
+	sdk.LogInfo(a.logger, "fetched sprint", "id", sprintID, "duration", time.Since(ts))
+	return &sprint, nil
 }
 
 func (m *sprintManager) getSprintStateKey(id int) string {
 	return fmt.Sprintf("sprint_%d", id)
 }
 
+// TODO(robin): port this to be part of agileAPI
 func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey string, projectID string) ([]int, error) {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/sprint", boardID))
 	client := state.manager.HTTPManager().New(theurl, nil)
@@ -492,17 +507,58 @@ func (m *sprintManager) fetchSprints(state *state, boardID int, projectKey strin
 	return append(sprintids, oldids...), nil
 }
 
+type boardSource struct {
+	ID       int    `json:"id"`
+	Self     string `json:"self"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Location struct {
+		ID         int    `json:"projectId"`
+		ProjectKey string `json:"projectKey"`
+	} `json:"location"`
+}
+
+func (a *agileAPI) fetchBoard(refid int) (*boardDetail, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d", refid))
+	client := a.httpmanager.New(theurl, nil)
+	var resp boardSource
+	response, err := client.Get(&resp, append(a.authConfig.Middleware)...)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching agile board: %w", err)
+	}
+	if response.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	b := toBoardDetail(a.customerID, resp)
+	return &b, nil
+}
+
+func (a *agileAPI) fetchOneSprint(sprintRefID int, boardRefID int) (*sdk.AgileSprint, error) {
+	board, err := a.fetchBoard(boardRefID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching board: %w", err)
+	}
+	fmt.Println(sdk.Stringify(board))
+	cols, err := a.fetchBoardConfig(boardRefID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching board config: %w", err)
+	}
+	fmt.Println(sdk.Stringify(cols))
+	_, _, _, _, statusmapping, filteredcolumns := buildKanbanColumns(cols, true)
+	bid := sdk.NewAgileBoardID(a.customerID, strconv.Itoa(board.ID), refType)
+	return a.fetchSprint(sprintRefID, bid, board.ProjectKey, statusmapping, len(filteredcolumns))
+}
+
 // easyjson:skip
 type boardColumn struct {
 	Name      string
 	StatusIDs []string
 }
 
-func (m *sprintManager) fetchBoardConfig(state *state, boardID int) ([]boardColumn, error) {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/configuration", boardID))
-	client := state.manager.HTTPManager().New(theurl, nil)
+func (a *agileAPI) fetchBoardConfig(boardID int) ([]boardColumn, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/configuration", boardID))
+	client := a.httpmanager.New(theurl, nil)
 	ts := time.Now()
-	var count int
 	var resp struct {
 		ColumnConfig struct {
 			Columns []struct {
@@ -513,23 +569,22 @@ func (m *sprintManager) fetchBoardConfig(state *state, boardID int) ([]boardColu
 			} `json:"columns"`
 		} `json:"columnConfig"`
 	}
-	_, err := client.Get(&resp, state.authConfig.Middleware...)
+	_, err := client.Get(&resp, a.authConfig.Middleware...)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching agile board %d config: %w", boardID, err)
 	}
-	customerID := state.export.CustomerID()
 	columns := make([]boardColumn, 0)
 	for _, c := range resp.ColumnConfig.Columns {
 		statusids := make([]string, 0)
 		for _, s := range c.Statuses {
-			statusids = append(statusids, sdk.NewWorkIssueStatusID(customerID, refType, s.ID))
+			statusids = append(statusids, sdk.NewWorkIssueStatusID(a.customerID, refType, s.ID))
 		}
 		columns = append(columns, boardColumn{
 			Name:      c.Name,
 			StatusIDs: statusids,
 		})
 	}
-	sdk.LogDebug(state.logger, "fetched agile board config", "id", boardID, "len", count, "duration", time.Since(ts))
+	sdk.LogDebug(a.logger, "fetched agile board config", "id", boardID, "duration", time.Since(ts))
 	return columns, nil
 }
 
@@ -542,55 +597,93 @@ type boardDetail struct {
 	ProjectID  string
 }
 
-func (m *sprintManager) fetchBoards(state *state) error {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/agile/1.0/board")
-	client := state.manager.HTTPManager().New(theurl, nil)
+func toBoardDetail(customerID string, board boardSource) boardDetail {
+	return boardDetail{
+		ID:         board.ID,
+		Name:       board.Name,
+		Type:       board.Type,
+		ProjectKey: board.Location.ProjectKey,
+		ProjectID:  sdk.NewWorkProjectID(customerID, strconv.Itoa(board.Location.ID), refType),
+	}
+}
+
+func buildKanbanColumns(cols []boardColumn, isScrum bool) (
+	columns []sdk.AgileBoardColumns,
+	backlogIndex int,
+	hasBacklogColumn,
+	fetchBacklog bool,
+	statusmapping map[string]*int,
+	filteredcolumns []boardColumn,
+) {
+	// build the kanban columnss
+	columns = make([]sdk.AgileBoardColumns, 0)
+	statusmapping = make(map[string]*int)
+	filteredcolumns = make([]boardColumn, 0)
+	var colindex int
+	for i, col := range cols {
+		if col.Name == "Backlog" {
+			backlogIndex = i
+			hasBacklogColumn = true
+			fetchBacklog = len(col.StatusIDs) > 0
+			if isScrum {
+				continue // we need the backlog for kanban below
+			}
+		}
+		if len(col.StatusIDs) == 0 {
+			continue
+		}
+		columns = append(columns, sdk.AgileBoardColumns{
+			Name: col.Name,
+		})
+		var c = colindex
+		for _, id := range col.StatusIDs {
+			statusmapping[id] = &c
+		}
+		filteredcolumns = append(filteredcolumns, col)
+		colindex++
+	}
+	return
+}
+
+func (a *agileAPI) fetchBoardDetailsPaginated() ([]boardDetail, error) {
+	theurl := sdk.JoinURL(a.authConfig.APIURL, "/rest/agile/1.0/board")
+	client := a.httpmanager.New(theurl, nil)
 	var startAt int
-	ts := time.Now()
-	var count int
 	var resp struct {
-		MaxResults int  `json:"maxResults"`
-		StartAt    int  `json:"startAt"`
-		Total      int  `json:"total"`
-		IsLast     bool `json:"isLast"`
-		Values     []struct {
-			ID       int    `json:"id"`
-			Self     string `json:"self"`
-			Name     string `json:"name"`
-			Type     string `json:"type"`
-			Location struct {
-				ID         int    `json:"projectId"`
-				ProjectKey string `json:"projectKey"`
-			} `json:"location"`
-		} `json:"values"`
+		MaxResults int           `json:"maxResults"`
+		StartAt    int           `json:"startAt"`
+		Total      int           `json:"total"`
+		IsLast     bool          `json:"isLast"`
+		Values     []boardSource `json:"values"`
 	}
 	qs := make(url.Values)
 	qs.Set("maxResults", "100")
-	customerID := state.export.CustomerID()
-	boardProjectKeys := make(map[int]string)
 	boards := make([]boardDetail, 0)
 	for {
 		qs.Set("startAt", strconv.Itoa(startAt))
-		_, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
+		_, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 		if err != nil {
-			return fmt.Errorf("error fetching agile boards: %w", err)
+			return nil, fmt.Errorf("error fetching agile boards: %w", err)
 		}
 		for _, board := range resp.Values {
-			boardProjectKeys[board.ID] = board.Location.ProjectKey
-			boards = append(boards, boardDetail{
-				ID:         board.ID,
-				Name:       board.Name,
-				Type:       board.Type,
-				ProjectKey: board.Location.ProjectKey,
-				ProjectID:  sdk.NewWorkProjectID(customerID, strconv.Itoa(board.Location.ID), refType),
-			})
+			boards = append(boards, toBoardDetail(a.customerID, board))
 		}
 		if resp.IsLast {
 			break
 		}
 		startAt += len(resp.Values)
-		count += len(resp.Values)
 	}
+	return boards, nil
+}
+
+func (m *sprintManager) fetchBoards(state *state) error {
+	api := newAgileAPI(state.logger, state.authConfig, state.export.CustomerID(), state.integrationInstanceID, state.manager.HTTPManager())
+	ts := time.Now()
+	boards, err := api.fetchBoardDetailsPaginated()
+	if err != nil {
+		return fmt.Errorf("error finding boards: %w", err)
+	}
+	customerID := state.export.CustomerID()
 	// sort id in descending order since newer boards have bigger id than older ones
 	sort.Slice(boards, func(i, j int) bool {
 		left, right := boards[i], boards[j]
@@ -614,7 +707,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 		m.async.Do(func() error {
 
 			// fetch the board config to get the columns
-			columns, err := m.fetchBoardConfig(state, board.ID)
+			columns, err := api.fetchBoardConfig(board.ID)
 			if err != nil {
 				return err
 			}
@@ -627,36 +720,11 @@ func (m *sprintManager) fetchBoards(state *state) error {
 			theboard.RefID = strconv.Itoa(board.ID)
 			theboard.IntegrationInstanceID = sdk.StringPointer(state.integrationInstanceID)
 			theboard.Name = board.Name
-			theboard.Columns = make([]sdk.AgileBoardColumns, 0)
 
 			// build the kanban columnss
-			statusmapping := make(map[string]*int)
 			isScrum := board.Type == "scrum"
-			var hasBacklogColumn, fetchBacklog bool
-			var colindex, backlogIndex int
-			filteredcolumns := make([]boardColumn, 0)
-			for i, col := range columns {
-				if col.Name == "Backlog" {
-					backlogIndex = i
-					hasBacklogColumn = true
-					fetchBacklog = len(col.StatusIDs) > 0
-					if isScrum {
-						continue // we need the backlog for kanban below
-					}
-				}
-				if len(col.StatusIDs) == 0 {
-					continue
-				}
-				theboard.Columns = append(theboard.Columns, sdk.AgileBoardColumns{
-					Name: col.Name,
-				})
-				var c = colindex
-				for _, id := range col.StatusIDs {
-					statusmapping[id] = &c
-				}
-				filteredcolumns = append(filteredcolumns, col)
-				colindex++
-			}
+			cols, backlogIndex, hasBacklogColumn, fetchBacklog, statusmapping, filteredcolumns := buildKanbanColumns(columns, isScrum)
+			theboard.Columns = cols
 
 			// if we don't have a backlog column and it's scrum we can fetch the backlog
 			if !hasBacklogColumn && isScrum {
@@ -667,7 +735,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 
 			if fetchBacklog {
 				// fetch the backlog for the board
-				backlogids, err := m.fetchBoardIssues(state, board.ID, board.Type, "backlog")
+				backlogids, err := api.fetchBoardIssues(board.ID, board.Type, "backlog")
 				if err != nil {
 					return err
 				}
@@ -696,8 +764,15 @@ func (m *sprintManager) fetchBoards(state *state) error {
 						// already processed it since we have same sprint pointing at other boards
 						continue
 					}
-					if err := m.fetchSprint(state, sid, theboard.ID, boardProjectKeys, statusmapping, len(filteredcolumns)); err != nil {
+					sprint, err := api.fetchSprint(sid, theboard.ID, board.ProjectKey, statusmapping, len(filteredcolumns))
+					if err != nil {
 						return err
+					}
+					if err := state.export.State().Set(m.getSprintStateKey(sid), sdk.EpochNow()); err != nil {
+						return fmt.Errorf("error writing sprint key to state: %w", err)
+					}
+					if err := state.pipe.Write(sprint); err != nil {
+						return fmt.Errorf("error writing sprint to pipe: %w", err)
 					}
 				}
 			case "kanban":
@@ -725,7 +800,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 					}
 				}
 				// fetch all the board issues and assign them to the right columns
-				boardissues, err := m.fetchBoardIssues(state, board.ID, board.Type, "issue")
+				boardissues, err := api.fetchBoardIssues(board.ID, board.Type, "issue")
 				if err != nil {
 					return fmt.Errorf("error fetching kanban issues for board id %d. %w", board.ID, err)
 				}
@@ -770,7 +845,7 @@ func (m *sprintManager) fetchBoards(state *state) error {
 			return nil
 		})
 	}
-	sdk.LogDebug(state.logger, "fetched agile boards", "len", count, "duration", time.Since(ts))
+	sdk.LogDebug(state.logger, "fetched agile boards", "len", len(boards), "duration", time.Since(ts))
 	return nil
 }
 
