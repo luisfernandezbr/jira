@@ -363,6 +363,15 @@ func (a *agileAPI) fetchSprintIssues(sprintID int) ([]sprintIssue, error) {
 	return issues, nil
 }
 
+var sprintStateMap = map[string]sdk.AgileSprintStatus{
+	"future": sdk.AgileSprintStatusFuture,
+	"FUTURE": sdk.AgileSprintStatusFuture,
+	"active": sdk.AgileSprintStatusActive,
+	"ACTIVE": sdk.AgileSprintStatusActive,
+	"closed": sdk.AgileSprintStatusClosed,
+	"CLOSED": sdk.AgileSprintStatusClosed,
+}
+
 func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey string, statusmapping map[string]*int, columncount int) (*sdk.AgileSprint, error) {
 	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID))
 	client := a.httpmanager.New(theurl, nil)
@@ -397,15 +406,7 @@ func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey str
 	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
 	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
 	sdk.ConvertTimeToDateModel(s.CompleteDate, &sprint.CompletedDate)
-	switch s.State {
-	case "CLOSED", "closed":
-		sprint.Status = sdk.AgileSprintStatusClosed
-	case "ACTIVE", "active":
-		sprint.Status = sdk.AgileSprintStatusActive
-	case "FUTURE", "future":
-		sprint.Status = sdk.AgileSprintStatusFuture
-	default:
-	}
+	sprint.Status = sprintStateMap[s.State]
 	issues, err := a.fetchSprintIssues(sprintID)
 	if err != nil {
 		return nil, err
@@ -538,12 +539,10 @@ func (a *agileAPI) fetchOneSprint(sprintRefID int, boardRefID int) (*sdk.AgileSp
 	if err != nil {
 		return nil, fmt.Errorf("error fetching board: %w", err)
 	}
-	fmt.Println(sdk.Stringify(board))
 	cols, err := a.fetchBoardConfig(boardRefID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching board config: %w", err)
 	}
-	fmt.Println(sdk.Stringify(cols))
 	_, _, _, _, statusmapping, filteredcolumns := buildKanbanColumns(cols, true)
 	bid := sdk.NewAgileBoardID(a.customerID, strconv.Itoa(board.ID), refType)
 	return a.fetchSprint(sprintRefID, bid, board.ProjectKey, statusmapping, len(filteredcolumns))

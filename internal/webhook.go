@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -421,8 +422,107 @@ func webhookCreateSprint(api *agileAPI, rawdata []byte, pipe sdk.Pipe) error {
 	if err != nil {
 		return fmt.Errorf("error fetching sprint: %w", err)
 	}
-	fmt.Println(sprint.Stringify())
 	return pipe.Write(sprint)
+}
+
+func (i *JiraIntegration) webhookDeleteSprint(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var deleted struct {
+		Timestamp int64 `json:"timestamp"`
+		Sprint    struct {
+			ID            int `json:"id"`
+			OriginBoardID int `json:"originBoardId"`
+		} `json:"sprint"`
+	}
+	if err := json.Unmarshal(rawdata, &deleted); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(deleted.Sprint.ID)
+	val := sdk.AgileSprintUpdate{}
+	active := false
+	val.Set.Active = &active
+	update := sdk.NewAgileSprintUpdate(customerID, integrationInstanceID, refid, refType, val)
+	sdk.LogDebug(i.logger, "deleting sprint", "sprint", refid)
+	return pipe.Write(update)
+}
+
+type sprintProjection struct {
+	ID        int        `json:"id"`
+	Self      string     `json:"self"`
+	Name      string     `json:"name"`
+	State     string     `json:"state"`
+	StartDate *time.Time `json:"startDate,omitempty"`
+	EndDate   *time.Time `json:"endDate,omitempty"`
+	Goal      *string    `json:"goal,omitempty"`
+}
+
+func buildSprintUpdate(old, new sprintProjection) (sdk.AgileSprintUpdate, bool) {
+	val := sdk.AgileSprintUpdate{}
+	var setName, setStatus, setGoal, setStartDate, setEndDate bool
+
+	// check name differences
+	if new.Name != old.Name {
+		setName = true
+	}
+	if setName {
+		val.Set.Name = &(new.Name)
+	}
+
+	// check state differences
+	if new.State != old.State {
+		setStatus = true
+	}
+	if setStatus {
+		status := sprintStateMap[new.State]
+		val.Set.Status = &status
+	}
+
+	// check goal differences
+	if (new.Goal != nil && old.Goal != nil && *new.Goal != *old.Goal) || // if goal changed
+		(new.Goal != nil && old.Goal == nil) { // if goal was set
+		setGoal = true
+	}
+	if setGoal {
+		val.Set.Goal = new.Goal
+	}
+
+	// check startdate differences
+	if (new.StartDate != nil && old.StartDate != nil && *new.StartDate != *old.StartDate) || // if start date changed
+		(new.StartDate != nil && old.StartDate == nil) { // if start date was set
+		setStartDate = true
+	}
+	if setStartDate {
+		val.Set.StartedDate = new.StartDate
+	}
+
+	// check enddate differences
+	if (new.EndDate != nil && old.EndDate != nil && *new.EndDate != *old.EndDate) || // if end date changed
+		(new.EndDate != nil && old.EndDate == nil) { // if end date was set
+		setEndDate = true
+	}
+	if setEndDate {
+		val.Set.EndedDate = new.EndDate
+	}
+	return val, setName || setStatus || setGoal || setStartDate || setEndDate
+}
+
+func (i *JiraIntegration) webhookUpdateSprint(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var updated struct {
+		Timestamp int64            `json:"timestamp"`
+		Sprint    sprintProjection `json:"sprint"`
+		OldValue  sprintProjection `json:"oldValue"`
+	}
+	if err := json.Unmarshal(rawdata, &updated); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(updated.Sprint.ID)
+	val, change := buildSprintUpdate(updated.OldValue, updated.Sprint)
+	if !change {
+		sdk.LogDebug(i.logger, "no changes to sprint from webhook", "sprint", refid)
+		return nil
+	}
+	update := sdk.NewAgileSprintUpdate(customerID, integrationInstanceID, refid, refType, val)
+	sdk.LogDebug(i.logger, "updating sprint", "sprint", refid)
+	return pipe.Write(update)
 }
 
 // WebHook is called when a webhook is received on behalf of the integration
@@ -456,6 +556,10 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		// TODO
 	case "sprint_created":
 		return i.webhookCreateSprint(webhook)
+	case "sprint_deleted":
+		return i.webhookDeleteSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "sprint_updated":
+		return i.webhookUpdateSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
