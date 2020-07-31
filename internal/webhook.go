@@ -446,13 +446,14 @@ func (i *JiraIntegration) webhookDeleteSprint(customerID string, integrationInst
 }
 
 type sprintProjection struct {
-	ID        int        `json:"id"`
-	Self      string     `json:"self"`
-	Name      string     `json:"name"`
-	State     string     `json:"state"`
-	StartDate *time.Time `json:"startDate,omitempty"`
-	EndDate   *time.Time `json:"endDate,omitempty"`
-	Goal      *string    `json:"goal,omitempty"`
+	ID           int        `json:"id"`
+	Self         string     `json:"self"`
+	Name         string     `json:"name"`
+	State        string     `json:"state"`
+	StartDate    *time.Time `json:"startDate,omitempty"`
+	CompleteDate *time.Time `json:"completeDate"`
+	EndDate      *time.Time `json:"endDate,omitempty"`
+	Goal         *string    `json:"goal,omitempty"`
 }
 
 func buildSprintUpdate(old, new sprintProjection) (sdk.AgileSprintUpdate, bool) {
@@ -525,6 +526,29 @@ func (i *JiraIntegration) webhookUpdateSprint(customerID string, integrationInst
 	return pipe.Write(update)
 }
 
+func (i *JiraIntegration) webhookCloseSprint(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var closed struct {
+		Timestamp int64            `json:"timestamp"`
+		Sprint    sprintProjection `json:"sprint"`
+	}
+	if err := json.Unmarshal(rawdata, &closed); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(closed.Sprint.ID)
+	val := sdk.AgileSprintUpdate{}
+	status := sdk.AgileSprintStatusClosed
+	val.Set.Status = &status
+	if closed.Sprint.CompleteDate == nil {
+		sdk.LogWarn(i.logger, "closed sprint had no completed date, using now", "sprint", refid)
+		now := time.Now()
+		closed.Sprint.CompleteDate = &now
+	}
+	val.Set.CompletedDate = closed.Sprint.CompleteDate
+	update := sdk.NewAgileSprintUpdate(customerID, integrationInstanceID, refid, refType, val)
+	sdk.LogDebug(i.logger, "updating sprint", "sprint", refid)
+	return pipe.Write(update)
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -560,6 +584,11 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookDeleteSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "sprint_updated":
 		return i.webhookUpdateSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "sprint_started":
+		// NOTE: jira sends a sprint_updated on sprint start with all the info we need.
+		// Strangely, it does not send the same for sprint_closed.
+	case "sprint_closed":
+		return i.webhookCloseSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

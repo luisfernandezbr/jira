@@ -273,3 +273,20 @@ func TestWebhookJiraSprintUpdateNothing(t *testing.T) {
 	assert.NoError(i.webhookUpdateSprint("1234", "1", []byte(sprintUpdateNothing), pipe))
 	assert.Len(pipe.Written, 0)
 }
+
+func TestWebhookJiraSprintClosed(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookCloseSprint("1234", "1", loadFile("testdata/sprint_closed.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("\"CLOSED\"", update.Set["status"])
+	assert.EqualValues("", update.Set["name"])
+	assert.EqualValues("", update.Set["ended_date"])
+	assert.EqualValues("", update.Set["started_date"])
+	assert.EqualValues("{\"epoch\":1594082275692,\"offset\":0,\"rfc3339\":\"2020-07-07T00:37:55.692+00:00\"}", update.Set["completed_date"])
+	assert.EqualValues("", update.Set["goal"])
+}
