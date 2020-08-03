@@ -789,6 +789,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "board_deleted":
 		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "issuelink_created":
+		return i.webhookIssueLinkCreated(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
