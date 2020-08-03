@@ -113,12 +113,18 @@ type webhookEvent struct {
 	Event string `json:"webhookEvent"`
 }
 
-func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
 	var changelog struct {
 		Timestamp int64 `json:"timestamp"`
 		User      user  `json:"user"`
 		Issue     struct {
-			ID string `json:"id"`
+			ID     string `json:"id"`
+			Key    string `json:"key"`
+			Fields struct {
+				Project struct {
+					ID string `json:"id"`
+				} `json:"project"`
+			} `json:"fields"`
 		}
 		Changelog struct {
 			ID    string `json:"id"`
@@ -137,6 +143,7 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 	}
 	ts := sdk.DateFromEpoch(changelog.Timestamp)
 	val := sdk.WorkIssueUpdate{}
+	var updatedStatus bool
 	for i, change := range changelog.Changelog.Items {
 		var field sdk.WorkIssueChangeLogField
 		var skip bool
@@ -153,6 +160,7 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssueStatusID(customerID, refType, change.To)),
 			}
+			updatedStatus = true
 		case "Epic Link":
 			field = sdk.WorkIssueChangeLogFieldEpicID
 			if change.To == "" {
@@ -195,7 +203,48 @@ func (i *JiraIntegration) webhookUpdateIssue(customerID string, integrationInsta
 	}
 	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
 	sdk.LogDebug(i.logger, "sending issue update", "data", sdk.Stringify(update))
-	return pipe.Write(update)
+	if err := pipe.Write(update); err != nil {
+		return fmt.Errorf("error writing issue update to pipe: %w", err)
+	}
+
+	if updatedStatus {
+		ts := time.Now()
+		authCfg, err := i.createAuthConfig(i.logger, config)
+		if err != nil {
+			return fmt.Errorf("error creating authconfig: %w", err)
+		}
+		api := newAgileAPI(i.logger, authCfg, customerID, integrationInstanceID, i.httpmanager)
+		projectID := sdk.NewWorkProjectID(customerID, changelog.Issue.Fields.Project.ID, refType)
+		sdk.LogDebug(i.logger, "updating board for issue", "issue", changelog.Issue.ID)
+		if err := updateIssueBoards(state, pipe, api, customerID, integrationInstanceID, changelog.Issue.Key, projectID); err != nil {
+			return fmt.Errorf("error sending updated issue boards: %w", err)
+		}
+		sdk.LogDebug(i.logger, "done processing boards for issue", "issue", changelog.Issue.ID, "duration", time.Since(ts))
+	}
+	return nil
+}
+
+func updateIssueBoards(state sdk.State, pipe sdk.Pipe, api *agileAPI, customerID, integrationInstanceID, issueKey, projectID string) error {
+	if api.authConfig.SupportsAgileAPI {
+		boards, err := findBoardsForIssueInProject(state, api, issueKey, projectID)
+		if err != nil {
+			return fmt.Errorf("error finding boards for issue: %w", err)
+		}
+		if len(boards) == 0 {
+			// if issue is on no project boards then search all boards
+			boards, err = findBoardsForIssue(state, api, issueKey, nil)
+			if err != nil {
+				return fmt.Errorf("error finding boards for issue: %w", err)
+			}
+		}
+		for _, boardID := range boards {
+			// re-export boards
+			if err := fetchAndExportBoard(api, state, pipe, customerID, integrationInstanceID, boardID); err != nil {
+				return fmt.Errorf("error updating board for issue: %w", err)
+			}
+		}
+	}
+	return nil
 }
 
 func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte, pipe sdk.Pipe) error {
@@ -239,6 +288,15 @@ func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte
 		if err := pipe.Write(comment); err != nil {
 			return err
 		}
+	}
+	if state.authConfig.SupportsAgileAPI {
+		ts := time.Now()
+		sdk.LogDebug(i.logger, "updating board for issue", "issue", issue.ID)
+		api := newAgileAPI(i.logger, state.authConfig, webhook.CustomerID(), webhook.IntegrationInstanceID(), i.httpmanager)
+		if err := updateIssueBoards(webhook.State(), pipe, api, webhook.CustomerID(), webhook.IntegrationInstanceID(), issue.Identifier, issue.ProjectID); err != nil {
+			return fmt.Errorf("error re-exporting board: %w", err)
+		}
+		sdk.LogDebug(i.logger, "done processing boards for issue", "issue", issue.ID, "duration", time.Since(ts))
 	}
 	return nil
 }
@@ -549,6 +607,11 @@ func (i *JiraIntegration) webhookCloseSprint(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
+func (i *JiraIntegration) webhookUpdateBoard(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	// TODO:
+	return nil
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
@@ -561,7 +624,7 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	pipe := webhook.Pipe()
 	switch event.Event {
 	case "jira:issue_updated":
-		return i.webhookUpdateIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		return i.webhookUpdateIssue(webhook.State(), webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "jira:issue_created":
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	case "jira:issue_deleted":
@@ -589,6 +652,8 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		// Strangely, it does not send the same for sprint_closed.
 	case "sprint_closed":
 		return i.webhookCloseSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "board_updated":
+		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}

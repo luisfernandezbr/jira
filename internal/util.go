@@ -201,3 +201,53 @@ func getJiraErrorMessage(err error) string {
 	}
 	return err.Error()
 }
+
+func sliceContains(s []string, value string) bool {
+	for _, v := range s {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// appendUnique will append val(s) to arr if arr does not already contain them
+func appendUnique(arr []string, val ...string) []string {
+	for _, v := range val {
+		if !sliceContains(arr, v) {
+			arr = append(arr, v)
+		}
+	}
+	return arr
+}
+
+func appendStateArray(state sdk.State, stateKey string, newVals ...string) error {
+	var existingInts []string
+	found, err := state.Get(stateKey, &existingInts)
+	if err != nil {
+		return fmt.Errorf("error getting string array (%s) from state: %w", stateKey, err)
+	}
+	var shouldSave bool
+	if found {
+		exists := make(map[string]bool)
+		for _, existing := range existingInts {
+			exists[existing] = true
+		}
+		for _, newVal := range newVals {
+			if !exists[newVal] {
+				// if it doesnt exist in the current array, then add to it
+				existingInts = append(existingInts, newVal)
+				shouldSave = true
+			}
+		}
+	} else {
+		existingInts = newVals
+		shouldSave = true
+	}
+	if shouldSave {
+		if err := state.Set(stateKey, existingInts); err != nil {
+			return fmt.Errorf("error saving string array to state: %w", err)
+		}
+	}
+	return nil
+}
