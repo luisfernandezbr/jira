@@ -703,7 +703,7 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		// Strangely, it does not send the same for sprint_closed.
 	case "sprint_closed":
 		return i.webhookCloseSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
-	case "board_created":
+	case "board_created", "board_configuration_changed":
 		return i.webhookCreateBoard(webhook.State(), webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "board_updated":
 		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
