@@ -663,6 +663,86 @@ func (i *JiraIntegration) webhookDeleteBoard(customerID string, integrationInsta
 	return pipe.Write(model)
 }
 
+func makeLinkUpdate(issueID string, issueRefID string, linkRefID string, linkType sdk.WorkIssueLinkedIssuesLinkType, reverse bool) *sdk.WorkIssueUpdate {
+	updt := &sdk.WorkIssueUpdate{}
+	links := []sdk.WorkIssueLinkedIssues{
+		{
+			IssueID:          issueID,
+			IssueRefID:       issueRefID,
+			LinkType:         linkType,
+			RefID:            linkRefID,
+			ReverseDirection: reverse,
+			// IssueIdentifier:  ,
+		},
+	}
+	updt.Push.LinkedIssues = &links
+	return updt
+}
+
+func (i *JiraIntegration) webhookIssueLinkCreated(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var link struct {
+		Timestamp int64 `json:"timestamp"`
+		IssueLink struct {
+			ID                 int `json:"id"`
+			SourceIssueID      int `json:"sourceIssueId"`
+			DestinationIssueID int `json:"destinationIssueId"`
+			IssueLinkType      struct {
+				ID                int    `json:"id"`
+				Name              string `json:"name"`
+				OutwardName       string `json:"outwardName"`
+				InwardName        string `json:"inwardName"`
+				Style             string `json:"style"`
+				IsSubTaskLinkType bool   `json:"isSubTaskLinkType"`
+				IsSystemLinkType  bool   `json:"isSystemLinkType"`
+			} `json:"issueLinkType"`
+		} `json:"issueLink"`
+	}
+	if err := json.Unmarshal(rawdata, &link); err != nil {
+		return fmt.Errorf("error parsing json for link: %w", err)
+	}
+
+	sourceRefID := strconv.Itoa(link.IssueLink.SourceIssueID)
+	destRefID := strconv.Itoa(link.IssueLink.DestinationIssueID)
+	sourceID := sdk.NewWorkIssueID(customerID, sourceRefID, refType)
+	destID := sdk.NewWorkIssueID(customerID, destRefID, refType)
+
+	var source, dest *sdk.WorkIssueUpdate
+	makeUpdates := func(linktype sdk.WorkIssueLinkedIssuesLinkType) {
+		// create link from source to dest
+		source = makeLinkUpdate(destID, destRefID, strconv.Itoa(link.IssueLink.ID), linktype, false)
+		// create reverse link from dest back to source
+		dest = makeLinkUpdate(sourceID, sourceRefID, strconv.Itoa(link.IssueLink.ID), linktype, true)
+	}
+	switch link.IssueLink.IssueLinkType.Name {
+	case "Epic-Story Link":
+		// NOTE: changing an epic sends an issue webhook, so webhookUpdateIssue will handle this
+	case "Relates":
+		makeUpdates(sdk.WorkIssueLinkedIssuesLinkTypeRelates)
+	case "Blocks":
+		makeUpdates(sdk.WorkIssueLinkedIssuesLinkTypeBlocks)
+	case "Cloners":
+		makeUpdates(sdk.WorkIssueLinkedIssuesLinkTypeClones)
+	case "Duplicate":
+		makeUpdates(sdk.WorkIssueLinkedIssuesLinkTypeDuplicates)
+	case "Problem/Incident":
+		makeUpdates(sdk.WorkIssueLinkedIssuesLinkTypeCauses)
+	default:
+		sdk.LogDebug(i.logger, "unhandled issue link", "type", link.IssueLink.IssueLinkType.Name)
+	}
+
+	if source != nil {
+		if err := pipe.Write(sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, sourceRefID, refType, *source)); err != nil {
+			return fmt.Errorf("error writing update to pipe: %w", err)
+		}
+	}
+	if dest != nil {
+		if err := pipe.Write(sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, destRefID, refType, *dest)); err != nil {
+			return fmt.Errorf("error writing update to pipe: %w", err)
+		}
+	}
+	return nil
+}
+
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	sdk.LogInfo(i.logger, "webhook request received", "customer_id", webhook.CustomerID())
