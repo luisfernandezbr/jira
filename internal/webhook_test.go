@@ -290,3 +290,27 @@ func TestWebhookJiraSprintClosed(t *testing.T) {
 	assert.EqualValues("{\"epoch\":1594082275692,\"offset\":0,\"rfc3339\":\"2020-07-07T00:37:55.692+00:00\"}", update.Set["completed_date"])
 	assert.EqualValues("", update.Set["goal"])
 }
+
+func TestWebhookBoardUpdated(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateBoard("1234", "1", loadFile("testdata/board_updated.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("\"Teamoji Board (updated)\"", update.Set["name"])
+}
+
+func TestWebhookBoardDeleted(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookDeleteBoard("1234", "1", loadFile("testdata/board_deleted.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("false", update.Set["active"])
+}

@@ -607,9 +607,60 @@ func (i *JiraIntegration) webhookCloseSprint(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
+func (i *JiraIntegration) webhookCreateBoard(state sdk.State, config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var update struct {
+		Timestamp int64 `json:"timestamp"`
+		Board     struct {
+			ID int `json:"id"`
+		} `json:"board"`
+	}
+	if err := json.Unmarshal(rawdata, &update); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(update.Board.ID)
+	authConfig, err := i.createAuthConfig(i.logger, config)
+	if err != nil {
+		return fmt.Errorf("error getting auth config: %w", err)
+	}
+	api := newAgileAPI(i.logger, authConfig, customerID, integrationInstanceID, i.httpmanager)
+	return fetchAndExportBoard(api, state, pipe, customerID, integrationInstanceID, refid)
+}
+
 func (i *JiraIntegration) webhookUpdateBoard(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
-	// TODO:
-	return nil
+	var update struct {
+		Timestamp int64 `json:"timestamp"`
+		Board     struct {
+			ID   int    `json:"id"`
+			Name string `json:"name"`
+			Type string `json:"type"` // TODO(robin): investigate if you can change board types
+		} `json:"board"`
+	}
+	if err := json.Unmarshal(rawdata, &update); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(update.Board.ID)
+	val := sdk.AgileBoardUpdate{}
+	val.Set.Name = &(update.Board.Name)
+	model := sdk.NewAgileBoardUpdate(customerID, integrationInstanceID, refid, refType, val)
+	return pipe.Write(model)
+}
+
+func (i *JiraIntegration) webhookDeleteBoard(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+	var update struct {
+		Timestamp int64 `json:"timestamp"`
+		Board     struct {
+			ID int `json:"id"`
+		} `json:"board"`
+	}
+	if err := json.Unmarshal(rawdata, &update); err != nil {
+		return fmt.Errorf("error parsing json for created project: %w", err)
+	}
+	refid := strconv.Itoa(update.Board.ID)
+	val := sdk.AgileBoardUpdate{}
+	active := false
+	val.Set.Active = &active
+	model := sdk.NewAgileBoardUpdate(customerID, integrationInstanceID, refid, refType, val)
+	return pipe.Write(model)
 }
 
 // WebHook is called when a webhook is received on behalf of the integration
@@ -652,7 +703,11 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 		// Strangely, it does not send the same for sprint_closed.
 	case "sprint_closed":
 		return i.webhookCloseSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "board_created":
+		return i.webhookCreateBoard(webhook.State(), webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "board_updated":
+		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
+	case "board_deleted":
 		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
 		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
