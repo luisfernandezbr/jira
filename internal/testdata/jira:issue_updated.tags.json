@@ -1,0 +1,423 @@
+{
+  "timestamp": 1596505745219,
+  "webhookEvent": "jira:issue_updated",
+  "issue_event_type_name": "issue_updated",
+  "user": {
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+    "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+    "avatarUrls": {
+      "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+    },
+    "displayName": "Robin Diddams",
+    "active": true,
+    "timeZone": "America/Los_Angeles",
+    "accountType": "atlassian"
+  },
+  "issue": {
+    "id": "11917",
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/11917",
+    "key": "TES-12",
+    "fields": {
+      "statuscategorychangedate": "2020-08-03T08:36:17.988-0700",
+      "issuetype": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+        "id": "10103",
+        "description": "A problem which impairs or prevents the functions of the product.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10303
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10601",
+        "id": "10601",
+        "key": "TES",
+        "name": "TESTING",
+        "projectTypeKey": "software",
+        "simplified": false,
+        "avatarUrls": {
+          "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?avatarId=10324",
+          "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&avatarId=10324",
+          "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&avatarId=10324",
+          "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&avatarId=10324"
+        },
+        "projectCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/projectCategory/10001",
+          "id": "10001",
+          "description": "",
+          "name": "Development"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "resolution": null,
+      "customfield_10510": null,
+      "customfield_10104": null,
+      "customfield_10105": null,
+      "customfield_10501": null,
+      "customfield_10106": null,
+      "customfield_10502": null,
+      "customfield_10107": [
+        "com.atlassian.greenhopper.service.sprint.Sprint@62140a46[completeDate=2020-07-31T15:50:09.718Z,endDate=2020-08-14T21:13:00.000Z,goal=take over the world! 🌍🌎🌏,id=196,name=TES Sprint 2,rapidViewId=9,sequence=196,startDate=2020-07-30T21:13:24.588Z,state=CLOSED]",
+        "com.atlassian.greenhopper.service.sprint.Sprint@7c2b0edc[completeDate=<null>,endDate=2020-08-15T16:17:00.000Z,goal=,id=197,name=TES Sprint 3,rapidViewId=9,sequence=197,startDate=2020-07-31T16:17:17.777Z,state=ACTIVE]"
+      ],
+      "customfield_10503": null,
+      "customfield_10504": null,
+      "customfield_10108": "0|i003mb:",
+      "customfield_10109": null,
+      "customfield_10505": null,
+      "customfield_10506": null,
+      "resolutiondate": null,
+      "customfield_10507": null,
+      "customfield_10508": null,
+      "workratio": -1,
+      "customfield_10509": null,
+      "watches": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TES-12/watchers",
+        "watchCount": 1,
+        "isWatching": true
+      },
+      "lastViewed": "2020-08-03T18:48:57.158-0700",
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": false
+      },
+      "created": "2017-12-07T00:30:36.278-0800",
+      "customfield_10100": null,
+      "priority": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/3",
+        "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+        "name": "Medium",
+        "id": "3"
+      },
+      "customfield_10101": null,
+      "customfield_10102": null,
+      "customfield_10300": null,
+      "customfield_10103": [],
+      "labels": [
+        "signal"
+      ],
+      "customfield_10301": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [
+        {
+          "id": "23158",
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLink/23158",
+          "type": {
+            "id": "10000",
+            "name": "Blocks",
+            "inward": "is blocked by",
+            "outward": "blocks",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLinkType/10000"
+          },
+          "inwardIssue": {
+            "id": "11901",
+            "key": "TES-1",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/11901",
+            "fields": {
+              "summary": "Test issue for Robin",
+              "status": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+                "description": "",
+                "iconUrl": "https://pinpt-hq.atlassian.net/",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/3",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                "name": "Medium",
+                "id": "3"
+              },
+              "issuetype": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+                "id": "10103",
+                "description": "A problem which impairs or prevents the functions of the product.",
+                "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+                "name": "Bug",
+                "subtask": false,
+                "avatarId": 10303
+              }
+            }
+          }
+        },
+        {
+          "id": "23160",
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLink/23160",
+          "type": {
+            "id": "10001",
+            "name": "Cloners",
+            "inward": "is cloned by",
+            "outward": "clones",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLinkType/10001"
+          },
+          "outwardIssue": {
+            "id": "18715",
+            "key": "TES-81",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/18715",
+            "fields": {
+              "summary": "Testing description",
+              "status": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+                "description": "",
+                "iconUrl": "https://pinpt-hq.atlassian.net/",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              },
+              "issuetype": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+                "id": "10103",
+                "description": "A problem which impairs or prevents the functions of the product.",
+                "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+                "name": "Bug",
+                "subtask": false,
+                "avatarId": 10303
+              }
+            }
+          }
+        },
+        {
+          "id": "23161",
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLink/23161",
+          "type": {
+            "id": "10002",
+            "name": "Duplicate",
+            "inward": "is duplicated by",
+            "outward": "duplicates",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLinkType/10002"
+          },
+          "inwardIssue": {
+            "id": "18715",
+            "key": "TES-81",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/18715",
+            "fields": {
+              "summary": "Testing description",
+              "status": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+                "description": "",
+                "iconUrl": "https://pinpt-hq.atlassian.net/",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              },
+              "issuetype": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+                "id": "10103",
+                "description": "A problem which impairs or prevents the functions of the product.",
+                "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+                "name": "Bug",
+                "subtask": false,
+                "avatarId": 10303
+              }
+            }
+          }
+        },
+        {
+          "id": "23162",
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLink/23162",
+          "type": {
+            "id": "10200",
+            "name": "Problem/Incident",
+            "inward": "is caused by",
+            "outward": "causes",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issueLinkType/10200"
+          },
+          "outwardIssue": {
+            "id": "18715",
+            "key": "TES-81",
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/18715",
+            "fields": {
+              "summary": "Testing description",
+              "status": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+                "description": "",
+                "iconUrl": "https://pinpt-hq.atlassian.net/",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              },
+              "issuetype": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+                "id": "10103",
+                "description": "A problem which impairs or prevents the functions of the product.",
+                "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+                "name": "Bug",
+                "subtask": false,
+                "avatarId": 10303
+              }
+            }
+          }
+        }
+      ],
+      "assignee": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "updated": "2020-08-03T18:49:05.216-0700",
+      "status": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/10000",
+        "description": "",
+        "iconUrl": "https://pinpt-hq.atlassian.net/",
+        "name": "To Do",
+        "id": "10000",
+        "statusCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "New"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": "This would be a lot easier if I could use our structs",
+      "customfield_10210": null,
+      "timetracking": {},
+      "customfield_10006": "TES-38",
+      "security": null,
+      "customfield_10007": {
+        "hasEpicLinkFieldDependency": false,
+        "showField": false,
+        "nonEditableReason": {
+          "reason": "PLUGIN_LICENSE_ERROR",
+          "message": "The Parent Link is only available to Jira Premium users."
+        }
+      },
+      "aggregatetimeestimate": null,
+      "attachment": [],
+      "customfield_10208": null,
+      "customfield_10209": null,
+      "summary": "something's wrong again!",
+      "creator": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "customfield_10000": "{}",
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10001": null,
+      "customfield_10002": null,
+      "customfield_10520": null,
+      "customfield_10400": null,
+      "customfield_10511": null,
+      "customfield_10512": null,
+      "customfield_10513": null,
+      "environment": null,
+      "customfield_10514": null,
+      "duedate": null,
+      "customfield_10517": null,
+      "customfield_10518": null,
+      "customfield_10519": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TES-12/votes",
+        "votes": 0,
+        "hasVoted": false
+      }
+    }
+  },
+  "changelog": {
+    "id": "104651",
+    "items": [
+      {
+        "field": "labels",
+        "fieldtype": "jira",
+        "fieldId": "labels",
+        "from": null,
+        "fromString": "",
+        "to": null,
+        "toString": "signal"
+      }
+    ]
+  }
+}

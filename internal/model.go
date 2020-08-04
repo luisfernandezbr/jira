@@ -9,9 +9,9 @@ const refType = "jira"
 type user struct {
 	AccountID    string  `json:"accountId"` // AccountID not available in hosted jira.
 	Self         string  `json:"self"`
-	Name         string  `json:"name"`
+	Name         string  `json:"name"` // Name not available from jira cloud.
 	Key          string  `json:"key"`
-	EmailAddress string  `json:"emailAddress"`
+	EmailAddress string  `json:"emailAddress"` // EmailAddress not available from jira cloud.
 	Avatars      Avatars `json:"avatarUrls"`
 	DisplayName  string  `json:"displayName"`
 	Active       bool    `json:"active"`

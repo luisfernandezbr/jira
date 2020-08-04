@@ -1,8 +1,10 @@
 package internal
 
-import "github.com/pinpt/agent.next/sdk"
+import (
+	"github.com/pinpt/agent.next/sdk"
+)
 
-func (u user) ToModel(customerID string, integrationInstanceID string, websiteURL string) (*sdk.WorkUser, error) {
+func (u user) ToModel(customerID string, integrationInstanceID string, websiteURL string) *sdk.WorkUser {
 	theuser := &sdk.WorkUser{}
 	theuser.CustomerID = customerID
 	theuser.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
@@ -27,7 +29,7 @@ func (u user) ToModel(customerID string, integrationInstanceID string, websiteUR
 		// but on our test hosted server it hangs forever when used in jira
 		theuser.URL = sdk.StringPointer(websiteURL + "/secure/ViewProfile.jspa?name=" + u.Key)
 	}
-	return theuser, nil
+	return theuser
 }
 
 // easyjson:skip
@@ -40,24 +42,30 @@ type userManager struct {
 	integrationInstanceID string
 }
 
-func (m *userManager) emit(user user) error {
+func (m *userManager) Emit(user user) error {
 	refid := user.RefID()
 	if m.users[refid] {
 		return nil
 	}
-	object, err := user.ToModel(m.customerID, m.websiteURL, m.integrationInstanceID)
-	if err != nil {
-		return err
-	}
+	object := user.ToModel(m.customerID, m.websiteURL, m.integrationInstanceID)
 	if err := m.pipe.Write(object); err != nil {
 		return nil
 	}
-	m.stats.incUser()
+	// stats may be nil for the case of webhooks/testing
+	if m.stats != nil {
+		m.stats.incUser()
+	}
 	m.users[refid] = true
 	return nil
 }
 
-func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe, stats *stats, integrationInstanceID string) *userManager {
+// UserManager will handle sending jira users
+type UserManager interface {
+	// Emit a jira user if the user has not yet been emitted.
+	Emit(user user) error
+}
+
+func newUserManager(customerID string, websiteURL string, pipe sdk.Pipe, stats *stats, integrationInstanceID string) UserManager {
 	return &userManager{
 		users:                 make(map[string]bool),
 		customerID:            customerID,
