@@ -338,7 +338,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	sdk.LogInfo(logger, "export started")
 	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationInstanceID())
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating state: %w", err)
 	}
 	state.manager = i.manager
 	state.export = export
@@ -346,7 +346,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		started: time.Now(),
 	}
 	if err := i.installWebHookIfNecessary(logger, export.Config(), export.State(), state.authConfig, export.CustomerID(), export.IntegrationInstanceID()); err != nil {
-		return err
+		return fmt.Errorf("error installing webhooks: %w", err)
 	}
 	var fromTime time.Time
 	var fromTimeStr string
@@ -354,7 +354,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		sdk.LogInfo(logger, "historical has been requested")
 	} else {
 		if _, err := export.State().Get(configKeyLastExportTimestamp, &fromTimeStr); err != nil {
-			return err
+			return fmt.Errorf("error getting last export time from state: %w", err)
 		}
 		if fromTimeStr != "" {
 			fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
@@ -365,7 +365,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	customfields, err := i.fetchCustomFields(logger, state.export, export.CustomerID(), state.authConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching custome fields: %w", err)
 	}
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationInstanceID())
@@ -375,29 +375,29 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	projectKeys, err := i.fetchProjectsPaginated(state)
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching projects: %w", err)
 	}
 	if len(projectKeys) == 0 {
 		sdk.LogInfo(logger, "no projects found to export")
 	} else {
 		if err := state.sprintManager.init(state); err != nil {
-			return err
+			return fmt.Errorf("error in sprintmanager: %w", err)
 		}
 		if err := i.fetchPriorities(state); err != nil {
-			return err
+			return fmt.Errorf("error fetching priorities: %w", err)
 		}
 		if err := i.fetchTypes(state); err != nil {
-			return err
+			return fmt.Errorf("error fetching types: %w", err)
 		}
 		if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {
-			return err
+			return fmt.Errorf("error fetching issues: %w", err)
 		}
 		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
-			return err
+			return fmt.Errorf("error waiting for fetched sprints: %w", err)
 		}
 	}
 	if err := export.State().Set(configKeyLastExportTimestamp, state.stats.started.Format(time.RFC3339Nano)); err != nil {
-		return err
+		return fmt.Errorf("error writing last export date to state: %w", err)
 	}
 	state.stats.dump(logger)
 	return nil
