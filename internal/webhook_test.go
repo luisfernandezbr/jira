@@ -107,6 +107,35 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	assert.EqualValues(1596507496902, res[0].CreatedDate.Epoch)
 }
 
+func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	err := i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.project.json"), pipe)
+	// NOTE: this error is fine since we arent testing that the board gets updated 😅
+	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues(quoteString(sdk.NewWorkProjectID("1234", "10639", refType)), update.Set["project_id"])
+	assert.EqualValues(quoteString("Work Required"), update.Set["status"])
+	assert.EqualValues(quoteString(sdk.NewWorkIssueStatusID("1234", refType, "1")), update.Set["status_id"])
+	assert.EqualValues(quoteString("GOLD-208"), update.Set["identifier"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 4)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldProjectID, res[0].Field)
+	assert.EqualValues("10639", res[0].To)
+	assert.EqualValues(1596507921569, res[0].CreatedDate.Epoch)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldStatus, res[1].Field)
+	assert.EqualValues("1", res[1].To)
+	assert.EqualValues(1596507921569, res[1].CreatedDate.Epoch)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldIdentifier, res[3].Field)
+	assert.EqualValues("GOLD-208", res[3].To)
+	assert.EqualValues(1596507921569, res[3].CreatedDate.Epoch)
+
+}
 func TestWebhookJiraIssueDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}

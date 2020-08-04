@@ -191,14 +191,19 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssueTypeID(customerID, refType, change.To)),
 			}
+		case "project":
+			field = sdk.WorkIssueChangeLogFieldProjectID
+			projectID := sdk.NewWorkProjectID(customerID, change.To, refType)
+			val.Set.ProjectID = &projectID
+		case "Key":
+			field = sdk.WorkIssueChangeLogFieldIdentifier
+			val.Set.Identifier = sdk.StringPointer(change.ToString)
+			change.To = change.ToString // to is null
 		}
 		// TODO:
 		// "DUE_DATE"
-		// "IDENTIFIER"
 		// "PARENT_ID"
-		// "PROJECT_ID"
 		// "SPRINT_IDS"
-		// "TYPE"
 		if !skip {
 			changeItem := sdk.WorkIssueChangeLog{
 				RefID:      changelog.Changelog.ID,
