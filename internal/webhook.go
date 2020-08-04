@@ -215,9 +215,7 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 				val.Set.DueDate = &t
 			}
 		}
-		// TODO:
-		// "DUE_DATE"
-		// "PARENT_ID"
+		// TODO: find a way to replicate "PARENT_ID" webhook
 		if !skip {
 			changeItem := sdk.WorkIssueChangeLog{
 				RefID:      changelog.Changelog.ID,
