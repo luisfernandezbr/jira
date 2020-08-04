@@ -182,15 +182,16 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 			tags := strings.Split(change.ToString, " ")
 			val.Set.Tags = &tags
 			change.To = change.ToString // to is null, this api is lousy
+		case "resolution":
+			field = sdk.WorkIssueChangeLogFieldResolution
+			val.Set.Resolution = sdk.StringPointer(change.ToString)
 		}
 		// TODO:
 		// "DUE_DATE"
 		// "IDENTIFIER"
 		// "PARENT_ID"
 		// "PROJECT_ID"
-		// "RESOLUTION"
 		// "SPRINT_IDS"
-		// "TAGS"
 		// "TYPE"
 		if !skip {
 			changeItem := sdk.WorkIssueChangeLog{

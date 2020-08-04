@@ -1,0 +1,226 @@
+{
+  "timestamp": 1596506483154,
+  "webhookEvent": "jira:issue_updated",
+  "issue_event_type_name": "issue_generic",
+  "user": {
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+    "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+    "avatarUrls": {
+      "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+    },
+    "displayName": "Robin Diddams",
+    "active": true,
+    "timeZone": "America/Los_Angeles",
+    "accountType": "atlassian"
+  },
+  "issue": {
+    "id": "11924",
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/11924",
+    "key": "TES-19",
+    "fields": {
+      "statuscategorychangedate": "2020-08-03T19:01:23.138-0700",
+      "issuetype": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+        "id": "10103",
+        "description": "A problem which impairs or prevents the functions of the product.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10303
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10601",
+        "id": "10601",
+        "key": "TES",
+        "name": "TESTING",
+        "projectTypeKey": "software",
+        "simplified": false,
+        "avatarUrls": {
+          "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?avatarId=10324",
+          "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&avatarId=10324",
+          "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&avatarId=10324",
+          "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&avatarId=10324"
+        },
+        "projectCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/projectCategory/10001",
+          "id": "10001",
+          "description": "",
+          "name": "Development"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "resolution": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/resolution/10001",
+        "id": "10001",
+        "description": "This issue won't be actioned.",
+        "name": "Won't Do"
+      },
+      "customfield_10510": null,
+      "customfield_10104": null,
+      "customfield_10501": null,
+      "customfield_10105": null,
+      "customfield_10106": null,
+      "customfield_10502": null,
+      "customfield_10503": null,
+      "customfield_10107": null,
+      "customfield_10504": null,
+      "customfield_10108": "0|i003nv:",
+      "customfield_10109": null,
+      "customfield_10505": null,
+      "resolutiondate": "2020-08-03T19:01:23.105-0700",
+      "customfield_10506": null,
+      "customfield_10507": null,
+      "customfield_10508": null,
+      "workratio": -1,
+      "customfield_10509": null,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": false
+      },
+      "watches": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TES-19/watchers",
+        "watchCount": 1,
+        "isWatching": true
+      },
+      "lastViewed": "2020-08-03T19:01:23.042-0700",
+      "created": "2017-12-07T02:56:32.379-0800",
+      "priority": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/3",
+        "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+        "name": "Medium",
+        "id": "3"
+      },
+      "customfield_10100": null,
+      "customfield_10101": "6_*:*_1_*:*_0_*|*_10000_*:*_1_*:*_83862290775",
+      "customfield_10102": null,
+      "customfield_10300": null,
+      "customfield_10301": null,
+      "labels": [],
+      "customfield_10103": [],
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": null,
+      "updated": "2020-08-03T19:01:23.135-0700",
+      "status": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/6",
+        "description": "The issue is considered finished, the resolution is correct. Issues which are closed can be reopened.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/images/icons/statuses/closed.png",
+        "name": "Closed",
+        "id": "6",
+        "statusCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Complete"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": "Panic log:\n{code}\nWARN\tthis should be in the log file\t{\"pkg\": \"test\"}\nDEBUG\tand this\t{\"pkg\": \"test\"}\n\n\nPanic detected at 2017-12-07 19:56:24.094311 +0900 JST m=+0.040304133\n\npanic: this is a test\n\ngoroutine 1 [running]:\ngithub.com/pinpt/worker/cmd/test.glob..func4(0x56d2b40, 0x56ffcd0, 0x0, 0x0)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/cmd/test/test.go:102 +0x15d\ngithub.com/pinpt/worker/vendor/github.com/spf13/cobra.(*Command).execute(0x56d2b40, 0x56ffcd0, 0x0, 0x0, 0x56d2b40, 0x56ffcd0)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/spf13/cobra/command.go:702 +0x2c6\ngithub.com/pinpt/worker/vendor/github.com/spf13/cobra.(*Command).ExecuteC(0x56cd200, 0x10000c420161e90, 0xc420161e98, 0x3)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/spf13/cobra/command.go:783 +0x30e\ngithub.com/pinpt/worker/vendor/github.com/spf13/cobra.(*Command).Execute(0x56cd200, 0x4fb4a01, 0xc4201c0770)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/spf13/cobra/command.go:736 +0x2b\ngithub.com/pinpt/worker/cmd.Execute()\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/cmd/root.go:136 +0xb6\nmain.main()\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/main.go:8 +0x20\n\n\n=======================================================================\nSystem Information\n=======================================================================\n\nHostname:Pepper.local\nExecution Command:pinpt test panic\nVersion: dev Build: dev\nStart Date: 2017-12-07 19:56:24.05795 +0900 JST m=+0.003941988 (36.937903ms)\nCurrent Date: 2017-12-07 19:56:24.094927 +0900 JST m=+0.040919808\nCurrent Memory: 1.9 MB\n\ngoroutine 1 [running]:\ngithub.com/pinpt/worker/pkg/util.LogMemory(0x566b8a0, 0xc420398000)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/pkg/util/log.go:597 +0x9e\ngithub.com/pinpt/worker/pkg/util/catchpanic.handleLogs(0xc42038e000, 0x429, 0xc420161d50, 0x4006fdb)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/pkg/util/catchpanic/catchpanic.go:98 +0x5dc\ngithub.com/pinpt/worker/pkg/util/catchpanic.PanicHandler(0xc42038e000, 0x429)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/pkg/util/catchpanic/catchpanic.go:66 +0x39\ngithub.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap.Wrap(0x56dd400, 0x0, 0x0, 0x0)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap/panicwrap.go:220 +0x731\ngithub.com/pinpt/worker/cmd.Execute()\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/cmd/root.go:122 +0x2c6\nmain.main()\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/main.go:8 +0x20\n\ngoroutine 5 [syscall]:\nos/signal.signal_recv(0x5672020)\n\t/usr/local/Cellar/go/1.9.2/libexec/src/runtime/sigqueue.go:131 +0xa7\nos/signal.loop()\n\t/usr/local/Cellar/go/1.9.2/libexec/src/os/signal/signal_unix.go:22 +0x22\ncreated by os/signal.init.0\n\t/usr/local/Cellar/go/1.9.2/libexec/src/os/signal/signal_unix.go:28 +0x41\n\ngoroutine 18 [select]:\ngithub.com/pinpt/worker/vendor/github.com/patrickmn/go-cache.(*janitor).Run(0xc4201c0750, 0xc4201d6340)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache/cache.go:1079 +0x11a\ncreated by github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache.runJanitor\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache/cache.go:1099 +0xba\n\ngoroutine 19 [select]:\ngithub.com/pinpt/worker/vendor/github.com/patrickmn/go-cache.(*janitor).Run(0xc4201c0760, 0xc4201d6380)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache/cache.go:1079 +0x11a\ncreated by github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache.runJanitor\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/patrickmn/go-cache/cache.go:1099 +0xba\n\ngoroutine 25 [select, locked to thread]:\nruntime.gopark(0x4fb78e0, 0x0, 0x4f48cee, 0x6, 0x18, 0x1)\n\t/usr/local/Cellar/go/1.9.2/libexec/src/runtime/proc.go:287 +0x12c\nruntime.selectgo(0xc420372f50, 0xc42022d2c0)\n\t/usr/local/Cellar/go/1.9.2/libexec/src/runtime/select.go:395 +0x1149\nruntime.ensureSigM.func1()\n\t/usr/local/Cellar/go/1.9.2/libexec/src/runtime/signal_unix.go:511 +0x1fe\nruntime.goexit()\n\t/usr/local/Cellar/go/1.9.2/libexec/src/runtime/asm_amd64.s:2337 +0x1\n\ngoroutine 26 [select]:\ngithub.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap.Wrap.func2(0xc42022d1a0, 0xc42022d200, 0xc42022cea0, 0xc42021adc0)\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap/panicwrap.go:186 +0x178\ncreated by github.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap.Wrap\n\t/Users/robindiddams/go/src/github.com/pinpt/worker/vendor/github.com/mitchellh/panicwrap/panicwrap.go:182 +0x655\n\n\n=======================================================================\nEnvironment Variables\n=======================================================================\n\nTERM_PROGRAM=Apple_Terminal\nSHELL=/bin/bash\nTERM=xterm-256color\nCLICOLOR=1\nTMPDIR=/var/folders/7k/vz1zjvcd1ldd38p7k98rr9bw0000gn/T/\nApple_PubSub_Socket_Render=/private/tmp/com.apple.launchd.qoUARSZaYI/Render\nTERM_PROGRAM_VERSION=400\nPP_SLACK_URL=https://hooks.slack.com/services/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\nOLDPWD=/Users/robindiddams/go/src/github.com/pinpt\nTERM_SESSION_ID=77A02F83-27DA-4E4E-A9AE-242106899C12\nTF_ALIAS=fuck\nTF_SHELL_ALIASES=alias dkill\nPYTHONIOENCODING=\nUSER=robindiddams\nPP_JIRA_USERNAME=rdiddams\nSSH_AUTH_SOCK=/private/tmp/com.apple.launchd.16wX1uoWI1/Listeners\nPP_JIRA_URL=https://pinpt-hq.atlassian.net/rest\nPATH=/Users/robindiddams/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin\nWORK=/Users/robindiddams/go/src/github.com/pinpt/\nPP_ANALYTICS_KEY=2PS*************************************\nPWD=/Users/robindiddams/go/src/github.com/pinpt/worker\nSUBDOMAIN=robin\nAWS_SECRET_ACCESS_KEY=Dwg*************************************\nLANG=en_US.UTF-8\nPP_JIRA_PASSWORD=byt**********\nAWS_REGION=us-west-2\nXPC_FLAGS=0x0\nPP_WEBROOT=/Users/robindiddams/go/src/github.com/pinpt/worker/pkg/webapp/server/router/testdata\nXPC_SERVICE_NAME=0\nAWS_ACCESS_KEY_ID=AKI*****************\nIRCNICK=robou\nSHLVL=1\nHOME=/Users/robindiddams\nLOGNAME=robindiddams\nGITHUB_TOKEN=7cc*************************************\nGOPATH=/Users/robindiddams/go\nDISPLAY=/private/tmp/com.apple.launchd.ujFboyzyex/org.macosforge.xquartz:0\nPP_SLACK_DEFAULT_CHANNEL=slacktesting\nPP_ANALYTICS_URL=https://p0db183fw1.execute-api.us-west-2.amazonaws.com/prod\n_=/usr/local/bin/go\nPP_LOGFILE=/var/folders/7k/vz1zjvcd1ldd38p7k98rr9bw0000gn/T/pinpt-log-85095-772294812.txt\n\n\n{code}",
+      "customfield_10210": null,
+      "timetracking": {},
+      "customfield_10006": null,
+      "customfield_10007": {
+        "hasEpicLinkFieldDependency": false,
+        "showField": false,
+        "nonEditableReason": {
+          "reason": "PLUGIN_LICENSE_ERROR",
+          "message": "The Parent Link is only available to Jira Premium users."
+        }
+      },
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "customfield_10208": null,
+      "customfield_10209": null,
+      "summary": "Panic happen!",
+      "creator": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Chicago",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Chicago",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10000": "{}",
+      "customfield_10001": null,
+      "customfield_10002": null,
+      "customfield_10520": null,
+      "customfield_10400": null,
+      "customfield_10511": null,
+      "customfield_10512": null,
+      "environment": null,
+      "customfield_10513": null,
+      "customfield_10514": null,
+      "customfield_10517": null,
+      "duedate": null,
+      "customfield_10518": null,
+      "customfield_10519": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/TES-19/votes",
+        "votes": 0,
+        "hasVoted": false
+      }
+    }
+  },
+  "changelog": {
+    "id": "104654",
+    "items": [
+      {
+        "field": "resolution",
+        "fieldtype": "jira",
+        "fieldId": "resolution",
+        "from": null,
+        "fromString": null,
+        "to": "10001",
+        "toString": "Won't Do"
+      },
+      {
+        "field": "status",
+        "fieldtype": "jira",
+        "fieldId": "status",
+        "from": "10000",
+        "fromString": "To Do",
+        "to": "6",
+        "toString": "Closed"
+      }
+    ]
+  }
+}

@@ -48,7 +48,6 @@ func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.tags.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
-	fmt.Println(sdk.Stringify(update))
 	assert.EqualValues("", update.Set["active"])
 	assert.EqualValues("[\"signal\"]", update.Set["tags"])
 	var res []sdk.WorkIssueChangeLog
@@ -57,6 +56,32 @@ func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldTags, res[0].Field)
 	assert.EqualValues("signal", res[0].To)
 	assert.EqualValues(1596505745219, res[0].CreatedDate.Epoch)
+}
+
+func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	err := i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.resolution.json"), pipe)
+	// NOTE: this error is fine since we arent testing that the board gets updated 😅
+	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	fmt.Println(sdk.Stringify(update))
+	assert.EqualValues("\"Won't Do\"", update.Set["resolution"])
+	assert.EqualValues("\"Closed\"", update.Set["status"])
+	assert.EqualValues("\""+sdk.NewWorkIssueStatusID("1234", refType, "6")+"\"", update.Set["status_id"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 2)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldResolution, res[0].Field)
+	assert.EqualValues("10001", res[0].To)
+	assert.EqualValues(1596506483154, res[0].CreatedDate.Epoch)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldStatus, res[1].Field)
+	assert.EqualValues("6", res[1].To)
+	assert.EqualValues(1596506483154, res[1].CreatedDate.Epoch)
 }
 
 func TestWebhookJiraIssueDeleted(t *testing.T) {
