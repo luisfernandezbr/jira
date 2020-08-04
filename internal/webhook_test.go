@@ -153,6 +153,43 @@ func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 	assert.EqualValues(1596508629814, res[0].CreatedDate.Epoch)
 }
 
+func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.due_date.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("{\"epoch\":1596499200000,\"offset\":0,\"rfc3339\":\"2020-08-04T00:00:00+00:00\"}", update.Set["due_date"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldDueDate, res[0].Field)
+	assert.EqualValues("2020-08-04", res[0].To)
+	assert.EqualValues(1596509144985, res[0].CreatedDate.Epoch)
+}
+
+func TestWebhookJiraIssueUpdatedDueDateUnset(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.due_date.unset.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("due_date", update.Unset[0])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldDueDate, res[0].Field)
+	assert.EqualValues("2020-08-04", res[0].From)
+	assert.EqualValues("", res[0].To)
+	assert.EqualValues(1596509717736, res[0].CreatedDate.Epoch)
+}
+
 func TestWebhookJiraIssueDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}

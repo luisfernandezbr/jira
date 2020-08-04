@@ -203,11 +203,21 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 			field = sdk.WorkIssueChangeLogFieldSprintIds
 			sprintID := []string{sdk.NewAgileSprintID(customerID, change.To, refType)}
 			val.Set.SprintIDs = &sprintID
+		case "duedate":
+			field = sdk.WorkIssueChangeLogFieldDueDate
+			if change.To == "" {
+				val.Unset.DueDate = sdk.BoolPointer(true)
+			} else {
+				t, err := time.Parse("2006-01-02", change.To)
+				if err != nil {
+					return fmt.Errorf("error parsing due date time: %w", err)
+				}
+				val.Set.DueDate = &t
+			}
 		}
 		// TODO:
 		// "DUE_DATE"
 		// "PARENT_ID"
-		// "SPRINT_IDS"
 		if !skip {
 			changeItem := sdk.WorkIssueChangeLog{
 				RefID:      changelog.Changelog.ID,
