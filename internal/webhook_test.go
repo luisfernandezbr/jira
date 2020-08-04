@@ -96,7 +96,6 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.type.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
-	fmt.Println(sdk.Stringify(update))
 	assert.EqualValues("\"Task\"", update.Set["type"])
 	assert.EqualValues(quoteString(sdk.NewWorkIssueTypeID("1234", refType, "10101")), update.Set["type_id"])
 	var res []sdk.WorkIssueChangeLog
@@ -134,8 +133,26 @@ func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldIdentifier, res[3].Field)
 	assert.EqualValues("GOLD-208", res[3].To)
 	assert.EqualValues(1596507921569, res[3].CreatedDate.Epoch)
-
 }
+
+func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.sprint_ids.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("["+quoteString(sdk.NewAgileSprintID("1234", "197", refType))+"]", update.Set["sprint_ids"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldSprintIds, res[0].Field)
+	assert.EqualValues("197", res[0].To)
+	assert.EqualValues(1596508629814, res[0].CreatedDate.Epoch)
+}
+
 func TestWebhookJiraIssueDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}

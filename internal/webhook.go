@@ -199,6 +199,10 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 			field = sdk.WorkIssueChangeLogFieldIdentifier
 			val.Set.Identifier = sdk.StringPointer(change.ToString)
 			change.To = change.ToString // to is null
+		case "Sprint":
+			field = sdk.WorkIssueChangeLogFieldSprintIds
+			sprintID := []string{sdk.NewAgileSprintID(customerID, change.To, refType)}
+			val.Set.SprintIDs = &sprintID
 		}
 		// TODO:
 		// "DUE_DATE"
