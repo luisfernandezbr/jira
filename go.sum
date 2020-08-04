@@ -338,12 +338,10 @@ github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067 h1:GG0k6rjX7ywCwY
 github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
 github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648 h1:hkfjX+KJmcSLpFjWqiZtnPIRsJBcOrMdgJD1d5fisB8=
 github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
-github.com/pinpt/integration-sdk v0.0.1118 h1:r8tffaOhpG07GJGmR20xmcUYDO6B6fadix5lCwNjbjY=
-github.com/pinpt/integration-sdk v0.0.1118/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
-github.com/pinpt/integration-sdk v0.0.1121 h1:BD1Geh3s6v5YHDyB/6OXyAGBMFaupHLqW3+ezq08rcU=
-github.com/pinpt/integration-sdk v0.0.1121/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
-github.com/pinpt/integration-sdk v0.0.1122 h1:aWhIqyVuLrjtUEksI5ScJlkoPkyOHWu/ZQ1M+I3pebs=
-github.com/pinpt/integration-sdk v0.0.1122/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
+github.com/pinpt/integration-sdk v0.0.1126 h1:+RpRRKDKkYt0v3dQVqqbkgBL4dWk84rn2WlLKh6BnCE=
+github.com/pinpt/integration-sdk v0.0.1126/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
+github.com/pinpt/integration-sdk v0.0.1128 h1:Nwr3MAd9WRz1pFGky5Ddm2zVelljgwDzjU1oUrT3q+g=
+github.com/pinpt/integration-sdk v0.0.1128/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 h1:49lOXmGaUpV9Fz3gd7TFZY106KVlPVa5jcYD1gaQf98=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
