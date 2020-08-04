@@ -19,6 +19,25 @@ func loadFile(fn string) []byte {
 	return b
 }
 
+func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.assignee.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues("", update.Set["active"])
+	assert.EqualValues("\"557058:8b6b268b-17b3-407b-8974-bed4042fa709\"", update.Set["assignee_ref_id"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldAssigneeRefID, res[0].Field)
+	assert.EqualValues("557058:8b6b268b-17b3-407b-8974-bed4042fa709", res[0].To)
+	assert.EqualValues(1596504990138, res[0].CreatedDate.Epoch)
+}
+
 func TestWebhookJiraIssueDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
@@ -331,7 +350,6 @@ func TestWebhookCreateLinkedIssueBlocks(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("a5539aea796c83ed", res[0].IssueID)
-	assert.EqualValues("20734", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeBlocks, res[0].LinkType)
 	assert.EqualValues("22768", res[0].RefID)
 	assert.EqualValues(false, res[0].ReverseDirection)
@@ -343,7 +361,6 @@ func TestWebhookCreateLinkedIssueBlocks(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("af83c065adcd9a05", res[0].IssueID)
-	assert.EqualValues("20192", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeBlocks, res[0].LinkType)
 	assert.EqualValues("22768", res[0].RefID)
 	assert.EqualValues(true, res[0].ReverseDirection)
@@ -384,7 +401,6 @@ func TestWebhookCreateLinkedIssueDuplicates(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("91135726a7b2592f", res[0].IssueID)
-	assert.EqualValues("11917", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeDuplicates, res[0].LinkType)
 	assert.EqualValues("23161", res[0].RefID)
 	assert.EqualValues(false, res[0].ReverseDirection)
@@ -396,7 +412,6 @@ func TestWebhookCreateLinkedIssueDuplicates(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("0d3454a12c41b1d4", res[0].IssueID)
-	assert.EqualValues("18715", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeDuplicates, res[0].LinkType)
 	assert.EqualValues("23161", res[0].RefID)
 	assert.EqualValues(true, res[0].ReverseDirection)
@@ -437,7 +452,6 @@ func TestWebhookCreateLinkedIssueClones(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("91135726a7b2592f", res[0].IssueID)
-	assert.EqualValues("11917", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeClones, res[0].LinkType)
 	assert.EqualValues("23160", res[0].RefID)
 	assert.EqualValues(false, res[0].ReverseDirection)
@@ -449,7 +463,6 @@ func TestWebhookCreateLinkedIssueClones(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("0d3454a12c41b1d4", res[0].IssueID)
-	assert.EqualValues("18715", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeClones, res[0].LinkType)
 	assert.EqualValues("23160", res[0].RefID)
 	assert.EqualValues(true, res[0].ReverseDirection)
@@ -490,7 +503,6 @@ func TestWebhookCreateLinkedIssueRelates(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("91135726a7b2592f", res[0].IssueID)
-	assert.EqualValues("11917", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeRelates, res[0].LinkType)
 	assert.EqualValues("23156", res[0].RefID)
 	assert.EqualValues(false, res[0].ReverseDirection)
@@ -502,8 +514,65 @@ func TestWebhookCreateLinkedIssueRelates(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["linked_issues"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues("0d3454a12c41b1d4", res[0].IssueID)
-	assert.EqualValues("18715", res[0].IssueRefID)
 	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeRelates, res[0].LinkType)
 	assert.EqualValues("23156", res[0].RefID)
 	assert.EqualValues(true, res[0].ReverseDirection)
+}
+
+func TestWebhookDeleteLinkedIssueBlocks(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookIssueLinkDeleted("1234", "1", loadFile("testdata/issuelink_deleted.json"), pipe))
+	assert.Len(pipe.Written, 2)
+	update := pipe.Written[0].(*agent.UpdateData)
+	assert.Len(update.Unset, 0)
+	assert.EqualValues("af83c065adcd9a05", update.ID)
+	var res []sdk.WorkIssueLinkedIssues
+	json.Unmarshal([]byte(update.Pull["linked_issues"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues("a5539aea796c83ed", res[0].IssueID)
+	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeBlocks, res[0].LinkType)
+	assert.EqualValues("22768", res[0].RefID)
+	assert.EqualValues(false, res[0].ReverseDirection)
+
+	update = pipe.Written[1].(*agent.UpdateData)
+	assert.Len(update.Unset, 0)
+	assert.EqualValues("a5539aea796c83ed", update.ID)
+	res = nil
+	json.Unmarshal([]byte(update.Pull["linked_issues"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues("af83c065adcd9a05", res[0].IssueID)
+	assert.EqualValues(sdk.WorkIssueLinkedIssuesLinkTypeBlocks, res[0].LinkType)
+	assert.EqualValues("22768", res[0].RefID)
+	assert.EqualValues(true, res[0].ReverseDirection)
+}
+
+const unhandledLink = `{
+  "timestamp": 1596476927095,
+  "webhookEvent": "issuelink_created",
+  "issueLink": {
+    "id": 23156,
+    "sourceIssueId": 18715,
+    "destinationIssueId": 11917,
+    "issueLinkType": {
+      "id": 10003,
+      "name": "SomeFutureThing🤷‍♀️",
+      "outwardName": "relates to",
+      "inwardName": "relates to",
+      "isSubTaskLinkType": false,
+      "isSystemLinkType": false
+    },
+    "systemLink": false
+  }
+}`
+
+func TestWebhookLinkedIssueUnhanled(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(webhookHandleIssueLink(logger, "1234", "1", []byte(unhandledLink), pipe, false))
+	assert.Len(pipe.Written, 0)
 }

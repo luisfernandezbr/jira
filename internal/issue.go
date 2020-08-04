@@ -170,8 +170,6 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		link2 := sdk.WorkIssueLinkedIssues{}
 		link2.RefID = link.ID
 		link2.IssueID = sdk.NewWorkIssueID(customerID, linkedIssue.ID, refType)
-		link2.IssueRefID = linkedIssue.ID
-		link2.IssueIdentifier = linkedIssue.Key
 		link2.ReverseDirection = reverseDirection
 		link2.LinkType = linkType
 		issue.LinkedIssues = append(issue.LinkedIssues, link2)
