@@ -3,6 +3,8 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 
 	"github.com/pinpt/adf"
 	"github.com/pinpt/agent.next/sdk"
@@ -25,8 +27,8 @@ type comment struct {
 	      }*/
 }
 
-func (c comment) ToModel(customerID string, integrationInstanceID string, websiteURL string, userManager *userManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
-	if err := userManager.emit(c.Author); err != nil {
+func (c comment) ToModel(customerID string, integrationInstanceID string, websiteURL string, userManager UserManager, projectID string, issueID string, issueKey string) (*sdk.WorkIssueComment, error) {
+	if err := userManager.Emit(c.Author); err != nil {
 		return nil, err
 	}
 	comment := &sdk.WorkIssueComment{}
@@ -58,4 +60,20 @@ func (c comment) ToModel(customerID string, integrationInstanceID string, websit
 		comment.Body = adjustRenderedHTML(websiteURL, html)
 	}
 	return comment, nil
+}
+
+func (i *JiraIntegration) fetchComment(authCfg authConfig, userManager UserManager, integrationInstanceID, customerID, issueRefID, issueKey, commentRefID, projectID string) (*sdk.WorkIssueComment, error) {
+	theurl := sdk.JoinURL(authCfg.APIURL, fmt.Sprintf("/rest/api/3/issue/%s/comment/%s", issueRefID, commentRefID))
+	client := i.httpmanager.New(theurl, nil)
+	issueID := sdk.NewWorkIssueID(customerID, issueRefID, refType)
+	qs := url.Values{}
+	var c comment
+	resp, err := client.Get(&c, append(authCfg.Middleware, sdk.WithGetQueryParameters(qs))...)
+	if resp == nil && err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	return c.ToModel(customerID, integrationInstanceID, authCfg.WebsiteURL, userManager, projectID, issueID, issueKey)
 }

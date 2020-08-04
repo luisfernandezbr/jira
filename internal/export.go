@@ -135,7 +135,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
-	queryParams.Set("expand", "description,url,issueTypes,projectKeys")
+	setProjectExpand(queryParams)
 	queryParams.Set("typeKey", "software")
 	queryParams.Set("status", "live")
 	queryParams.Set("maxResults", "100") // 100 is the max, 50 is the default
@@ -274,7 +274,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		}
 		// only process issues that haven't already been processed before (given recursion)
 		for _, i := range toprocess {
-			issue, comments, err := i.ToModel(customerID, state.integrationInstanceID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL)
+			issue, comments, err := i.ToModel(customerID, state.integrationInstanceID, state.issueIDManager, state.sprintManager, state.userManager, customfields, state.authConfig.WebsiteURL, true)
 			if err != nil {
 				return err
 			}

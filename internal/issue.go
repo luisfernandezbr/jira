@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -44,7 +45,7 @@ func (s customFieldIDs) missing() (res []string) {
 }
 
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
-func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager *userManager, fieldByID map[string]customField, websiteURL string) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
+func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
 	if err := sdk.MapToStruct(i.Fields, &fields); err != nil {
 		return nil, nil, err
@@ -119,19 +120,19 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 
 	if !fields.Creator.IsZero() {
 		issue.CreatorRefID = fields.Creator.RefID()
-		if err := userManager.emit(fields.Creator); err != nil {
+		if err := userManager.Emit(fields.Creator); err != nil {
 			return nil, nil, err
 		}
 	}
 	if !fields.Reporter.IsZero() {
 		issue.ReporterRefID = fields.Reporter.RefID()
-		if err := userManager.emit(fields.Reporter); err != nil {
+		if err := userManager.Emit(fields.Reporter); err != nil {
 			return nil, nil, err
 		}
 	}
 	if !fields.Assignee.IsZero() {
 		issue.AssigneeRefID = fields.Assignee.RefID()
-		if err := userManager.emit(fields.Assignee); err != nil {
+		if err := userManager.Emit(fields.Assignee); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -169,8 +170,6 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		link2 := sdk.WorkIssueLinkedIssues{}
 		link2.RefID = link.ID
 		link2.IssueID = sdk.NewWorkIssueID(customerID, linkedIssue.ID, refType)
-		link2.IssueRefID = linkedIssue.ID
-		link2.IssueIdentifier = linkedIssue.Key
 		link2.ReverseDirection = reverseDirection
 		link2.LinkType = linkType
 		issue.LinkedIssues = append(issue.LinkedIssues, link2)
@@ -429,7 +428,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	}
 
 	// now go in one shot and resolve all transitive issue keys
-	if len(transitiveIssueKeys) > 0 {
+	if len(transitiveIssueKeys) > 0 && fetchTransitive {
 		keys := sdk.Keys(transitiveIssueKeys)
 		found, err := issueManager.getRefIDsFromKeys(keys)
 		if err != nil {
@@ -477,16 +476,16 @@ type issueIDManager struct {
 	refids        map[string]string
 	logger        sdk.Logger
 	i             *JiraIntegration
-	export        sdk.Export
+	control       sdk.Control
 	pipe          sdk.Pipe
 	fields        map[string]customField
 	sprintManager *sprintManager
-	userManager   *userManager
+	userManager   UserManager
 	authConfig    authConfig
 	stats         *stats
 }
 
-func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export, pipe sdk.Pipe, sprintManager *sprintManager, userManager *userManager, fields map[string]customField, authConfig authConfig, stats *stats) *issueIDManager {
+func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, control sdk.Control, pipe sdk.Pipe, sprintManager *sprintManager, userManager UserManager, fields map[string]customField, authConfig authConfig, stats *stats) *issueIDManager {
 	return &issueIDManager{
 		refids:        make(map[string]string),
 		i:             i,
@@ -494,7 +493,7 @@ func newIssueIDManager(logger sdk.Logger, i *JiraIntegration, export sdk.Export,
 		authConfig:    authConfig,
 		sprintManager: sprintManager,
 		userManager:   userManager,
-		export:        export,
+		control:       control,
 		pipe:          pipe,
 		fields:        fields,
 		stats:         stats,
@@ -543,7 +542,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 	sdk.LogDebug(m.logger, "fetching dependent issues", "notfound", notfound, "found", found)
 	qs := url.Values{}
 	qs.Set("jql", "key IN ("+strings.Join(notfound, ",")+")")
-	qs.Set("expand", "changelog,fields,comments,transitions")
+	setIssueExpand(qs)
 	qs.Set("fields", "*navigable,attachment")
 	var result issueQueryResult
 	client := m.i.httpmanager.New(theurl, nil)
@@ -559,7 +558,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		}
 		for _, issue := range result.Issues {
 			// recursively process it
-			issueObject, comments, err := issue.ToModel(m.export.CustomerID(), m.export.IntegrationInstanceID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL)
+			issueObject, comments, err := issue.ToModel(m.control.CustomerID(), m.control.IntegrationInstanceID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL, true)
 			if err != nil {
 				return nil, err
 			}
@@ -573,7 +572,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 				m.stats.incComment()
 			}
 			m.stats.incIssue()
-			if rerr := m.i.checkForRateLimit(m.export, m.export.CustomerID(), err, resp.Headers); rerr != nil {
+			if rerr := m.i.checkForRateLimit(m.control, m.control.CustomerID(), err, resp.Headers); rerr != nil {
 				return nil, rerr
 			}
 		}
@@ -584,6 +583,28 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 		// return in the order in which they came in
 		return res, nil
 	}
+}
+
+// fetch just one issue by refid, and optionally fetch any other transitive/mentioned issues
+func (m *issueIDManager) fetchIssue(refid string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
+	theurl := sdk.JoinURL(m.authConfig.APIURL, "/rest/api/3/issue/", refid)
+	client := m.i.httpmanager.New(theurl, nil)
+	qs := url.Values{}
+	setIssueExpand(qs)
+	qs.Set("fields", "*navigable,attachment")
+	var issue issueSource
+	resp, err := client.Get(&issue, append(m.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
+	if resp == nil && err != nil {
+		return nil, nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil, nil
+	}
+	return issue.ToModel(m.control.CustomerID(), m.control.IntegrationInstanceID(), m, m.sprintManager, m.userManager, m.fields, m.authConfig.WebsiteURL, fetchTransitive)
+}
+
+func setIssueExpand(qs url.Values) {
+	qs.Set("expand", "changelog,fields,comments,transitions")
 }
 
 const epicCustomFieldIDCacheKey = "epic_id_custom_field"

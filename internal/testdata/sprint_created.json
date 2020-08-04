@@ -1,0 +1,11 @@
+{
+  "timestamp": 1596133146364,
+  "webhookEvent": "sprint_created",
+  "sprint": {
+    "id": 196,
+    "self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/sprint/196",
+    "state": "future",
+    "name": "TES Sprint 2",
+    "originBoardId": 9
+  }
+}

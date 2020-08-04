@@ -1,11 +1,11 @@
 {
-	"timestamp": 1594081945930,
-	"webhookEvent": "project_created",
+	"timestamp": 1594081981123,
+	"webhookEvent": "project_updated",
 	"project": {
-		"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10642",
-		"id": 10642,
-		"key": "TSD",
-		"name": "testproject",
+		"self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10601",
+		"id": 10601,
+		"key": "TES",
+		"name": "TESTING",
 		"avatarUrls": {
 			"48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10642&avatarId=10962",
 			"24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10642&avatarId=10962",
