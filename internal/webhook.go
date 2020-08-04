@@ -185,6 +185,12 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 		case "resolution":
 			field = sdk.WorkIssueChangeLogFieldResolution
 			val.Set.Resolution = sdk.StringPointer(change.ToString)
+		case "issuetype":
+			field = sdk.WorkIssueChangeLogFieldType
+			val.Set.Type = &sdk.NameID{
+				Name: sdk.StringPointer(change.ToString),
+				ID:   sdk.StringPointer(sdk.NewWorkIssueTypeID(customerID, refType, change.To)),
+			}
 		}
 		// TODO:
 		// "DUE_DATE"

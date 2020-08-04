@@ -20,6 +20,10 @@ func loadFile(fn string) []byte {
 	return b
 }
 
+func quoteString(str string) string {
+	return fmt.Sprintf(`"%s"`, str)
+}
+
 func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
@@ -30,7 +34,7 @@ func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
-	assert.EqualValues("\"557058:8b6b268b-17b3-407b-8974-bed4042fa709\"", update.Set["assignee_ref_id"])
+	assert.EqualValues(quoteString("557058:8b6b268b-17b3-407b-8974-bed4042fa709"), update.Set["assignee_ref_id"])
 	var res []sdk.WorkIssueChangeLog
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
 	assert.Len(res, 1)
@@ -69,7 +73,6 @@ func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
-	fmt.Println(sdk.Stringify(update))
 	assert.EqualValues("\"Won't Do\"", update.Set["resolution"])
 	assert.EqualValues("\"Closed\"", update.Set["status"])
 	assert.EqualValues("\""+sdk.NewWorkIssueStatusID("1234", refType, "6")+"\"", update.Set["status_id"])
@@ -82,6 +85,26 @@ func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldStatus, res[1].Field)
 	assert.EqualValues("6", res[1].To)
 	assert.EqualValues(1596506483154, res[1].CreatedDate.Epoch)
+}
+
+func TestWebhookJiraIssueUpdatedType(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.type.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	fmt.Println(sdk.Stringify(update))
+	assert.EqualValues("\"Task\"", update.Set["type"])
+	assert.EqualValues(quoteString(sdk.NewWorkIssueTypeID("1234", refType, "10101")), update.Set["type_id"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldType, res[0].Field)
+	assert.EqualValues("Task", res[0].ToString)
+	assert.EqualValues(1596507496902, res[0].CreatedDate.Epoch)
 }
 
 func TestWebhookJiraIssueDeleted(t *testing.T) {
