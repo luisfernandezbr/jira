@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -36,6 +37,26 @@ func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldAssigneeRefID, res[0].Field)
 	assert.EqualValues("557058:8b6b268b-17b3-407b-8974-bed4042fa709", res[0].To)
 	assert.EqualValues(1596504990138, res[0].CreatedDate.Epoch)
+}
+
+func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
+	assert := assert.New(t)
+	pipe := &sdktest.MockPipe{}
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.tags.json"), pipe))
+	assert.Len(pipe.Written, 1)
+	update := pipe.Written[0].(*agent.UpdateData)
+	fmt.Println(sdk.Stringify(update))
+	assert.EqualValues("", update.Set["active"])
+	assert.EqualValues("[\"signal\"]", update.Set["tags"])
+	var res []sdk.WorkIssueChangeLog
+	json.Unmarshal([]byte(update.Push["change_log"]), &res)
+	assert.Len(res, 1)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldTags, res[0].Field)
+	assert.EqualValues("signal", res[0].To)
+	assert.EqualValues(1596505745219, res[0].CreatedDate.Epoch)
 }
 
 func TestWebhookJiraIssueDeleted(t *testing.T) {

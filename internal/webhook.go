@@ -177,9 +177,13 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 		case "assignee":
 			field = sdk.WorkIssueChangeLogFieldAssigneeRefID
 			val.Set.AssigneeRefID = sdk.StringPointer(change.To)
+		case "labels":
+			field = sdk.WorkIssueChangeLogFieldTags
+			tags := strings.Split(change.ToString, " ")
+			val.Set.Tags = &tags
+			change.To = change.ToString // to is null, this api is lousy
 		}
 		// TODO:
-		// "ASSIGNEE_REF_ID"
 		// "DUE_DATE"
 		// "IDENTIFIER"
 		// "PARENT_ID"
@@ -189,22 +193,22 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 		// "TAGS"
 		// "TYPE"
 		if !skip {
-			change := sdk.WorkIssueChangeLog{
+			changeItem := sdk.WorkIssueChangeLog{
 				RefID:      changelog.Changelog.ID,
 				Field:      field,
-				From:       changelog.Changelog.Items[0].From,
-				FromString: changelog.Changelog.Items[0].FromString,
-				To:         changelog.Changelog.Items[0].To,
-				ToString:   changelog.Changelog.Items[0].ToString,
+				From:       change.From,
+				FromString: change.FromString,
+				To:         change.To,
+				ToString:   change.ToString,
 				UserID:     changelog.User.RefID(),
 				Ordinal:    changelog.Timestamp + int64(i),
 			}
-			sdk.ConvertTimeToDateModel(ts, &change.CreatedDate)
+			sdk.ConvertTimeToDateModel(ts, &changeItem.CreatedDate)
 			if val.Push.ChangeLogs == nil {
 				l := make([]sdk.WorkIssueChangeLog, 0)
 				val.Push.ChangeLogs = &l
 			}
-			cl := append(*val.Push.ChangeLogs, change)
+			cl := append(*val.Push.ChangeLogs, changeItem)
 			val.Push.ChangeLogs = &cl
 		}
 	}
