@@ -1,0 +1,22 @@
+{
+  "timestamp": 1596143604633,
+  "webhookEvent": "sprint_updated",
+  "sprint": {
+    "id": 196,
+    "self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/sprint/196",
+    "state": "active",
+    "name": "TES Sprint 2",
+    "startDate": "2020-07-30T21:13:24.588Z",
+    "endDate": "2020-08-13T21:13:00.000Z",
+    "originBoardId": 9,
+    "goal": "take over the world! 🌍🌎🌏"
+  },
+  "oldValue": {
+    "id": 196,
+    "self": "https://pinpt-hq.atlassian.net/rest/agile/1.0/sprint/196",
+    "state": "future",
+    "name": "TES Sprint 2",
+    "originBoardId": 9,
+    "goal": "take over the world! 🌍🌎🌏"
+  }
+}

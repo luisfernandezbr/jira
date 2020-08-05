@@ -1,0 +1,226 @@
+{
+  "timestamp": 1596508629814,
+  "webhookEvent": "jira:issue_updated",
+  "issue_event_type_name": "issue_updated",
+  "user": {
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+    "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+    "avatarUrls": {
+      "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+    },
+    "displayName": "Robin Diddams",
+    "active": true,
+    "timeZone": "America/Los_Angeles",
+    "accountType": "atlassian"
+  },
+  "issue": {
+    "id": "19518",
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/19518",
+    "key": "GOLD-208",
+    "fields": {
+      "statuscategorychangedate": "2020-04-06T07:45:07.736-0700",
+      "issuetype": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+        "id": "10103",
+        "description": "A problem which impairs or prevents the functions of the product.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10303
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10639",
+        "id": "10639",
+        "key": "GOLD",
+        "name": "Gold Miners",
+        "projectTypeKey": "software",
+        "simplified": false,
+        "avatarUrls": {
+          "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+          "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+          "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+          "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+        },
+        "projectCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/projectCategory/10001",
+          "id": "10001",
+          "description": "",
+          "name": "Development"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "resolution": null,
+      "customfield_10510": null,
+      "customfield_10104": null,
+      "customfield_10501": null,
+      "customfield_10105": null,
+      "customfield_10106": null,
+      "customfield_10502": null,
+      "customfield_10503": null,
+      "customfield_10107": [
+        "com.atlassian.greenhopper.service.sprint.Sprint@519c6abe[completeDate=<null>,endDate=2020-08-15T16:17:00.000Z,goal=,id=197,name=TES Sprint 3,rapidViewId=9,sequence=197,startDate=2020-07-31T16:17:17.777Z,state=ACTIVE]"
+      ],
+      "customfield_10504": null,
+      "customfield_10108": "0|i015hn:",
+      "customfield_10505": null,
+      "customfield_10109": null,
+      "customfield_10506": null,
+      "resolutiondate": null,
+      "customfield_10507": null,
+      "customfield_10508": null,
+      "customfield_10509": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": false
+      },
+      "watches": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/GOLD-208/watchers",
+        "watchCount": 1,
+        "isWatching": false
+      },
+      "lastViewed": "2020-08-03T19:25:27.188-0700",
+      "created": "2020-04-06T07:45:07.544-0700",
+      "priority": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/5",
+        "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+        "name": "Not Prioritized",
+        "id": "5"
+      },
+      "customfield_10100": null,
+      "customfield_10101": null,
+      "customfield_10300": null,
+      "customfield_10102": null,
+      "customfield_10103": [],
+      "customfield_10301": null,
+      "labels": [],
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5c2a767a75b0e95216e8fa16",
+        "accountId": "5c2a767a75b0e95216e8fa16",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png"
+        },
+        "displayName": "Andris Valums",
+        "active": false,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "updated": "2020-08-03T19:37:09.812-0700",
+      "status": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/1",
+        "iconUrl": "https://pinpt-hq.atlassian.net/images/icons/statuses/open.png",
+        "name": "Work Required",
+        "id": "1",
+        "statusCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "New"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": null,
+      "customfield_10210": null,
+      "timetracking": {},
+      "customfield_10006": null,
+      "customfield_10007": {
+        "hasEpicLinkFieldDependency": false,
+        "showField": false,
+        "nonEditableReason": {
+          "reason": "PLUGIN_LICENSE_ERROR",
+          "message": "The Parent Link is only available to Jira Premium users."
+        }
+      },
+      "security": null,
+      "aggregatetimeestimate": null,
+      "attachment": [],
+      "customfield_10208": null,
+      "customfield_10209": null,
+      "summary": "Test issue",
+      "creator": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5c2a767a75b0e95216e8fa16",
+        "accountId": "5c2a767a75b0e95216e8fa16",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png"
+        },
+        "displayName": "Andris Valums",
+        "active": false,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5c2a767a75b0e95216e8fa16",
+        "accountId": "5c2a767a75b0e95216e8fa16",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AV-1.png"
+        },
+        "displayName": "Andris Valums",
+        "active": false,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "customfield_10000": "{}",
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10001": null,
+      "customfield_10002": null,
+      "customfield_10520": null,
+      "customfield_10400": null,
+      "customfield_10511": null,
+      "customfield_10512": null,
+      "customfield_10513": null,
+      "environment": null,
+      "customfield_10514": null,
+      "customfield_10517": null,
+      "duedate": null,
+      "customfield_10518": null,
+      "customfield_10519": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/GOLD-208/votes",
+        "votes": 0,
+        "hasVoted": false
+      }
+    }
+  },
+  "changelog": {
+    "id": "104661",
+    "items": [
+      {
+        "field": "Sprint",
+        "fieldtype": "custom",
+        "fieldId": "customfield_10107",
+        "from": "",
+        "fromString": "",
+        "to": "197",
+        "toString": "TES Sprint 3"
+      }
+    ]
+  }
+}

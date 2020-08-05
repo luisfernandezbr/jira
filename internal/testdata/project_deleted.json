@@ -1,0 +1,31 @@
+{
+  "timestamp": 1596040172744,
+  "webhookEvent": "project_deleted",
+  "project": {
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10646",
+    "id": 10646,
+    "key": "RRRRR",
+    "name": "DELETEME",
+    "avatarUrls": {
+      "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10646&avatarId=10955",
+      "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10646&avatarId=10955",
+      "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10646&avatarId=10955",
+      "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10646&avatarId=10955"
+    },
+    "projectLead": {
+      "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+      "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+      "avatarUrls": {
+        "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+        "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+        "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+        "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+      },
+      "displayName": "Robin Diddams",
+      "active": true,
+      "timeZone": "America/Los_Angeles",
+      "accountType": "atlassian"
+    },
+    "assigneeType": "admin.assignee.type.unassigned"
+  }
+}
