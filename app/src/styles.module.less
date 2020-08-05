@@ -18,6 +18,23 @@
 		margin: 0 20px;
 		cursor: pointer;
 
+		&.Disabled {
+			background-color: @Mono100 !important;
+		}
+
+		div {
+			margin-top: 2.0rem;
+			font-size: 1.2rem;
+
+			svg {
+				font-size: 1.2rem;
+			}
+
+			.Setup {
+				margin-top: 1.5rem;
+			}
+		}
+
 		.Icon {
 			font-size: 3.0rem;
 			margin: 0 auto 2.0rem;
@@ -25,10 +42,37 @@
 			display: block;
 		}
 
-		&:hover {
+		&:hover:not(.Disabled) {
 			.Icon {
 				color: @Royal500;
 			}
 		}
 	}
+}
+
+.Validate {
+	margin-top: -10.0rem;
+
+	p {
+		margin-top: 3.0rem;
+		font-size: 1.6rem;
+	}
+}
+
+.Afterword {
+	input {
+		display: block;
+		margin-top: 0.5rem;
+		padding: 1.0rem;
+		outline: none;
+		border: 1px solid @Mono200;
+		color: @Mono700;
+		width: 100% !important;
+		background-color: @Mono100;
+	}
+}
+
+.Validating {
+	font-size: 1.4rem;
+	margin-top: 2.0rem;
 }

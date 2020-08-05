@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimulatorInstaller, Integration, IProcessingDetail, IProcessingState, IInstalledLocation } from '@pinpt/agent.websdk';
+import { SimulatorInstaller, Integration, IProcessingDetail, IProcessingState, IInstalledLocation, ISelfManagedAgent, ISession } from '@pinpt/agent.websdk';
 import IntegrationUI from './integration';
 
 function App() {
@@ -33,7 +33,25 @@ function App() {
 			location: IInstalledLocation.CLOUD
 		};
 
-		return <SimulatorInstaller integration={integration} processingDetail={processingDetail} />;
+		const selfManagedAgent: ISelfManagedAgent = {
+			enrollment_id: '',
+			running: false,
+		};
+
+		const session: ISession = {
+			customer: {
+				id: '359d4a0ffac0329c',
+				name: 'Pinpoint',
+			},
+			user: {
+				id: '',
+				name: 'Jeff Haynie',
+				avatar_url: '',
+			},
+			env: 'edge',
+		};
+
+		return <SimulatorInstaller integration={integration} processingDetail={processingDetail} selfManagedAgent={selfManagedAgent} session={session} />;
 	}
 	return <IntegrationUI />;
 }
