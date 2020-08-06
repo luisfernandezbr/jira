@@ -499,7 +499,7 @@ const Integration = () => {
 
 	useEffect(() => {
 		if (state === State.Validate) {
-			const _config = {...config, action: 'FETCH_PROJECTS'};
+			const _config = {...config, action: 'FETCH_ACCOUNTS'};
 			setValidate(_config, (err: Maybe<Error>, res: Maybe<any>) => {
 				if (err) {
 					setError(err);
@@ -515,7 +515,16 @@ const Integration = () => {
 							public: false,
 						}]);
 					} else {
-						setAccounts(res?.accounts);
+						// FIXME once robin has his fix
+						setAccounts([{
+							id: '1',
+							name: 'pinpt-hq',
+							description: '',
+							avatarUrl: '',
+							totalCount: 24,
+							type: 'ORG',
+							public: false,
+						}]);
 					}
 					setState(State.Projects);
 				}
