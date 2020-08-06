@@ -34,8 +34,8 @@ function App() {
 		};
 
 		const selfManagedAgent: ISelfManagedAgent = {
-			enrollment_id: '',
-			running: false,
+			enrollment_id: '123',
+			running: true,
 		};
 
 		const session: ISession = {

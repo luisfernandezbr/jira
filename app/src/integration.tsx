@@ -7,10 +7,8 @@ import {
 	IntegrationType,
 	ISession,
 	IAuth,
-	IAppBasicAuth,
 	Form,
 	FormType,
-	Http,
 	Config,
 	URLValidator,
 	OAuthConnect,
@@ -230,7 +228,7 @@ enum selfManagedFormState {
 }
 
 const SelfManagedForm = ({session, callback, type}: {session: ISession, callback: (err: Error | undefined, url?: string) => void, type: IntegrationType}) => {
-	const { setOAuth1Connect, setValidate } = useIntegration();
+	const { setOAuth1Connect, setValidate, id } = useIntegration();
 	const [connected, setConnected] = useState(false);
 	const [buttonText, setButtonText] = useState('Validate');
 	const url = useRef<string>();
@@ -261,7 +259,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 			ref.current = null;
 			url.current = '';
 		};
-	}, []);
+	}, [setOAuth1Connect]);
 	useEffect(() => {
 		if (updatedState) {
 			state.current = updatedState;
@@ -270,7 +268,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 				setTimeout(copy, 10);
 			}
 		}
-	}, [updatedState]);
+	}, [updatedState, copy]);
 	const verify = useCallback(async(auth: IAuth | string) => {
 		switch (state.current) {
 			case selfManagedFormState.EnteringUrl: {
@@ -350,8 +348,8 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 			}
 			default: break;
 		}
-	}, []);
-	const seed = useMemo(() => String(Date.now()), [session]);
+	}, [callback, setOAuth1Connect, setValidate, type]);
+	const seed = useMemo(() => String(Date.now()), []);
 	let otherbuttons: React.ReactElement | undefined = undefined;
 	if (!connected && state.current === selfManagedFormState.Setup) {
 		otherbuttons = (
@@ -378,7 +376,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 			type={FormType.URL}
 			name='Jira'
 			title='Connect Pinpoint to Jira.'
-			intro={<>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="nofollow" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Help</a></>}
+			intro={<>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="noopener noreferrer" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Help</a></>}
 			button={buttonText}
 			callback={verify}
 			readonly={state.current === selfManagedFormState.Setup}
@@ -401,7 +399,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 				return (
 					<div className={styles.Afterword}>
 						<label htmlFor="instructions">Copy this URL and enter it in the "Create new link" field in Jira</label>
-						<input ref={ref} type="text" name="instructions" onFocus={copy} readOnly value={`https://auth.api.${env}pinpoint.com/oauth1/jira/${session.customer.id}/${seed.charAt(seed.length - 1)}`} />
+						<input ref={ref} type="text" name="instructions" onFocus={copy} readOnly value={`https://auth.api.${env}pinpoint.com/oauth1/jira/${id}/${seed.charAt(seed.length - 1)}`} />
 					</div>
 				);
 			}}
@@ -456,6 +454,7 @@ const Integration = () => {
 					if (success) {
 						const url = window.sessionStorage.getItem(urlStorageKey);
 						config.oauth1_auth = {
+							date_ts: Date.now(),
 							url,
 							consumer_key,
 							oauth_token,
@@ -470,7 +469,7 @@ const Integration = () => {
 				}
 			});
 		}
-	}, [isFromRedirect, currentURL]);
+	}, [isFromRedirect, currentURL, config, setConfig]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -496,7 +495,7 @@ const Integration = () => {
 			setConfig(config);
 			setInstallEnabled(Object.keys(config.accounts).length > 0);
 		}
-	}, [accounts]);
+	}, [accounts, config, setConfig, setInstallEnabled]);
 
 	useEffect(() => {
 		if (state === State.Validate) {
@@ -522,7 +521,7 @@ const Integration = () => {
 				}
 			});
 		}
-	}, [state]);
+	}, [state, setState, setAccounts, setValidate, config]);
 
 	if (loading) {
 		return <Loader screen />;
