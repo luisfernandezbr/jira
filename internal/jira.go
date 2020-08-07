@@ -31,7 +31,7 @@ func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sd
 
 // Enroll is called when a new integration instance is added
 func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
-	authConfig, err := i.createAuthConfig(i.logger, instance.Config())
+	authConfig, err := i.createAuthConfig(&instance)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
 
 // Dismiss is called when an existing integration instance is removed
 func (i *JiraIntegration) Dismiss(instance sdk.Instance) error {
-	authConfig, err := i.createAuthConfig(i.logger, instance.Config())
+	authConfig, err := i.createAuthConfig(&instance)
 	if err != nil {
 		return err
 	}
