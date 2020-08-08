@@ -49,9 +49,11 @@ function App() {
 				avatar_url: '',
 			},
 			env: 'edge',
+			graphqlUrl: 'https://graph.api.edge.pinpoint.com/graphql',
+			authUrl: 'https://auth.api.edge.pinpoint.com'
 		};
 
-		return <SimulatorInstaller integration={integration} processingDetail={processingDetail} selfManagedAgent={selfManagedAgent} session={session} />;
+		return <SimulatorInstaller id="f64c34f79f4b7994" integration={integration} processingDetail={processingDetail} selfManagedAgent={selfManagedAgent} session={session} />;
 	}
 	return <IntegrationUI />;
 }

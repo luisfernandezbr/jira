@@ -18,135 +18,6 @@ import styles from './styles.module.less';
 
 type Maybe<T> = T | undefined | null;
 
-// interface orgResponse {
-// 	avatarUrl: string;
-// 	id: string;
-// 	name: string;
-// 	scopes: string[];
-// 	url: string;
-// }
-
-// interface projectsResponse {
-// 	total: number;
-// 	self: string;
-// }
-
-// // FIXME
-// const AccountListBasic = () => {
-// 	return (
-// 		<p>basic auth</p>
-// 	);
-// };
-
-// const fetchOrgsOAuth2 = async (config: Config): Promise<orgResponse[]> => {
-// 	let resp = await Http.get('https://api.atlassian.com/oauth/token/accessible-resources', {
-// 		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token,
-// 		'Content-Type': 'application/json'
-// 	});
-// 	if (resp[1] !== 200) {
-// 		console.error('error fetching orgs', 'response code', resp[1]);
-// 		return [];
-// 	}
-// 	return resp[0] as orgResponse[];
-
-// }
-
-// const fetchProjectParams: string[] = [
-// 	'typeKey=software',
-// 	'status=live',
-// 	'maxResults=100'
-// ];
-
-// const fetchProjectCountOAuth2 = async (config: Config, accountId: string): Promise<number> => {
-// 	const resp = await Http.get('https://api.atlassian.com/ex/jira/' + accountId + '/rest/api/3/project/search?' + fetchProjectParams.join('&'), {
-// 		'Authorization': 'Bearer ' + config.oauth2_auth!.access_token
-// 	});
-// 	if (resp[1] !== 200) {
-// 		if (resp[0].errorMessages?.length) {
-// 			throw new Error(resp[0].errorMessages[0]);
-// 		}
-// 		throw new Error('Error returned fetching projects');
-// 	}
-// 	const projects = resp[0] as projectsResponse
-// 	return projects.total;
-// }
-
-// const fetchProjectCountBasicAuth = async (auth: IAuth): Promise<number> => {
-// 	const basic = auth as IAppBasicAuth
-// 	const resp = await Http.get(basic.url! + '/rest/api/2/project/search?' + fetchProjectParams.join('&'), {
-// 		'Authorization': 'Basic ' + btoa(basic.username + ":" + basic.password),
-// 	});
-// 	if (resp[1] !== 200) {
-// 		if (resp[0].errorMessages?.length) {
-// 			throw new Error(resp[0].errorMessages[0]);
-// 		}
-// 		throw new Error('Error returned fetching projects');
-// 	}
-// 	const projects = resp[0] as projectsResponse
-// 	return projects.total;
-// }
-
-// const AccountListOAuth2 = () => {
-// 	const [loading, setLoading] = useState(true);
-// 	const [error, setError] = useState<string>();
-// 	const { config, setConfig, installed, setInstallEnabled } = useIntegration();
-// 	const [accounts, setAccounts] = useState<Account[]>([]);
-
-// 	useEffect(() => {
-// 		const fetch = async () => {
-// 			const accts: Account[] = [];
-// 			const orgs = await fetchOrgsOAuth2(config);
-// 			if (orgs.length === 0) {
-// 				setError('No projects found for this organization');
-// 				return;
-// 			}
-// 			config.accounts = {};
-// 			await Promise.all(orgs.map(async (current: any) => {
-// 				const count = await fetchProjectCountOAuth2(config, current.id);
-// 				if (count === 0) {
-// 					return;
-// 				}
-// 				const account: Account = {
-// 					id: current.id,
-// 					name: current.name,
-// 					description: '',
-// 					avatarUrl: current.avatarUrl,
-// 					totalCount: count,
-// 					type: 'ORG',
-// 					public: false,
-// 				}
-// 				accts.push(account);
-// 				config.accounts![account.id] = account;
-// 			}));
-// 			setInstallEnabled(installed ? true : accts.length > 0);
-// 			setAccounts(accts);
-// 			setConfig(config);
-// 			setLoading(false);
-// 		}
-// 		fetch().catch(err => {
-// 			setLoading(false);
-// 			setInstallEnabled(false);
-// 			setError(err.message);
-// 		});
-// 	}, []);
-
-// 	if (loading) {
-// 		return <Loader>Fetching details</Loader>;
-// 	}
-
-// 	return (
-// 		<>
-// 			{error && <Banner error>{error}</Banner> }
-// 			<AccountsTable
-// 				description='For the selected accounts, all projects, issues and other data will automatically be made available in Pinpoint once installed.'
-// 				accounts={accounts}
-// 				entity='project'
-// 				config={config}
-// 			/>
-// 		</>
-// 	);
-// };
-
 const LocationSelector = ({ setType }: { setType: (val: 'cloud' | 'selfmanaged') => void }) => {
 	return (
 		<div className={styles.Location}>
@@ -279,16 +150,15 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 					url: auth,
 					action: 'VALIDATE_URL',
 				};
-				setValidate(config, (err: Maybe<Error>, res: Maybe<any>) => {
-					if (err) {
-						setButtonText('Validate');
-						setUpdatedState(selfManagedFormState.EnteringUrl);
-						callback(err);
-					} else {
-						setButtonText('Begin Setup');
-						setUpdatedState(selfManagedFormState.Validated);
-					}
-				});
+				try {
+					const res = await setValidate(config);
+					setButtonText('Begin Setup');
+					setUpdatedState(selfManagedFormState.Validated);
+				} catch (ex) {
+					setButtonText('Validate');
+					setUpdatedState(selfManagedFormState.EnteringUrl);
+					callback(ex);
+				}
 				break;
 			}
 			case selfManagedFormState.Validating: {
@@ -312,8 +182,8 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 				setOAuth1Connect(u.toString(), (err: Maybe<Error>) => {
 					setConnected(true);
 				});
-				const width = window.innerWidth < 1000 ? window.innerWidth : 1000;
-				const height = window.innerHeight < 600 ? window.innerHeight : 600;
+				const width = window.screen.width < 1000 ? window.screen.width : 1000;
+				const height = window.screen.height < 700 ? window.screen.height : 700;
 				windowRef.current = window.open(u.toString(), undefined, `toolbar=no,location=yes,status=no,menubar=no,scrollbars=yes,resizable=yes,width=${width},height=${height}`);
 				if (!windowRef.current) {
 					callback(new Error(`couldn't open the window to ${auth}`));
@@ -417,7 +287,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 const urlStorageKey = 'installer.jira.url';
 
 enum State {
-	Location,
+	Location = 1,
 	Setup,
 	AgentSelector,
 	Link,
@@ -426,12 +296,31 @@ enum State {
 }
 
 const Integration = () => {
-	const { loading, currentURL, config, isFromRedirect, isFromReAuth, setValidate, setConfig, session, setInstallEnabled } = useIntegration();
+	const { loading, installed, currentURL, config, isFromRedirect, isFromReAuth, setValidate, setConfig, session, setInstallEnabled, createPrivateKey, getPrivateKey, setPrivateKey } = useIntegration();
 	const [type, setType] = useState<IntegrationType | undefined>(config.integration_type);
 	const [state, setState] = useState<State>(State.Location);
 	const [error, setError] = useState<Error | undefined>();
 	const [url, setURL] = useState('');
-	const [accounts, setAccounts] = useState<Account[]>([]);
+	const accounts = useRef<Account[]>([]);
+	const currentConfig = useRef<Config>(config);
+	const insideRedirect = useRef(false);
+
+	if (installed && accounts.current?.length === 0) {
+		currentConfig.current = config;
+		accounts.current = Object.keys(config.accounts ?? {}).map((key: string) => config.accounts?.[key]) as Account[];
+	}
+
+	useEffect(() => {
+		return () => {
+			window.sessionStorage.removeItem(urlStorageKey);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (installed) {
+			setState(State.Projects);
+		}
+	}, [installed]);
 
 	useEffect(() => {
 		if (isFromReAuth) {
@@ -440,36 +329,45 @@ const Integration = () => {
 	}, [isFromReAuth]);
 
 	useEffect(() => {
-		if (isFromRedirect && currentURL) {
-			const search = currentURL.split('?');
-			const tok = search[1].split('&');
-			tok.forEach(token => {
-				const t = token.split('=');
-				const k = t[0];
-				const v = t[1];
-				if (k === 'result') {
-					const result = JSON.parse(atob(decodeURIComponent(v)));
-					console.log(result);
-					const { success, consumer_key, oauth_token, oauth_token_secret } = result;
-					if (success) {
-						const url = window.sessionStorage.getItem(urlStorageKey);
-						config.oauth1_auth = {
-							date_ts: Date.now(),
-							url,
-							consumer_key,
-							oauth_token,
-							oauth_token_secret,
+		setConfig(currentConfig.current);
+	}, [currentConfig.current]);
+
+	useEffect(() => {
+		if (isFromRedirect && currentURL && !insideRedirect.current) {
+			const url = window.sessionStorage.getItem(urlStorageKey);
+			if (url) {
+				const search = currentURL.split('?');
+				const tok = search[1].split('&');
+				tok.some(token => {
+					const t = token.split('=');
+					const k = t[0];
+					const v = t[1];
+					if (k === 'result') {
+						const result = JSON.parse(atob(decodeURIComponent(v)));
+						const { success, consumer_key, oauth_token, oauth_token_secret, error } = result;
+						if (success) {
+							if (url) {
+								const _config = { ...config };
+								_config.oauth1_auth = {
+									date_ts: Date.now(),
+									url,
+									consumer_key,
+									oauth_token,
+									oauth_token_secret,
+								}
+								currentConfig.current = _config;
+								insideRedirect.current = true;
+								setState(State.Validate);
+							}
+						} else {
+							setError(new Error(error ?? 'Unknown error obtaining OAuth token'));
 						}
-						setConfig(config);
-						setState(State.Validate);
-						window.sessionStorage.removeItem(urlStorageKey);
-					} else {
-						// FIXME:
+						return true;
 					}
-				}
-			});
+				});
+			}
 		}
-	}, [isFromRedirect, currentURL, config, setConfig]);
+	}, [isFromRedirect, currentURL]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -487,50 +385,39 @@ const Integration = () => {
 	}, []);
 
 	useEffect(() => {
-		if (accounts?.length) {
-			config.accounts = {};
-			accounts.forEach((acct: Account) => {
-				config.accounts![acct.id] = acct;
-			});
-			setConfig(config);
-			setInstallEnabled(Object.keys(config.accounts).length > 0);
-		}
-	}, [accounts, config, setConfig, setInstallEnabled]);
-
-	useEffect(() => {
-		if (state === State.Validate) {
-			const _config = {...config, action: 'FETCH_ACCOUNTS'};
-			setValidate(_config, (err: Maybe<Error>, res: Maybe<any>) => {
-				if (err) {
-					setError(err);
-				} else {
-					if (res?.simulator) {
-						setAccounts([{
-							id: '1',
-							name: 'pinpt-hq',
-							description: '',
-							avatarUrl: '',
-							totalCount: 24,
-							type: 'ORG',
-							public: false,
-						}]);
-					} else {
-						// FIXME once robin has his fix
-						setAccounts([{
-							id: '1',
-							name: 'pinpt-hq',
-							description: '',
-							avatarUrl: '',
-							totalCount: 24,
-							type: 'ORG',
-							public: false,
-						}]);
-					}
+		if (state === State.Validate && accounts.current?.length === 0) {
+			const run = async () => {
+				const _config = {...currentConfig.current, action: 'FETCH_ACCOUNTS'};
+				try {
+					const res = await setValidate(_config);
+					console.log(res);
+					// FIXME once robin has his fix
+					accounts.current = [{
+						id: '1',
+						name: 'pinpt-hq',
+						description: '',
+						avatarUrl: '',
+						totalCount: 24,
+						type: 'ORG',
+						public: false,
+					}];
+					const newconfig = { ...currentConfig.current };
+					newconfig.accounts = {};
+					accounts.current.forEach((acct: Account) => {
+						newconfig.accounts![acct.id] = acct;
+					});
+					currentConfig.current = newconfig;
+					setInstallEnabled(Object.keys(newconfig.accounts).length > 0);
+					setConfig(newconfig);
 					setState(State.Projects);
+				} catch (err) {
+					console.error(err);
+					setError(err);
 				}
-			});
+			};
+			run();
 		}
-	}, [state, setState, setAccounts, setValidate, config]);
+	}, [state]);
 
 	if (loading) {
 		return <Loader screen />;
@@ -549,13 +436,21 @@ const Integration = () => {
 					setType(IntegrationType.CLOUD);
 					setState(State.Setup);
 				} else {
-					setState(State.AgentSelector);
+					// for self-managed we need to get a private key for oauth1
+					getPrivateKey().then((val: string | null) => {
+						if (!val) {
+							createPrivateKey().then(key => setPrivateKey(key)).catch((err: Error) => {
+								setError(err);
+							});
+						}
+						setState(State.AgentSelector);
+					}).catch((err: Error) => setError(err));
 				}
 			}} />;
 			break;
 		}
 		case State.AgentSelector: {
-			content = <AgentSelector setType={(type: IntegrationType) => {
+			content = <AgentSelector setType={async (type: IntegrationType) => {
 				setType(type);
 				setState(State.Setup);
 			}} />;
@@ -595,9 +490,9 @@ const Integration = () => {
 			content = (
 				<AccountsTable
 					description='For the selected accounts, all projects, issues and other data will automatically be made available in Pinpoint once installed.'
-					accounts={accounts}
+					accounts={accounts.current}
 					entity='project'
-					config={config}
+					config={currentConfig.current}
 				/>
 			);
 			break;
