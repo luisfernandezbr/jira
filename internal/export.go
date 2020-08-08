@@ -307,19 +307,26 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 	return nil
 }
 
-func (i *JiraIntegration) createAuthConfig(logger sdk.Logger, config sdk.Config) (authConfig, error) {
-	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
+// configIdentifier saves us from passing an identifier and a config, since most implementations
+// of sdk.Identifier also include a Config method
+type configIdentifier interface {
+	sdk.Identifier
+	Config() sdk.Config
+}
+
+func (i *JiraIntegration) createAuthConfig(ci configIdentifier) (authConfig, error) {
+	return i.createAuthConfigFromConfig(ci, ci.Config())
+}
+
+func (i *JiraIntegration) createAuthConfigFromConfig(identifier sdk.Identifier, config sdk.Config) (authConfig, error) {
+	auth, err := newAuth(i.logger, i.manager, identifier, i.httpmanager, config)
 	if err != nil {
 		return authConfig{}, err
 	}
 	return auth.Apply()
 }
 
-func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool, integrationInstanceID string) (*state, error) {
-	authConfig, err := i.createAuthConfig(logger, config)
-	if err != nil {
-		return nil, err
-	}
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, authConfig authConfig, config sdk.Config, historical bool, integrationInstanceID string) *state {
 	return &state{
 		pipe:                  pipe,
 		config:                config,
@@ -327,7 +334,7 @@ func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.
 		logger:                logger,
 		historical:            historical,
 		integrationInstanceID: integrationInstanceID,
-	}, nil
+	}
 }
 
 const configKeyLastExportTimestamp = "last_export_ts"
@@ -336,10 +343,11 @@ const configKeyLastExportTimestamp = "last_export_ts"
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID(), "integration_instance_id", export.IntegrationInstanceID())
 	sdk.LogInfo(logger, "export started")
-	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationInstanceID())
+	authConfig, err := i.createAuthConfig(export)
 	if err != nil {
-		return fmt.Errorf("error creating state: %w", err)
+		return fmt.Errorf("error creating auth config: %w", err)
 	}
+	state := i.newState(logger, export.Pipe(), authConfig, export.Config(), export.Historical(), export.IntegrationInstanceID())
 	state.manager = i.manager
 	state.export = export
 	state.stats = &stats{

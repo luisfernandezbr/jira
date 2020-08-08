@@ -1,6 +1,10 @@
 package internal
 
-import "github.com/pinpt/agent.next/sdk"
+import (
+	"fmt"
+
+	"github.com/pinpt/agent.next/sdk"
+)
 
 type idValue struct {
 	ID string `json:"id"`
@@ -36,10 +40,11 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 	c.APIKeyAuth = user.APIKeyAuth
 	c.BasicAuth = user.BasicAuth
 	c.OAuth2Auth = user.OAuth2Auth
-	state, err := i.newState(logger, mutation.Pipe(), c, false, mutation.IntegrationInstanceID())
+	authConfig, err := i.createAuthConfigFromConfig(mutation, c)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating auth config: %w", err)
 	}
+	state := i.newState(logger, mutation.Pipe(), authConfig, c, false, mutation.IntegrationInstanceID())
 	// TODO:
 	// create/update sprint
 	// create issue
