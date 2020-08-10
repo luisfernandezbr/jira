@@ -40,12 +40,24 @@ var webhookEvents = []string{
 
 const webhookVersion = "1" // change this to have the webhook uninstalled and reinstalled new
 
+func (i *JiraIntegration) isWebhookAuthSupported(config sdk.Config) (bool, string) {
+	if config.BasicAuth != nil {
+		return true, config.BasicAuth.URL
+	}
+	if config.OAuth1Auth != nil {
+		return true, config.OAuth1Auth.URL
+	}
+	return false, ""
+}
+
 func (i *JiraIntegration) uninstallWebHookIfNecessary(logger sdk.Logger, config sdk.Config, state sdk.State, authConfig authConfig, customerID string, integrationInstanceID string) error {
-	if config.BasicAuth == nil {
-		sdk.LogInfo(logger, "skipping web hook uninstall since not using basic auth")
+	webhookOK, url := i.isWebhookAuthSupported(config)
+	if !webhookOK {
+		sdk.LogInfo(logger, "skipping web hook uninstall since not supported")
+		return nil
 	}
 	// fetch the webhooks for this instance and delete them
-	client := i.httpmanager.New(sdk.JoinURL(config.BasicAuth.URL, "/webhooks/1.0/webhook"), nil)
+	client := i.httpmanager.New(sdk.JoinURL(url, "/webhooks/1.0/webhook"), nil)
 	var resp []struct {
 		Name string `json:"name"`
 		Self string `json:"self"`
@@ -68,8 +80,9 @@ func (i *JiraIntegration) uninstallWebHookIfNecessary(logger sdk.Logger, config 
 }
 
 func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sdk.Config, state sdk.State, authConfig authConfig, customerID string, integrationInstanceID string) error {
-	if config.BasicAuth == nil {
-		sdk.LogInfo(logger, "skipping web hook install since not using basic auth")
+	webhookOK, url := i.isWebhookAuthSupported(config)
+	if !webhookOK {
+		sdk.LogInfo(logger, "skipping web hook install since not supported")
 		return nil
 	}
 	if i.manager.WebHookManager().Exists(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg) {
@@ -89,7 +102,7 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 	if err != nil {
 		return fmt.Errorf("error creating webhook url: %w", err)
 	}
-	url := sdk.JoinURL(config.BasicAuth.URL, "/webhooks/1.0/webhook")
+	url = sdk.JoinURL(url, "/webhooks/1.0/webhook")
 	client := i.httpmanager.New(url, nil)
 	req := map[string]interface{}{
 		"name":   "Pinpoint/" + integrationInstanceID,
