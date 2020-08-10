@@ -13,6 +13,7 @@ import {
 	URLValidator,
 	OAuthConnect,
 	OAuthVersion,
+	IInstalledLocation,
 } from '@pinpt/agent.websdk';
 import styles from './styles.module.less';
 
@@ -178,12 +179,12 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 					return;
 				}
 				const u = new URL(auth as string);
-				u.pathname = '/plugins/servlet/applinks/listApplicationLinks';
 				setOAuth1Connect(u.toString(), (err: Maybe<Error>) => {
 					setConnected(true);
 				});
 				const width = window.screen.width < 1000 ? window.screen.width : 1000;
 				const height = window.screen.height < 700 ? window.screen.height : 700;
+				u.pathname = '/plugins/servlet/applinks/listApplicationLinks';
 				windowRef.current = window.open(u.toString(), undefined, `toolbar=no,location=yes,status=no,menubar=no,scrollbars=yes,resizable=yes,width=${width},height=${height}`);
 				if (!windowRef.current) {
 					callback(new Error(`couldn't open the window to ${auth}`));
@@ -296,7 +297,22 @@ enum State {
 }
 
 const Integration = () => {
-	const { loading, installed, currentURL, config, isFromRedirect, isFromReAuth, setValidate, setConfig, session, setInstallEnabled, createPrivateKey, getPrivateKey, setPrivateKey } = useIntegration();
+	const {
+		loading,
+		installed,
+		currentURL,
+		config,
+		isFromRedirect,
+		isFromReAuth,
+		session,
+		setValidate,
+		setConfig, 
+		setInstallEnabled,
+		setInstallLocation,
+		setPrivateKey,
+		createPrivateKey,
+		getPrivateKey,
+	} = useIntegration();
 	const [type, setType] = useState<IntegrationType | undefined>(config.integration_type);
 	const [state, setState] = useState<State>(State.Location);
 	const [error, setError] = useState<Error | undefined>();
@@ -390,25 +406,14 @@ const Integration = () => {
 				const _config = {...currentConfig.current, action: 'FETCH_ACCOUNTS'};
 				try {
 					const res = await setValidate(_config);
-					console.log(res);
-					// FIXME once robin has his fix
-					accounts.current = [{
-						id: '1',
-						name: 'pinpt-hq',
-						description: '',
-						avatarUrl: '',
-						totalCount: 24,
-						type: 'ORG',
-						public: false,
-					}];
 					const newconfig = { ...currentConfig.current };
 					newconfig.accounts = {};
-					accounts.current.forEach((acct: Account) => {
-						newconfig.accounts![acct.id] = acct;
-					});
+					if (res?.accounts) {
+						newconfig.accounts[res.accounts.id] = res.accounts;
+					}
 					currentConfig.current = newconfig;
+					accounts.current = [res.accounts as Account];
 					setInstallEnabled(Object.keys(newconfig.accounts).length > 0);
-					setConfig(newconfig);
 					setState(State.Projects);
 				} catch (err) {
 					console.error(err);
@@ -443,6 +448,7 @@ const Integration = () => {
 								setError(err);
 							});
 						}
+						setInstallLocation(IInstalledLocation.SELFMANAGED);
 						setState(State.AgentSelector);
 					}).catch((err: Error) => setError(err));
 				}

@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/pinpt/agent.next/sdk"
 )
@@ -23,25 +25,10 @@ type projectSearchResult struct {
 	IsLast     bool `json:"isLast"`
 }
 
-// type jiraOrg struct {
-// 	ID   string
-// 	Type string
-// }
-
-type validateAccount struct {
-	ID          string
-	Name        string
-	Description string
-	AvatarURL   string
-	TotalCount  int
-	Type        string
-	Public      bool
-}
-
 // Validate will perform pre-installation operations on behalf of the UI
 func (i *JiraIntegration) Validate(validate sdk.Validate) (map[string]interface{}, error) {
 	config := validate.Config()
-	sdk.LogDebug(i.logger, "Validation", "config", config)
+	sdk.LogDebug(i.logger, "Validate", "config", config)
 	found, action := config.GetString("action")
 	if !found {
 		return nil, fmt.Errorf("validation had no action")
@@ -79,27 +66,51 @@ func (i *JiraIntegration) Validate(validate sdk.Validate) (map[string]interface{
 		if err != nil {
 			if httperr, ok := err.(*sdk.HTTPError); ok {
 				buf, _ := ioutil.ReadAll(httperr.Body)
-				fmt.Println("AAaaaa", string(buf))
+				sdk.LogError(i.logger, "error reading data for validate", "buf", string(buf))
 			}
 			return nil, fmt.Errorf("error fetching project accounts: %w", err)
 		}
 		if r.StatusCode != http.StatusOK {
 			sdk.LogDebug(i.logger, "unusual status code", "code", r.StatusCode)
 		}
-		acc := validateAccount{
-			ID:         "1",
-			TotalCount: resp.Total,
+		indexURL := sdk.JoinURL(authConfig.APIURL, "/")
+		client = i.httpmanager.New(indexURL, nil)
+		var resp2 interface{}
+		r, err = client.Get(&resp2, authConfig.Middleware...)
+		if err != nil {
+			if httperr, ok := err.(*sdk.HTTPError); ok {
+				buf, _ := ioutil.ReadAll(httperr.Body)
+				sdk.LogError(i.logger, "error reading data for validate (index)", "buf", string(buf))
+			}
+			return nil, fmt.Errorf("error fetching project accounts: %w", err)
 		}
-		// TODO(robin): get account info
-		// orgurl := sdk.JoinURL(authConfig.APIURL, "/admin/v1/orgs/pinpt-hq")
-		// client = i.httpmanager.New(orgurl, nil)
-		// fmt.Println("the url", orgurl)
-		// qq := make(map[string]interface{})
-		// r, err = client.Get(&qq, authConfig.Middleware...)
-		// if err != nil {
-		// 	return nil, fmt.Errorf("error fetching org: %w", err)
-		// }
-		// fmt.Println(">>>", sdk.Stringify(qq))
+		// try and extract the name if possible
+		re := regexp.MustCompile(`<meta name="ajs-cloud-name" content="(.*?)">`)
+		nametok := re.FindStringSubmatch(string(r.Body))
+		var name string
+		if len(nametok) > 0 {
+			name = nametok[1]
+		}
+		if name == "" {
+			i := strings.Index(authConfig.APIURL, "://")
+			tok := strings.Split(authConfig.APIURL[i+3:], ".")
+			name = tok[0]
+		}
+		re = regexp.MustCompile(`<link rel="shortcut icon" href="(.*?)">`)
+		var avatar string
+		avatartok := re.FindStringSubmatch(string(r.Body))
+		if len(avatartok) > 0 {
+			avatar = sdk.JoinURL(authConfig.APIURL, avatartok[1])
+		}
+		acc := sdk.ValidatedAccount{
+			ID:          authConfig.APIURL,
+			Name:        name,
+			Description: authConfig.APIURL,
+			AvatarURL:   avatar,
+			TotalCount:  resp.Total,
+			Type:        "ORG",
+			Public:      false,
+		}
 		return map[string]interface{}{
 			"accounts": acc,
 		}, nil
