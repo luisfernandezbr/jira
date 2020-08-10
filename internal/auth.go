@@ -63,6 +63,29 @@ func (a *oauth2Auth) Apply() (authConfig, error) {
 	}, nil
 }
 
+// easyjson:skip
+type oauth1Auth struct {
+	token       string
+	tokenSecret string
+	consumerKey string
+	apiURL      string
+	identifier  sdk.Identifier
+	manager     sdk.Manager
+}
+
+var _ auth = (*oauth1Auth)(nil)
+
+func (a *oauth1Auth) Apply() (authConfig, error) {
+	return authConfig{
+		WebsiteURL: a.apiURL,
+		APIURL:     a.apiURL,
+		Middleware: []sdk.WithHTTPOption{
+			sdk.WithOAuth1(a.manager, a.identifier, a.consumerKey, reverseString(a.consumerKey), a.token, a.tokenSecret),
+		},
+		SupportsAgileAPI: true,
+	}, nil
+}
+
 func newOAuth2Auth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPClientManager, url string, accessToken string, refreshToken string) (*oauth2Auth, error) {
 	var sites []struct {
 		ID  string
@@ -129,7 +152,22 @@ func fixURLPath(theurl string) (string, error) {
 	return u.String(), nil
 }
 
-func newAuth(logger sdk.Logger, manager sdk.Manager, httpmanager sdk.HTTPClientManager, config sdk.Config) (auth, error) {
+func newAuth(logger sdk.Logger, manager sdk.Manager, identifier sdk.Identifier, httpmanager sdk.HTTPClientManager, config sdk.Config) (auth, error) {
+	if config.OAuth1Auth != nil {
+		theurl, err := fixURLPath(config.OAuth1Auth.URL)
+		if err != nil {
+			return nil, err
+		}
+		sdk.LogInfo(logger, "using oauth1 authentication")
+		return &oauth1Auth{
+			apiURL:      theurl,
+			token:       config.OAuth1Auth.Token,
+			tokenSecret: config.OAuth1Auth.Secret,
+			consumerKey: config.OAuth1Auth.ConsumerKey,
+			manager:     manager,
+			identifier:  identifier,
+		}, nil
+	}
 	if config.OAuth2Auth != nil {
 		var refreshToken string
 		if config.OAuth2Auth.RefreshToken != nil {

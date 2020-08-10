@@ -113,7 +113,11 @@ type webhookEvent struct {
 	Event string `json:"webhookEvent"`
 }
 
-func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
+	rawdata := webhook.Bytes()
+	customerID := webhook.CustomerID()
+	integrationInstanceID := webhook.IntegrationInstanceID()
+	pipe := webhook.Pipe()
 	var changelog struct {
 		Timestamp int64 `json:"timestamp"`
 		User      user  `json:"user"`
@@ -244,14 +248,14 @@ func (i *JiraIntegration) webhookUpdateIssue(state sdk.State, config sdk.Config,
 
 	if updatedStatus {
 		ts := time.Now()
-		authCfg, err := i.createAuthConfig(i.logger, config)
+		authCfg, err := i.createAuthConfig(webhook)
 		if err != nil {
 			return fmt.Errorf("error creating authconfig: %w", err)
 		}
 		api := newAgileAPI(i.logger, authCfg, customerID, integrationInstanceID, i.httpmanager)
 		projectID := sdk.NewWorkProjectID(customerID, changelog.Issue.Fields.Project.ID, refType)
 		sdk.LogDebug(i.logger, "updating board for issue", "issue", changelog.Issue.ID)
-		if err := updateIssueBoards(state, pipe, api, customerID, integrationInstanceID, changelog.Issue.Key, projectID); err != nil {
+		if err := updateIssueBoards(webhook.State(), pipe, api, customerID, integrationInstanceID, changelog.Issue.Key, projectID); err != nil {
 			return fmt.Errorf("error sending updated issue boards: %w", err)
 		}
 		sdk.LogDebug(i.logger, "done processing boards for issue", "issue", changelog.Issue.ID, "duration", time.Since(ts))
@@ -296,10 +300,11 @@ func (i *JiraIntegration) webhookCreateIssue(webhook sdk.WebHook, rawdata []byte
 
 	stats := &stats{}
 	stats.started = time.Now()
-	state, err := i.newState(i.logger, pipe, webhook.Config(), false, webhook.IntegrationInstanceID())
+	authConfig, err := i.createAuthConfig(webhook)
 	if err != nil {
-		return fmt.Errorf("unable to get state: %w", err)
+		return fmt.Errorf("error creating auth config: %w", err)
 	}
+	state := i.newState(i.logger, pipe, authConfig, webhook.Config(), false, webhook.IntegrationInstanceID())
 	customfields, err := i.fetchCustomFields(i.logger, state.export, webhook.CustomerID(), state.authConfig)
 	if err != nil {
 		return err
@@ -356,7 +361,10 @@ func (i *JiraIntegration) webhookDeleteIssue(customerID string, integrationInsta
 }
 
 // webhookUpsertComment will work for comment_created and comment_updated since they both require refetch because they dont deliver adf!
-func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+func (i *JiraIntegration) webhookUpsertComment(webhook sdk.WebHook) error {
+	pipe := webhook.Pipe()
+	customerID := webhook.CustomerID()
+	integrationInstanceID := webhook.IntegrationInstanceID()
 	var created struct {
 		Timestamp int64 `json:"timestamp"`
 		Comment   struct {
@@ -372,11 +380,11 @@ func (i *JiraIntegration) webhookUpsertComment(config sdk.Config, customerID str
 			} `json:"fields"`
 		} `json:"issue"`
 	}
-	if err := json.Unmarshal(rawdata, &created); err != nil {
+	if err := json.Unmarshal(webhook.Bytes(), &created); err != nil {
 		return fmt.Errorf("error parsing json for comment: %w", err)
 	}
 	sdk.LogDebug(i.logger, "new comment webhook recieved", "comment", created.Comment.ID)
-	authcfg, err := i.createAuthConfig(i.logger, config)
+	authcfg, err := i.createAuthConfig(webhook)
 	if err != nil {
 		return fmt.Errorf("error creating authconfig: %w", err)
 	}
@@ -432,10 +440,11 @@ func (i *JiraIntegration) webhookUpsertProject(webhook sdk.WebHook, pipe sdk.Pip
 	}
 	// jira webhooks (sometimes) return ids as numbers instead of strings
 	refID := fmt.Sprintf("%d", upsert.Project.ID)
-	state, err := i.newState(i.logger, pipe, webhook.Config(), false, webhook.IntegrationInstanceID())
+	authConfig, err := i.createAuthConfig(webhook)
 	if err != nil {
-		return fmt.Errorf("unable to get state: %w", err)
+		return fmt.Errorf("error creating auth config: %w", err)
 	}
+	state := i.newState(i.logger, pipe, authConfig, webhook.Config(), false, webhook.IntegrationInstanceID())
 	sdk.LogDebug(i.logger, "new project webhook received", "project", refID)
 	project, err := i.fetchProject(state, webhook.CustomerID(), refID)
 	if err != nil {
@@ -470,7 +479,7 @@ func (i *JiraIntegration) webhookDeleteProject(customerID string, integrationIns
 }
 
 func (i *JiraIntegration) webhookUpsertUser(webhook sdk.WebHook) error {
-	authConfig, err := i.createAuthConfig(i.logger, webhook.Config())
+	authConfig, err := i.createAuthConfig(webhook)
 	if err != nil {
 		return fmt.Errorf("error creating auth config for webhook: %w", err)
 	}
@@ -492,7 +501,7 @@ func webhookUpsertUser(logger sdk.Logger, userManager UserManager, rawdata []byt
 }
 
 func (i *JiraIntegration) webhookCreateSprint(webhook sdk.WebHook) error {
-	authConfig, err := i.createAuthConfig(i.logger, webhook.Config())
+	authConfig, err := i.createAuthConfig(webhook)
 	if err != nil {
 		return fmt.Errorf("error creating auth config for webhook: %w", err)
 	}
@@ -642,23 +651,27 @@ func (i *JiraIntegration) webhookCloseSprint(customerID string, integrationInsta
 	return pipe.Write(update)
 }
 
-func (i *JiraIntegration) webhookCreateBoard(state sdk.State, config sdk.Config, customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
+func (i *JiraIntegration) webhookCreateBoard(webhook sdk.WebHook) error {
+	pipe := webhook.Pipe()
+	customerID := webhook.CustomerID()
+	integrationInstanceID := webhook.IntegrationInstanceID()
+
 	var update struct {
 		Timestamp int64 `json:"timestamp"`
 		Board     struct {
 			ID int `json:"id"`
 		} `json:"board"`
 	}
-	if err := json.Unmarshal(rawdata, &update); err != nil {
+	if err := json.Unmarshal(webhook.Bytes(), &update); err != nil {
 		return fmt.Errorf("error parsing json for created project: %w", err)
 	}
 	refid := strconv.Itoa(update.Board.ID)
-	authConfig, err := i.createAuthConfig(i.logger, config)
+	authConfig, err := i.createAuthConfig(webhook)
 	if err != nil {
 		return fmt.Errorf("error getting auth config: %w", err)
 	}
 	api := newAgileAPI(i.logger, authConfig, customerID, integrationInstanceID, i.httpmanager)
-	return fetchAndExportBoard(api, state, pipe, customerID, integrationInstanceID, refid)
+	return fetchAndExportBoard(api, webhook.State(), pipe, customerID, integrationInstanceID, refid)
 }
 
 func (i *JiraIntegration) webhookUpdateBoard(customerID string, integrationInstanceID string, rawdata []byte, pipe sdk.Pipe) error {
@@ -793,13 +806,13 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	pipe := webhook.Pipe()
 	switch event.Event {
 	case "jira:issue_updated":
-		return i.webhookUpdateIssue(webhook.State(), webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		return i.webhookUpdateIssue(webhook)
 	case "jira:issue_created":
 		return i.webhookCreateIssue(webhook, webhook.Bytes(), pipe)
 	case "jira:issue_deleted":
 		return i.webhookDeleteIssue(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "comment_created", "comment_updated":
-		return i.webhookUpsertComment(webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		return i.webhookUpsertComment(webhook)
 	case "comment_deleted":
 		return i.webhookDeleteComment(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "project_created", "project_updated":
@@ -822,7 +835,7 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	case "sprint_closed":
 		return i.webhookCloseSprint(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "board_created", "board_configuration_changed":
-		return i.webhookCreateBoard(webhook.State(), webhook.Config(), customerID, integrationInstanceID, webhook.Bytes(), pipe)
+		return i.webhookCreateBoard(webhook)
 	case "board_updated":
 		return i.webhookUpdateBoard(customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	case "board_deleted":

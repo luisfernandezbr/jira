@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/pinpt/agent.next/sdk"
 	"github.com/pinpt/agent.next/sdk/sdktest"
@@ -24,15 +25,51 @@ func quoteString(str string) string {
 	return fmt.Sprintf(`"%s"`, str)
 }
 
+type mockWebHook struct {
+	config sdk.Config
+	raw    []byte
+	data   map[string]interface{}
+	pipe   *sdktest.MockPipe
+}
+
+var _ sdk.WebHook = (*mockWebHook)(nil)
+
+func (h *mockWebHook) Config() sdk.Config                    { return h.config }
+func (h *mockWebHook) State() sdk.State                      { return nil }
+func (h *mockWebHook) RefID() string                         { return "refid" }
+func (h *mockWebHook) Pipe() sdk.Pipe                        { return h.pipe }
+func (h *mockWebHook) Data() (map[string]interface{}, error) { return h.data, nil }
+func (h *mockWebHook) Bytes() []byte                         { return h.raw }
+func (h *mockWebHook) URL() string                           { return "" }
+func (h *mockWebHook) Headers() map[string]string            { return nil }
+func (h *mockWebHook) Scope() sdk.WebHookScope               { return sdk.WebHookScopeOrg }
+func (h *mockWebHook) Paused(resetAt time.Time) error        { return nil }
+func (h *mockWebHook) Resumed() error                        { return nil }
+func (h *mockWebHook) CustomerID() string                    { return "1234" }
+func (h *mockWebHook) IntegrationInstanceID() string         { return "1" }
+func (h *mockWebHook) RefType() string                       { return "jira" }
+
+func newMockWebHook(fn string) *mockWebHook {
+	pipe := &sdktest.MockPipe{}
+	config := sdk.Config{}
+	buf := loadFile(fn)
+	return &mockWebHook{
+		config: config,
+		raw:    buf,
+		data:   make(map[string]interface{}),
+		pipe:   pipe,
+	}
+}
+
 func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.assignee.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.assignee.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
 	assert.EqualValues(quoteString("557058:8b6b268b-17b3-407b-8974-bed4042fa709"), update.Set["assignee_ref_id"])
 	var res []sdk.WorkIssueChangeLog
@@ -45,13 +82,13 @@ func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.tags.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.tags.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
 	assert.EqualValues("[\"signal\"]", update.Set["tags"])
 	var res []sdk.WorkIssueChangeLog
@@ -64,15 +101,15 @@ func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	err := i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.resolution.json"), pipe)
+	webhook := newMockWebHook("testdata/jira:issue_updated.resolution.json")
+	err := i.webhookUpdateIssue(webhook)
 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
 	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"Won't Do\"", update.Set["resolution"])
 	assert.EqualValues("\"Closed\"", update.Set["status"])
 	assert.EqualValues("\""+sdk.NewWorkIssueStatusID("1234", refType, "6")+"\"", update.Set["status_id"])
@@ -89,13 +126,13 @@ func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.type.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.type.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"Task\"", update.Set["type"])
 	assert.EqualValues(quoteString(sdk.NewWorkIssueTypeID("1234", refType, "10101")), update.Set["type_id"])
 	var res []sdk.WorkIssueChangeLog
@@ -108,15 +145,15 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	err := i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.project.json"), pipe)
+	webhook := newMockWebHook("testdata/jira:issue_updated.project.json")
+	err := i.webhookUpdateIssue(webhook)
 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
 	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues(quoteString(sdk.NewWorkProjectID("1234", "10639", refType)), update.Set["project_id"])
 	assert.EqualValues(quoteString("Work Required"), update.Set["status"])
 	assert.EqualValues(quoteString(sdk.NewWorkIssueStatusID("1234", refType, "1")), update.Set["status_id"])
@@ -137,13 +174,13 @@ func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.sprint_ids.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.sprint_ids.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("["+quoteString(sdk.NewAgileSprintID("1234", "197", refType))+"]", update.Set["sprint_ids"])
 	var res []sdk.WorkIssueChangeLog
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
@@ -155,13 +192,13 @@ func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.due_date.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.due_date.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("{\"epoch\":1596499200000,\"offset\":0,\"rfc3339\":\"2020-08-04T00:00:00+00:00\"}", update.Set["due_date"])
 	var res []sdk.WorkIssueChangeLog
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
@@ -173,13 +210,13 @@ func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedDueDateUnset(t *testing.T) {
 	assert := assert.New(t)
-	pipe := &sdktest.MockPipe{}
 	i := JiraIntegration{
 		logger: sdk.NewNoOpTestLogger(),
 	}
-	assert.NoError(i.webhookUpdateIssue(nil, sdk.Config{}, "1234", "1", loadFile("testdata/jira:issue_updated.due_date.unset.json"), pipe))
-	assert.Len(pipe.Written, 1)
-	update := pipe.Written[0].(*agent.UpdateData)
+	webhook := newMockWebHook("testdata/jira:issue_updated.due_date.unset.json")
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("due_date", update.Unset[0])
 	var res []sdk.WorkIssueChangeLog
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)

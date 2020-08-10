@@ -23,10 +23,12 @@ const cacheKeyWorkConfig = "work_config"
 func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationInstanceID string, historical bool) error {
 	logger := sdk.LogWith(i.logger, "customer_id", customerID, "integration_instance_id", integrationInstanceID)
 	sdk.LogInfo(logger, "processing work config started")
-	state, err := i.newState(logger, pipe, config, historical, integrationInstanceID)
+	authConfig, err := i.createAuthConfigFromConfig(sdk.NewSimpleIdentifier(customerID, integrationInstanceID, refType), config)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating work config: %w", err)
 	}
+	// FIXME(robin): why does a new state need to be declared here instead of useing the one passed in?
+	state := i.newState(logger, pipe, authConfig, config, historical, integrationInstanceID)
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/status")
 	client := i.httpmanager.New(theurl, nil)
 	resp := make([]status, 0)

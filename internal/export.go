@@ -307,19 +307,26 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 	return nil
 }
 
-func (i *JiraIntegration) createAuthConfig(logger sdk.Logger, config sdk.Config) (authConfig, error) {
-	auth, err := newAuth(logger, i.manager, i.httpmanager, config)
+// configIdentifier saves us from passing an identifier and a config, since most implementations
+// of sdk.Identifier also include a Config method
+type configIdentifier interface {
+	sdk.Identifier
+	Config() sdk.Config
+}
+
+func (i *JiraIntegration) createAuthConfig(ci configIdentifier) (authConfig, error) {
+	return i.createAuthConfigFromConfig(ci, ci.Config())
+}
+
+func (i *JiraIntegration) createAuthConfigFromConfig(identifier sdk.Identifier, config sdk.Config) (authConfig, error) {
+	auth, err := newAuth(i.logger, i.manager, identifier, i.httpmanager, config)
 	if err != nil {
 		return authConfig{}, err
 	}
 	return auth.Apply()
 }
 
-func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.Config, historical bool, integrationInstanceID string) (*state, error) {
-	authConfig, err := i.createAuthConfig(logger, config)
-	if err != nil {
-		return nil, err
-	}
+func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, authConfig authConfig, config sdk.Config, historical bool, integrationInstanceID string) *state {
 	return &state{
 		pipe:                  pipe,
 		config:                config,
@@ -327,7 +334,7 @@ func (i *JiraIntegration) newState(logger sdk.Logger, pipe sdk.Pipe, config sdk.
 		logger:                logger,
 		historical:            historical,
 		integrationInstanceID: integrationInstanceID,
-	}, nil
+	}
 }
 
 const configKeyLastExportTimestamp = "last_export_ts"
@@ -336,17 +343,18 @@ const configKeyLastExportTimestamp = "last_export_ts"
 func (i *JiraIntegration) Export(export sdk.Export) error {
 	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID(), "integration_instance_id", export.IntegrationInstanceID())
 	sdk.LogInfo(logger, "export started")
-	state, err := i.newState(logger, export.Pipe(), export.Config(), export.Historical(), export.IntegrationInstanceID())
+	authConfig, err := i.createAuthConfig(export)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating auth config: %w", err)
 	}
+	state := i.newState(logger, export.Pipe(), authConfig, export.Config(), export.Historical(), export.IntegrationInstanceID())
 	state.manager = i.manager
 	state.export = export
 	state.stats = &stats{
 		started: time.Now(),
 	}
 	if err := i.installWebHookIfNecessary(logger, export.Config(), export.State(), state.authConfig, export.CustomerID(), export.IntegrationInstanceID()); err != nil {
-		return err
+		return fmt.Errorf("error installing webhooks: %w", err)
 	}
 	var fromTime time.Time
 	var fromTimeStr string
@@ -354,7 +362,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 		sdk.LogInfo(logger, "historical has been requested")
 	} else {
 		if _, err := export.State().Get(configKeyLastExportTimestamp, &fromTimeStr); err != nil {
-			return err
+			return fmt.Errorf("error getting last export time from state: %w", err)
 		}
 		if fromTimeStr != "" {
 			fromTime, _ = time.Parse(time.RFC3339Nano, fromTimeStr)
@@ -365,7 +373,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	customfields, err := i.fetchCustomFields(logger, state.export, export.CustomerID(), state.authConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching custome fields: %w", err)
 	}
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationInstanceID())
@@ -375,29 +383,29 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	projectKeys, err := i.fetchProjectsPaginated(state)
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching projects: %w", err)
 	}
 	if len(projectKeys) == 0 {
 		sdk.LogInfo(logger, "no projects found to export")
 	} else {
 		if err := state.sprintManager.init(state); err != nil {
-			return err
+			return fmt.Errorf("error in sprintmanager: %w", err)
 		}
 		if err := i.fetchPriorities(state); err != nil {
-			return err
+			return fmt.Errorf("error fetching priorities: %w", err)
 		}
 		if err := i.fetchTypes(state); err != nil {
-			return err
+			return fmt.Errorf("error fetching types: %w", err)
 		}
 		if err := i.fetchIssuesPaginated(state, fromTime, customfields, projectKeys); err != nil {
-			return err
+			return fmt.Errorf("error fetching issues: %w", err)
 		}
 		if err := state.sprintManager.blockForFetchBoards(logger); err != nil {
-			return err
+			return fmt.Errorf("error waiting for fetched sprints: %w", err)
 		}
 	}
 	if err := export.State().Set(configKeyLastExportTimestamp, state.stats.started.Format(time.RFC3339Nano)); err != nil {
-		return err
+		return fmt.Errorf("error writing last export date to state: %w", err)
 	}
 	state.stats.dump(logger)
 	return nil

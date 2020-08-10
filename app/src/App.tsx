@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimulatorInstaller, Integration } from '@pinpt/agent.websdk';
+import { SimulatorInstaller, Integration, IProcessingDetail, IProcessingState, IInstalledLocation, ISelfManagedAgent, ISession } from '@pinpt/agent.websdk';
 import IntegrationUI from './integration';
 
 function App() {
@@ -19,13 +19,43 @@ function App() {
 			},
 			uiURL: document.location.href,
 		};
-		return <SimulatorInstaller integration={integration} />;
+
+		const processingDetail: IProcessingDetail = {
+			createdDate: Date.now() - (86400000 * 5) - 60000,
+			processed: true,
+			lastProcessedDate: Date.now() - (86400000 * 2),
+			lastExportRequestedDate: Date.now() - ((86400000 * 5) + 60000),
+			lastExportCompletedDate: Date.now() - (86400000 * 5),
+			state: IProcessingState.IDLE,
+			throttled: false,
+			throttledUntilDate: Date.now() + 2520000,
+			paused: false,
+			location: IInstalledLocation.CLOUD
+		};
+
+		const selfManagedAgent: ISelfManagedAgent = {
+			enrollment_id: '123',
+			running: true,
+		};
+
+		const session: ISession = {
+			customer: {
+				id: '359d4a0ffac0329c',
+				name: 'Pinpoint',
+			},
+			user: {
+				id: '',
+				name: 'Jeff Haynie',
+				avatar_url: '',
+			},
+			env: 'edge',
+			graphqlUrl: 'https://graph.api.edge.pinpoint.com/graphql',
+			authUrl: 'https://auth.api.edge.pinpoint.com'
+		};
+
+		return <SimulatorInstaller id="f64c34f79f4b7994" integration={integration} processingDetail={processingDetail} selfManagedAgent={selfManagedAgent} session={session} />;
 	}
-	return (
-		<div className="App">
-			<IntegrationUI />
-		</div>
-	);
+	return <IntegrationUI />;
 }
 
 export default App;
