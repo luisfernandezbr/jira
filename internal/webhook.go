@@ -57,7 +57,7 @@ func (i *JiraIntegration) uninstallWebHookIfNecessary(logger sdk.Logger, config 
 		return nil
 	}
 	// fetch the webhooks for this instance and delete them
-	client := i.httpmanager.New(sdk.JoinURL(url, "/webhooks/1.0/webhook"), nil)
+	client := i.httpmanager.New(sdk.JoinURL(url, "/rest/webhooks/1.0/webhook"), nil)
 	var resp []struct {
 		Name string `json:"name"`
 		Self string `json:"self"`
@@ -102,7 +102,7 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 	if err != nil {
 		return fmt.Errorf("error creating webhook url: %w", err)
 	}
-	url = sdk.JoinURL(url, "/webhooks/1.0/webhook")
+	url = sdk.JoinURL(url, "/rest/webhooks/1.0/webhook")
 	client := i.httpmanager.New(url, nil)
 	req := map[string]interface{}{
 		"name":   "Pinpoint/" + integrationInstanceID,
@@ -114,7 +114,7 @@ func (i *JiraIntegration) installWebHookIfNecessary(logger sdk.Logger, config sd
 	}
 	if _, err := client.Post(sdk.StringifyReader(req), &res, authConfig.Middleware...); err != nil {
 		// mark the webhook as errored
-		sdk.LogInfo(logger, "error installing org webhook", "err", err)
+		sdk.LogInfo(logger, "error installing org webhook", "err", err, "url", url)
 		i.manager.WebHookManager().Errored(customerID, integrationInstanceID, refType, "", sdk.WebHookScopeOrg, err)
 		return nil
 	}

@@ -444,10 +444,6 @@ const Integration = () => {
 		}
 	}, [config, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, completeUpgrade]);
 
-	useEffect(() => {
-		setConfig(currentConfig.current);
-	}, [setConfig]);
-
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
 		if (theurl) {
@@ -478,6 +474,7 @@ const Integration = () => {
 					accounts.current = [res.accounts as Account];
 					setInstallEnabled(Object.keys(newconfig.accounts).length > 0);
 					setState(State.Projects);
+					setConfig(currentConfig.current);
 				} catch (err) {
 					console.error(err);
 					setError(err);
@@ -499,21 +496,23 @@ const Integration = () => {
 
 	switch (state) {
 		case State.Location: {
-			content = <LocationSelector setType={(val: 'cloud' | 'selfmanaged') => {
-				if (val === 'cloud') {
-					setType(IntegrationType.CLOUD);
-					setState(State.Setup);
-				} else {
-					// for self-managed we need to get a private key for oauth1
-					getPrivateKey().then((val: string | null) => {
-						if (!val) {
-							createPrivateKey().then(key => setPrivateKey(key)).catch((err: Error) => {
-								setError(err);
-							});
-						}
+			content = <LocationSelector setType={async (val: 'cloud' | 'selfmanaged') => {
+				try {
+					const privateKey = await getPrivateKey();
+					if (!privateKey) {
+						createPrivateKey().then(key => setPrivateKey(key)).catch((err: Error) => {
+							setError(err);
+						});
+					}
+					if (val === 'cloud') {
+						setType(IntegrationType.CLOUD);
+						setState(State.Setup);
+					} else {
 						setInstallLocation(IInstalledLocation.SELFMANAGED);
 						setState(State.AgentSelector);
-					}).catch((err: Error) => setError(err));
+					}
+				} catch (err) {
+					setError(err);
 				}
 			}} />;
 			break;

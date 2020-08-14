@@ -192,5 +192,5 @@ func newAuth(logger sdk.Logger, manager sdk.Manager, identifier sdk.Identifier, 
 			password: config.BasicAuth.Password,
 		}, nil
 	}
-	return nil, fmt.Errorf("authentication provided is not supported. tried oauth2 and basic authentication")
+	return nil, fmt.Errorf("authentication provided is not supported. tried oauth1, oauth2 and basic authentication")
 }
