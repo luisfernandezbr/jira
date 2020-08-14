@@ -35,6 +35,35 @@ const LocationSelector = ({ setType }: { setType: (val: 'cloud' | 'selfmanaged')
 	);
 };
 
+const UpgradeRequired = ({ onClick }: { onClick: () => void }) => {
+	return (
+		<div className={styles.Upgrade}>
+			<div className={styles.Content}>
+				<h3>Time to upgrade.</h3>
+				<p>
+					Your current Jira integration is using a legacy configuration and must be re-setup to
+					get new features and fixes for Jira. We promise it will be worth it! <span role="img" aria-label="Prayer">🙏</span>
+				</p>
+				<div>
+					To upgrade you have two choices:
+
+					<ol>
+						<li>You can delete this Jira integration and then re-add it. <em>Click the Uninstall button above for this option.</em></li>
+						<li>You can re-configure this Jira integration. <em>Click the Upgrade button below for this option.</em></li>
+					</ol>
+				</div>
+				<div>
+					<Button onClick={onClick} color="Green" weight={500}>Upgrade</Button>
+				</div>
+				<p className={styles.Help}>
+					If you would like someone from our amazing Customer Success team to assist you or if you have any difficulties,
+					please don't hesitate to reach out. You can email us at support@pinpoint.com or post a request in the Slack Community.
+				</p>
+			</div>
+		</div>
+	);
+};
+
 const AgentSelector = ({ setType }: { setType: (val: IntegrationType) => void }) => {
 	const { selfManagedAgent, setSelfManagedAgentRequired } = useIntegration();
 	const agentEnabled = selfManagedAgent?.enrollment_id;
@@ -72,7 +101,7 @@ const AgentSelector = ({ setType }: { setType: (val: IntegrationType) => void })
 			</div>
 
 			<div className={styles.Button} onClick={() => setType(IntegrationType.CLOUD)}>
-				<Icon icon={['fas', 'lock-open']} className={styles.Icon} />
+				<Icon icon={['fas', 'cloud']} className={styles.Icon} />
 				I'm using the <strong>Atlassian Jira Server</strong> and it is publically accessible or whitelisted for Pinpoint
 				<div>
 					<Icon icon="check-circle" color={Theme.Mono300} /> Pinpoint will directly connect to your server
@@ -152,7 +181,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 					action: 'VALIDATE_URL',
 				};
 				try {
-					const res = await setValidate(config);
+					await setValidate(config);
 					setButtonText('Begin Setup');
 					setUpdatedState(selfManagedFormState.Validated);
 				} catch (ex) {
@@ -286,6 +315,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 };
 
 const urlStorageKey = 'installer.jira.url';
+const upgradeStorageKey = 'installer.jira.in_upgrade';
 
 enum State {
 	Location = 1,
@@ -294,7 +324,14 @@ enum State {
 	Link,
 	Validate,
 	Projects,
+	UpgradeRequired,
 }
+
+const makeAccountsFromConfig = (config: Config) => {
+	return Object.keys(config.accounts ?? {}).map((key: string) => config.accounts?.[key]) as Account[];
+};
+
+const debugState = false;
 
 const Integration = () => {
 	const {
@@ -305,6 +342,7 @@ const Integration = () => {
 		isFromRedirect,
 		isFromReAuth,
 		session,
+		upgradeRequired,
 		setValidate,
 		setConfig, 
 		setInstallEnabled,
@@ -312,6 +350,7 @@ const Integration = () => {
 		setPrivateKey,
 		createPrivateKey,
 		getPrivateKey,
+		setUpgradeComplete,
 	} = useIntegration();
 	const [type, setType] = useState<IntegrationType | undefined>(config.integration_type);
 	const [state, setState] = useState<State>(State.Location);
@@ -321,10 +360,14 @@ const Integration = () => {
 	const currentConfig = useRef<Config>(config);
 	const insideRedirect = useRef(false);
 
-	if (installed && accounts.current?.length === 0) {
-		currentConfig.current = config;
-		accounts.current = Object.keys(config.accounts ?? {}).map((key: string) => config.accounts?.[key]) as Account[];
-	}
+	useEffect(() => {
+		if ((installed && accounts.current?.length === 0) || config?.accounts) {
+			currentConfig.current = config;
+			accounts.current = makeAccountsFromConfig(config);
+		} else if (currentConfig.current?.accounts) {
+			accounts.current = makeAccountsFromConfig(currentConfig.current);
+		}
+	}, [installed, config, upgradeRequired]);
 
 	useEffect(() => {
 		return () => {
@@ -332,24 +375,37 @@ const Integration = () => {
 		};
 	}, []);
 
-	useEffect(() => {
-		if (installed) {
-			setState(State.Projects);
-		}
-	}, [installed]);
+	const completeUpgrade = useCallback(() => {
+		window.sessionStorage.removeItem(upgradeStorageKey);
+		setUpgradeComplete();
+	}, [setUpgradeComplete]);
 
 	useEffect(() => {
-		if (isFromReAuth) {
+		const inupgrade = window.sessionStorage.getItem(upgradeStorageKey) === 'true';
+		if (debugState) {
+				console.log('JIRA: state machine', JSON.stringify({
+				installed,
+				inupgrade,
+				upgradeRequired,
+				accounts: config?.accounts,
+				isFromReAuth,
+				isFromRedirect,
+				currentURL,
+				insideRedirect: insideRedirect.current,
+			}, null, 2));
+		}
+		if (upgradeRequired && !inupgrade) {
+			setState(State.UpgradeRequired);
+		} else if (inupgrade && !isFromRedirect) {
 			setState(State.AgentSelector);
-		}
-	}, [isFromReAuth]);
-
-	useEffect(() => {
-		setConfig(currentConfig.current);
-	}, [currentConfig.current]);
-
-	useEffect(() => {
-		if (isFromRedirect && currentURL && !insideRedirect.current) {
+		} else if (isFromReAuth) {
+			setState(State.AgentSelector);
+		} else if (installed || config?.accounts) {
+			setState(State.Projects);
+			if (installed && inupgrade) {
+				completeUpgrade();
+			}
+		} else if (isFromRedirect && currentURL && !insideRedirect.current) {
 			const url = window.sessionStorage.getItem(urlStorageKey);
 			if (url) {
 				const search = currentURL.split('?');
@@ -380,10 +436,17 @@ const Integration = () => {
 						}
 						return true;
 					}
+					return false;
 				});
 			}
+		} else if (accounts.current?.length > 0) {
+			setState(State.Projects);
 		}
-	}, [isFromRedirect, currentURL]);
+	}, [config, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, completeUpgrade]);
+
+	useEffect(() => {
+		setConfig(currentConfig.current);
+	}, [setConfig]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -422,7 +485,7 @@ const Integration = () => {
 			};
 			run();
 		}
-	}, [state]);
+	}, [setInstallEnabled, setValidate, state]);
 
 	if (loading) {
 		return <Loader screen />;
@@ -500,6 +563,16 @@ const Integration = () => {
 					entity='project'
 					config={currentConfig.current}
 				/>
+			);
+			break;
+		}
+		case State.UpgradeRequired: {
+			const upgrade = () => {
+				window.sessionStorage.setItem(upgradeStorageKey, 'true');
+				setState(State.Location);
+			};
+			content = (
+				<UpgradeRequired onClick={upgrade} />
 			);
 			break;
 		}
