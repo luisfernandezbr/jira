@@ -407,6 +407,10 @@ func (i *JiraIntegration) webhookUpsertComment(webhook sdk.WebHook) error {
 	if err != nil {
 		return fmt.Errorf("error getting comment: %w", err)
 	}
+	if comment == nil {
+		sdk.LogWarn(i.logger, "unable to find in jira comment from webhook", "comment", created.Comment.ID, "issue", created.Issue.ID)
+		return nil
+	}
 	sdk.LogDebug(i.logger, "sending new comment", "data", sdk.Stringify(comment))
 	return pipe.Write(comment)
 }
