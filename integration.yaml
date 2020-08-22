@@ -1,23 +1,23 @@
 name: Jira
 ref_type: jira
 description: This is the official Atlassian Jira integration for Pinpoint
-avatar_url: https://img.icons8.com/color/144/000000/jira.png
+avatar_url: https://img.icons8.com/color/240/000000/jira.png
 capabilities:
   - work.User
   - work.Project
   - work.Issue
   - work.Sprint
+  - work.Kanban
   - work.IssueComment
   - work.IssuePriority
+  - web.Hook
 installation:
   modes:
     - cloud
     - selfmanaged
+  selfmanaged:
+    authorizations:
+      - oauth1
   cloud:
-    network:
-      hostnames:
-        - "*.atlassian.com"
-        - "*.jira.com"
-    capabilities:
-      - web.Hook
-      - auth.OAuth2
+    authorizations:
+      - oauth1
