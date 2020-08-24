@@ -314,7 +314,6 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 	);
 };
 
-const urlStorageKey = 'installer.jira.url';
 const upgradeStorageKey = 'installer.jira.in_upgrade';
 
 enum State {
@@ -339,6 +338,7 @@ const Integration = () => {
 		installed,
 		currentURL,
 		config,
+		location,
 		isFromRedirect,
 		isFromReAuth,
 		session,
@@ -369,12 +369,6 @@ const Integration = () => {
 		}
 	}, [installed, config, upgradeRequired]);
 
-	useEffect(() => {
-		return () => {
-			window.sessionStorage.removeItem(urlStorageKey);
-		};
-	}, []);
-
 	const completeUpgrade = useCallback(() => {
 		window.sessionStorage.removeItem(upgradeStorageKey);
 		setUpgradeComplete();
@@ -386,6 +380,7 @@ const Integration = () => {
 				console.log('JIRA: state machine', JSON.stringify({
 				installed,
 				inupgrade,
+				location,
 				upgradeRequired,
 				accounts: config?.accounts,
 				isFromReAuth,
@@ -394,7 +389,16 @@ const Integration = () => {
 				insideRedirect: insideRedirect.current,
 			}, null, 2));
 		}
-		if (upgradeRequired && !inupgrade) {
+		if (location) {
+			if (location === IInstalledLocation.CLOUD) {
+				setInstallLocation(IInstalledLocation.CLOUD);
+				setType(IntegrationType.CLOUD);
+				setState(State.Setup);
+			} else {
+				setInstallLocation(IInstalledLocation.SELFMANAGED);
+				setState(State.AgentSelector);
+			}
+		} else if (upgradeRequired && !inupgrade) {
 			setState(State.UpgradeRequired);
 		} else if (inupgrade && !isFromRedirect) {
 			setState(State.AgentSelector);
@@ -406,43 +410,37 @@ const Integration = () => {
 				completeUpgrade();
 			}
 		} else if (isFromRedirect && currentURL && !insideRedirect.current) {
-			const url = window.sessionStorage.getItem(urlStorageKey);
-			if (url) {
-				const search = currentURL.split('?');
-				const tok = search[1].split('&');
-				tok.some(token => {
-					const t = token.split('=');
-					const k = t[0];
-					const v = t[1];
-					if (k === 'result') {
-						const result = JSON.parse(atob(decodeURIComponent(v)));
-						const { success, consumer_key, oauth_token, oauth_token_secret, error } = result;
-						if (success) {
-							if (url) {
-								const _config = { ...config };
-								_config.oauth1_auth = {
-									date_ts: Date.now(),
-									url,
-									consumer_key,
-									oauth_token,
-									oauth_token_secret,
-								}
-								currentConfig.current = _config;
-								insideRedirect.current = true;
-								setState(State.Validate);
-							}
-						} else {
-							setError(new Error(error ?? 'Unknown error obtaining OAuth token'));
-						}
-						return true;
+			const search = currentURL.split('?');
+			const tok = search[1].split('&');
+			tok.some(token => {
+				const t = token.split('=');
+				const k = t[0];
+				const v = t[1];
+				if (k === 'result') {
+					const result = JSON.parse(atob(decodeURIComponent(v)));
+					const { success, consumer_key, oauth_token, oauth_token_secret, error } = result;
+					if (success) {
+						const _config = { ...config };
+						_config.oauth1_auth = { ...(_config.oauth1_auth || {}), ...{
+							date_ts: Date.now(),
+							consumer_key,
+							oauth_token,
+							oauth_token_secret,
+						} };
+						currentConfig.current = _config;
+						insideRedirect.current = true;
+						setState(State.Validate);
+					} else {
+						setError(new Error(error ?? 'Unknown error obtaining OAuth token'));
 					}
-					return false;
-				});
-			}
+					return true;
+				}
+				return false;
+			});
 		} else if (accounts.current?.length > 0) {
 			setState(State.Projects);
 		}
-	}, [config, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, completeUpgrade]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, completeUpgrade]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -453,9 +451,12 @@ const Integration = () => {
 			if (/\/$/.test(url)) {
 				url = url.substring(0, url.length - 1);
 			}
-			window.sessionStorage.setItem(urlStorageKey, url);
+			const _config = { ...currentConfig.current } as any;
+			_config.oauth1_auth = { ...(_config.oauth1_auth || {}), url };
 			setURL(url);
 			setState(State.Link);
+			setConfig(_config);
+			currentConfig.current = _config;
 		}
 	}, []);
 
