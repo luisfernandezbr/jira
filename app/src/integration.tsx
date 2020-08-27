@@ -35,8 +35,6 @@ const LocationSelector = ({ setType }: { setType: (val: 'cloud' | 'selfmanaged')
 	);
 };
 
-
-
 const UpgradeRequired = ({ onClick }: { onClick: () => void }) => {
 	return (
 		<div className={styles.Upgrade}>
@@ -369,7 +367,6 @@ const Integration = () => {
 		};
 	}, []);
 
-
 	useEffect(() => {
 		if ((installed && accounts.current?.length === 0) || config?.accounts) {
 			currentConfig.current = config;
@@ -434,7 +431,7 @@ const Integration = () => {
 						const _config = { ...config };
 						_config.oauth1_auth = { ...(_config.oauth1_auth || {}), ...{
 							date_ts: Date.now(),
-							url:jiraInstanceURL,
+							url: jiraInstanceURL,
 							consumer_key,
 							oauth_token,
 							oauth_token_secret,
@@ -471,7 +468,7 @@ const Integration = () => {
 			currentConfig.current = _config;
 			setConfig(currentConfig.current);
 		}
-	}, [setURL,setState,setConfig]);
+	}, [setURL, setState, setConfig]);
 
 	useEffect(() => {
 		if (state === State.Validate && accounts.current?.length === 0) {
@@ -496,7 +493,7 @@ const Integration = () => {
 			};
 			run();
 		}
-	}, [setInstallEnabled, setValidate, state,setConfig]);
+	}, [setInstallEnabled, setValidate, state, setConfig]);
 
 	if (loading) {
 		return <Loader screen />;
