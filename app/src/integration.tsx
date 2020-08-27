@@ -315,6 +315,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 };
 
 const upgradeStorageKey = 'installer.jira.in_upgrade';
+const urlStorageKey = 'installer.jira.url';
 
 enum State {
 	Location = 1,
@@ -359,6 +360,12 @@ const Integration = () => {
 	const accounts = useRef<Account[]>([]);
 	const currentConfig = useRef<Config>(config);
 	const insideRedirect = useRef(false);
+
+	useEffect(() => {
+		return () => {
+			window.sessionStorage.removeItem(urlStorageKey);
+		};
+	}, []);
 
 	useEffect(() => {
 		if ((installed && accounts.current?.length === 0) || config?.accounts) {
@@ -410,6 +417,7 @@ const Integration = () => {
 				completeUpgrade();
 			}
 		} else if (isFromRedirect && currentURL && !insideRedirect.current) {
+			const jiraInstanceURL = window.sessionStorage.getItem(urlStorageKey);
 			const search = currentURL.split('?');
 			const tok = search[1].split('&');
 			tok.some(token => {
@@ -423,6 +431,7 @@ const Integration = () => {
 						const _config = { ...config };
 						_config.oauth1_auth = { ...(_config.oauth1_auth || {}), ...{
 							date_ts: Date.now(),
+							url: jiraInstanceURL,
 							consumer_key,
 							oauth_token,
 							oauth_token_secret,
@@ -440,7 +449,7 @@ const Integration = () => {
 		} else if (accounts.current?.length > 0) {
 			setState(State.Projects);
 		}
-	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, completeUpgrade]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, setState, completeUpgrade, setInstallLocation]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -451,14 +460,15 @@ const Integration = () => {
 			if (/\/$/.test(url)) {
 				url = url.substring(0, url.length - 1);
 			}
+			window.sessionStorage.setItem(urlStorageKey, url);
 			const _config = { ...currentConfig.current } as any;
 			_config.oauth1_auth = { ...(_config.oauth1_auth || {}), url };
 			setURL(url);
 			setState(State.Link);
-			setConfig(_config);
 			currentConfig.current = _config;
+			setConfig(currentConfig.current);
 		}
-	}, []);
+	}, [setURL, setState, setConfig]);
 
 	useEffect(() => {
 		if (state === State.Validate && accounts.current?.length === 0) {
@@ -483,7 +493,7 @@ const Integration = () => {
 			};
 			run();
 		}
-	}, [setInstallEnabled, setValidate, state]);
+	}, [setInstallEnabled, setValidate, state, setConfig]);
 
 	if (loading) {
 		return <Loader screen />;
