@@ -35,7 +35,7 @@ const LocationSelector = ({ setType }: { setType: (val: 'cloud' | 'selfmanaged')
 	);
 };
 
-const urlStorageKey = 'installer.jira.url';
+
 
 const UpgradeRequired = ({ onClick }: { onClick: () => void }) => {
 	return (
@@ -317,6 +317,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 };
 
 const upgradeStorageKey = 'installer.jira.in_upgrade';
+const urlStorageKey = 'installer.jira.url';
 
 enum State {
 	Location = 1,
@@ -332,7 +333,7 @@ const makeAccountsFromConfig = (config: Config) => {
 	return Object.keys(config.accounts ?? {}).map((key: string) => config.accounts?.[key]) as Account[];
 };
 
-const debugState = true;
+const debugState = false;
 
 const Integration = () => {
 	const {
