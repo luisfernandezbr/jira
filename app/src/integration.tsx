@@ -362,13 +362,6 @@ const Integration = () => {
 	const currentConfig = useRef<Config>(config);
 	const insideRedirect = useRef(false);
 
-	// debug
-	useEffect(() => {
-		// config.integration_type = IntegrationType.CLOUD;
-		console.log("---->", config);
-		// setConfig(config);
-	}, [config]);
-
 	useEffect(() => {
 		return () => {
 			window.sessionStorage.removeItem(urlStorageKey);
@@ -406,7 +399,6 @@ const Integration = () => {
 			}, null, 2));
 		}
 		if (location) {
-			console.log("check1")
 			if (location === IInstalledLocation.CLOUD) {
 				setInstallLocation(IInstalledLocation.CLOUD);
 				setType(IntegrationType.CLOUD);
@@ -416,24 +408,18 @@ const Integration = () => {
 				setState(State.AgentSelector);
 			}
 		} else if (upgradeRequired && !inupgrade) {
-			console.log("check2")
 			setState(State.UpgradeRequired);
 		} else if (inupgrade && !isFromRedirect) {
-			console.log("check3")
 			setState(State.AgentSelector);
 		} else if (isFromReAuth) {
-			console.log("check4")
 			setState(State.AgentSelector);
 		} else if (installed || config?.accounts) {
-			console.log("check5")
 			setState(State.Projects);
 			if (installed && inupgrade) {
 				completeUpgrade();
 			}
 		} else if (isFromRedirect && currentURL && !insideRedirect.current) {
-			const url2 = window.sessionStorage.getItem(urlStorageKey);
-			console.log("check6url2",url2)
-			console.log("check6",url)
+			const jiraInstanceURL = window.sessionStorage.getItem(urlStorageKey);
 			const search = currentURL.split('?');
 			const tok = search[1].split('&');
 			tok.some(token => {
@@ -442,15 +428,12 @@ const Integration = () => {
 				const v = t[1];
 				if (k === 'result') {
 					const result = JSON.parse(atob(decodeURIComponent(v)));
-					console.log("debug-debug","url",url)
-					console.log("debug-debug","msg",JSON.stringify(result))
-					console.log("debug-debug","config",JSON.stringify(config))
-					console.log("debug-debug","currentConfig",JSON.stringify(currentConfig))
 					const { success, consumer_key, oauth_token, oauth_token_secret, error } = result;
 					if (success) {
 						const _config = { ...config };
 						_config.oauth1_auth = { ...(_config.oauth1_auth || {}), ...{
 							date_ts: Date.now(),
+							url:jiraInstanceURL,
 							consumer_key,
 							oauth_token,
 							oauth_token_secret,
@@ -466,14 +449,11 @@ const Integration = () => {
 				return false;
 			});
 		} else if (accounts.current?.length > 0) {
-			console.log("check7")
 			setState(State.Projects);
 		}
-	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired,setState, completeUpgrade]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, setState, completeUpgrade]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
-		console.log("THE-URL1",JSON.stringify(theurl))
-		console.log("THE-URL2",theurl)
 		setError(err);
 		if (theurl) {
 			const u = new URL(theurl);
@@ -484,14 +464,11 @@ const Integration = () => {
 			}
 			window.sessionStorage.setItem(urlStorageKey, url);
 			const _config = { ...currentConfig.current } as any;
-			console.log("config1",JSON.stringify(_config));
 			_config.oauth1_auth = { ...(_config.oauth1_auth || {}), url };
-			console.log("config2",JSON.stringify(_config));
 			setURL(url);
 			setState(State.Link);
 			currentConfig.current = _config;
 			setConfig(currentConfig.current);
-			console.log("config3",JSON.stringify(_config));
 		}
 	}, [url,setURL,setState,config,setConfig]);
 
