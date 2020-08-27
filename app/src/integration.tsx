@@ -452,7 +452,7 @@ const Integration = () => {
 		} else if (accounts.current?.length > 0) {
 			setState(State.Projects);
 		}
-	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, setState, completeUpgrade]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, setState, completeUpgrade, setInstallLocation]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
@@ -471,7 +471,7 @@ const Integration = () => {
 			currentConfig.current = _config;
 			setConfig(currentConfig.current);
 		}
-	}, [url,setURL,setState,config,setConfig]);
+	}, [setURL,setState,setConfig]);
 
 	useEffect(() => {
 		if (state === State.Validate && accounts.current?.length === 0) {
