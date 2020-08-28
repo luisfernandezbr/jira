@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Button, Icon, Loader, Error as ErrorMessage, Theme } from '@pinpt/uic.next';
+import Button from '@pinpt/uic.next/Button';
+import Icon from '@pinpt/uic.next/Icon';
+import Loader from '@pinpt/uic.next/Loader';
+import ErrorMessage from '@pinpt/uic.next/Error';
+import Theme from '@pinpt/uic.next/Theme';
+import { faCloud, faServer, faLock, faInfoCircle, faExclamationTriangle, faExclamationCircle, faCheckCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import {
 	useIntegration,
 	Account,
@@ -23,12 +28,12 @@ const LocationSelector = ({ setType }: { setType: (val: 'cloud' | 'selfmanaged')
 	return (
 		<div className={styles.Location}>
 			<div className={styles.Button} onClick={() => setType('cloud')}>
-				<Icon icon={['fas', 'cloud']} className={styles.Icon} />
+				<Icon icon={faCloud} className={styles.Icon} />
 				I'm using the <strong>Atlassian Jira Cloud</strong> service to manage my data
 			</div>
 
 			<div className={styles.Button} onClick={() => setType('selfmanaged')}>
-				<Icon icon={['fas', 'server']} className={styles.Icon} />
+				<Icon icon={faServer} className={styles.Icon} />
 				I'm using <strong>my own systems</strong> or a <strong>third-party</strong> to manage a <strong>Atlassian Jira Server</strong>
 			</div>
 		</div>
@@ -72,17 +77,17 @@ const AgentSelector = ({ setType }: { setType: (val: IntegrationType) => void })
 	return (
 		<div className={styles.Location}>
 			<div className={[styles.Button, enabled ? '' : styles.Disabled].join(' ')} onClick={() => enabled ? setType(IntegrationType.SELFMANAGED) : null}>
-				<Icon icon={['fas', 'lock']} className={styles.Icon} />
+				<Icon icon={faLock} className={styles.Icon} />
 				I'm using the <strong>Atlassian Jira Server</strong> behind a firewall which is not publically accessible
 				<div>
 					{agentEnabled && agentRunning ? (
 						<>
-							<Icon icon="info-circle" color={Theme.Mono300} />
+							<Icon icon={faInfoCircle} color={Theme.Mono300} />
 							Your self-managed cloud agent will be used
 						</>
 					) : !agentEnabled ? (
 						<>
-							<div><Icon icon="exclamation-circle" color={Theme.Red500} /> You must first setup a self-managed cloud agent</div>
+							<div><Icon icon={faExclamationCircle} color={Theme.Red500} /> You must first setup a self-managed cloud agent</div>
 							<Button className={styles.Setup} color="Green" weight={500} onClick={(e: any) => {
 								setSelfManagedAgentRequired();
 								e.stopPropagation();
@@ -90,7 +95,7 @@ const AgentSelector = ({ setType }: { setType: (val: IntegrationType) => void })
 						</>
 					) : (
 						<>
-							<div><Icon icon="exclamation-circle" color={Theme.Red500} /> Your agent is not running</div>
+							<div><Icon icon={faExclamationCircle} color={Theme.Red500} /> Your agent is not running</div>
 							<Button className={styles.Setup} color="Green" weight={500} onClick={(e: any) => {
 								setSelfManagedAgentRequired();
 								e.stopPropagation();
@@ -101,10 +106,10 @@ const AgentSelector = ({ setType }: { setType: (val: IntegrationType) => void })
 			</div>
 
 			<div className={styles.Button} onClick={() => setType(IntegrationType.CLOUD)}>
-				<Icon icon={['fas', 'cloud']} className={styles.Icon} />
+				<Icon icon={faCloud} className={styles.Icon} />
 				I'm using the <strong>Atlassian Jira Server</strong> and it is publically accessible or whitelisted for Pinpoint
 				<div>
-					<Icon icon="check-circle" color={Theme.Mono300} /> Pinpoint will directly connect to your server
+					<Icon icon={faCheckCircle} color={Theme.Mono300} /> Pinpoint will directly connect to your server
 				</div>
 			</div>
 		</div>
@@ -214,7 +219,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 				const width = window.screen.width < 1000 ? window.screen.width : 1000;
 				const height = window.screen.height < 700 ? window.screen.height : 700;
 				u.pathname = '/plugins/servlet/applinks/listApplicationLinks';
-				windowRef.current = window.open(u.toString(), undefined, `toolbar=no,location=yes,status=no,menubar=no,scrollbars=yes,resizable=yes,width=${width},height=${height}`);
+				windowRef.current = window.open(u.toString(), 'JiraConfig', `toolbar=no,location=yes,status=no,menubar=no,scrollbars=yes,resizable=yes,width=${width},height=${height}`);
 				if (!windowRef.current) {
 					callback(new Error(`couldn't open the window to ${auth}`));
 					return;
@@ -276,7 +281,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 			type={FormType.URL}
 			name='Jira'
 			title='Connect Pinpoint to Jira.'
-			intro={<>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="noopener noreferrer" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Help</a></>}
+			intro={<><h1 style={{paddingTop: '2rem', color: Theme.Yellow700}}><Icon icon={faExclamationTriangle} style={{marginRight: '1rem'}} /><strong>You must be an administrator of Jira to proceed</strong></h1><br/>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="noopener noreferrer" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Get Instructions</a></>}
 			button={buttonText}
 			callback={verify}
 			readonly={state.current === selfManagedFormState.Setup}
@@ -289,7 +294,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 					case selfManagedFormState.Validating: {
 						return (
 							<div className={styles.Validating}>
-								<Icon icon={['fas', 'spinner']} spin /> Validating
+								<Icon icon={faSpinner} spin /> Validating
 							</div>
 						);
 					}
@@ -557,7 +562,7 @@ const Integration = () => {
 				<Loader screen className={styles.Validate}>
 					<div>
 						<p>
-							<Icon icon="check-circle" color={Theme.Green500} /> Connected
+							<Icon icon={faCheckCircle} color={Theme.Green500} /> Connected
 						</p>
 						<p>Fetching Jira details...</p>
 					</div>
@@ -568,9 +573,9 @@ const Integration = () => {
 		case State.Projects: {
 			content = (
 				<AccountsTable
-					description='For the selected accounts, all projects, issues and other data will automatically be made available in Pinpoint once installed.'
+					description="For the selected accounts, all projects, issues and other data will automatically be made available in Pinpoint once installed."
 					accounts={accounts.current}
-					entity='project'
+					entity="project"
 					config={currentConfig.current}
 				/>
 			);
