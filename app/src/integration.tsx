@@ -281,7 +281,7 @@ const SelfManagedForm = ({session, callback, type}: {session: ISession, callback
 			type={FormType.URL}
 			name='Jira'
 			title='Connect Pinpoint to Jira.'
-			intro={<><h1 style={{paddingTop: '2rem', color: Theme.Yellow700}}><Icon icon={faExclamationTriangle} style={{marginRight: '1rem'}} /><strong>You must be an administrator of Jira to proceed</strong></h1><br/>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="noopener noreferrer" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Get Instructions</a></>}
+			intro={<><h1 style={{paddingTop: '2rem', fontSize: '1.4rem', color: Theme.Yellow700}}><Icon icon={faExclamationTriangle} style={{marginRight: '1rem'}} /><strong>You must be an administrator of Jira to proceed</strong></h1><br/>Please provide the URL to your Jira instance and click the button to begin. A new window will open to your Jira instance to authorize Pinpoint to communicate with Jira. Once authorized, come back to this window to complete the connection process. <a rel="noopener noreferrer" target="_blank" href="https://www.notion.so/Pinpoint-Knowledge-Center-c624dd8935454394a3e91dd82bfe341c">Get Instructions</a></>}
 			button={buttonText}
 			callback={verify}
 			readonly={state.current === selfManagedFormState.Setup}
