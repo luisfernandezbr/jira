@@ -373,7 +373,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	}
 	customfields, err := i.fetchCustomFields(logger, state.export, export.CustomerID(), state.authConfig)
 	if err != nil {
-		return fmt.Errorf("error fetching custome fields: %w", err)
+		return fmt.Errorf("error fetching custom fields: %w", err)
 	}
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationInstanceID())
