@@ -403,7 +403,7 @@ func (a *agileAPI) issueIsOnBoard(boardRefID string, issueKey string) (bool, err
 	client := a.httpmanager.New(theurl, nil)
 	qs := make(url.Values)
 	qs.Set("jql", fmt.Sprintf("issue=%s", issueKey))
-	qs["fields"] = removeIssueFields
+	qs.Set("fields", strings.Join(removeIssueFields, ","))
 	var resp boardIssueRes
 	_, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
 	if err != nil {
