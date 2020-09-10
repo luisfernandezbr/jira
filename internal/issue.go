@@ -19,6 +19,7 @@ type customFieldIDs struct {
 	Epic        string
 	StartDate   string
 	EndDate     string
+	Sprint      string
 }
 
 // easyjson:skip
@@ -44,6 +45,23 @@ func (s customFieldIDs) missing() (res []string) {
 	return
 }
 
+func extractSprints(fields map[string]interface{}, ids customFieldIDs) ([]sprint, bool, error) {
+	if ids.Sprint != "" {
+		if blob, ok := fields[ids.Sprint]; ok {
+			buf, err := json.Marshal(blob)
+			if err != nil {
+				return nil, false, fmt.Errorf("error reencoding sprint custom field: %w", err)
+			}
+			var sprints []sprint
+			if err := json.Unmarshal(buf, &sprints); err != nil {
+				return nil, false, fmt.Errorf("error decoding sprint custom field: %w", err)
+			}
+			return sprints, true, nil
+		}
+	}
+	return nil, false, nil
+}
+
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
 func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
@@ -63,8 +81,6 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	issue.ProjectID = sdk.NewWorkProjectID(customerID, fields.Project.ID, refType)
 	issue.ID = sdk.NewWorkIssueID(customerID, i.ID, refType)
 	issue.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
-
-	customFields := make([]customFieldValue, 0)
 
 	if fields.DueDate != "" {
 		orig := fields.DueDate
@@ -199,30 +215,14 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		issue.Attachments = append(issue.Attachments, attachment)
 	}
 
-	for k, v := range i.Fields {
-		if strings.HasPrefix(k, "customfield_") && v != nil {
-			if arr, ok := v.([]interface{}); ok && len(arr) != 0 {
-				for _, each := range arr {
-					str, ok := each.(string)
-					if !ok {
-						continue
-					}
-					id := extractPossibleSprintID(str)
-					if id == "" {
-						continue
-					}
-					issue.SprintIds = append(issue.SprintIds, sdk.NewAgileSprintID(customerID, id, refType))
-				}
-			}
-		}
-	}
-
 	customFieldIDs := customFieldIDs{}
 
 	for key, val := range fieldByID {
 		switch val.Name {
 		case "Story Points":
 			customFieldIDs.StoryPoints = key
+		case "Sprint":
+			customFieldIDs.Sprint = key
 		case "Epic Link":
 			customFieldIDs.Epic = key
 		case "Start Date":
@@ -242,10 +242,9 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		if !ok {
 			continue
 		}
-		v := ""
+		var v string
 		if d != nil {
-			ds, ok := d.(string)
-			if ok {
+			if ds, ok := d.(string); ok {
 				v = ds
 			} else {
 				b, err := json.Marshal(d)
@@ -255,13 +254,6 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 				v = string(b)
 			}
 		}
-
-		f := customFieldValue{}
-		f.ID = fd.ID
-		f.Name = fd.Name
-		f.Value = v
-		customFields = append(customFields, f)
-
 		if v == "" {
 			continue
 		}
@@ -290,7 +282,36 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		}
 	}
 
-	issueRefID := issue.RefID
+	sprints, foundSprintIDs, err := extractSprints(i.Fields, customFieldIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if foundSprintIDs {
+		for _, sprint := range sprints {
+			issue.SprintIds = append(issue.SprintIds, sdk.NewAgileSprintID(customerID, strconv.Itoa(sprint.ID), refType))
+		}
+	} else {
+		// try to extract sprint_ids the old way
+		// TODO(robin): check that this does anything for jira on premise
+		for k, v := range i.Fields {
+			if strings.HasPrefix(k, "customfield_") && v != nil {
+				if arr, ok := v.([]interface{}); ok && len(arr) != 0 {
+					for _, each := range arr {
+						str, ok := each.(string)
+						if !ok {
+							continue
+						}
+						id := extractPossibleSprintID(str)
+						if id == "" {
+							continue
+						}
+						issue.SprintIds = append(issue.SprintIds, sdk.NewAgileSprintID(customerID, id, refType))
+					}
+				}
+			}
+		}
+	}
 
 	// ordinal should be a monotonically increasing number for changelogs
 	// the value itself doesn't matter as long as the changelog is from
@@ -313,7 +334,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 
 			createdAt, err := parseTime(cl.Created)
 			if err != nil {
-				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issueRefID, err)
+				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issue.RefID, err)
 			}
 			sdk.ConvertTimeToDateModel(createdAt, &item.CreatedDate)
 			item.UserID = cl.Author.RefID()
@@ -450,13 +471,20 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	}
 
 	if !sprintManager.usingAgileAPI {
-		// process any sprint information on this issue
-		for _, field := range customFields {
-			if field.Name == "Sprint" {
-				if field.Value == "" {
-					continue
+		if foundSprintIDs {
+			for _, s := range sprints {
+				if err := sprintManager.emit(s); err != nil {
+					return nil, nil, err
 				}
-				data, err := parseSprints(field.Value)
+			}
+		} else {
+			// process any sprint information on this issue
+			if b, ok := i.Fields[customFieldIDs.Sprint]; ok && b != nil {
+				buf, err := json.Marshal(b)
+				if err != nil {
+					return nil, nil, fmt.Errorf("error marshalling sprint field: %w", err)
+				}
+				data, err := parseSprints(string(buf))
 				if err != nil {
 					return nil, nil, err
 				}
@@ -465,7 +493,6 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 						return nil, nil, err
 					}
 				}
-				break
 			}
 		}
 	}

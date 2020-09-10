@@ -222,6 +222,8 @@ github.com/jhaynie/go-vcr/v2 v2.0.2 h1:ztiOOC78+aUcGv26LpOI7MHOJ0FiDpPD8uFU+nTqE
 github.com/jhaynie/go-vcr/v2 v2.0.2/go.mod h1:aRoMK63qzV9c++GDPbwFj5iFuwWaT0qoVeWIpG4d+nI=
 github.com/jhaynie/oauth1 v1.0.0 h1:aUYR5UPDHOqjwsaWZ/xS5Rx2owCdkxedFyIL4xVa7oI=
 github.com/jhaynie/oauth1 v1.0.0/go.mod h1:oTpsv20X/CgQFd+OY4wOnWtJbnNcwzZixGh7YlRH8rg=
+github.com/jhaynie/oauth1 v1.0.1 h1:0olnrHWE7h4dgGXTTzDFWVM8NK/wwbo2i/vvQqKSI+s=
+github.com/jhaynie/oauth1 v1.0.1/go.mod h1:oTpsv20X/CgQFd+OY4wOnWtJbnNcwzZixGh7YlRH8rg=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=

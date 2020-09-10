@@ -17,16 +17,15 @@ import (
 )
 
 // sprint is for non-agile api, ie. issue scraping
-// easyjson:skip
 type sprint struct {
-	ID            int
-	Name          string
-	Goal          string
-	State         string
-	StartDate     time.Time
-	EndDate       time.Time
-	CompleteDate  time.Time
-	OriginBoardID int
+	ID            int       `json:"id"`
+	Name          string    `json:"name"`
+	State         string    `json:"state"`
+	OriginBoardID int       `json:"boardId"`
+	Goal          string    `json:"goal"`
+	StartDate     time.Time `json:"startDate"`
+	EndDate       time.Time `json:"endDate"`
+	CompleteDate  time.Time `json:"completeDate"`
 }
 
 func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.AgileSprint, error) {
