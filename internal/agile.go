@@ -508,7 +508,7 @@ var sprintStateMap = map[string]sdk.AgileSprintStatus{
 	"CLOSED": sdk.AgileSprintStatusClosed,
 }
 
-func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey string, statusmapping map[string]*int, columncount int) (*sdk.AgileSprint, error) {
+func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey string, statusmapping map[string]*int, cols []boardColumn) (*sdk.AgileSprint, error) {
 	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID))
 	client := a.httpmanager.New(theurl, nil)
 	var s struct {
@@ -550,10 +550,12 @@ func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey str
 	sprint.ProjectIds = make([]string, 0)
 	sprint.IssueIds = make([]string, 0)
 	sprint.Columns = make([]sdk.AgileSprintColumns, 0)
+	columncount := len(cols)
 	columns := make([]*sdk.AgileSprintColumns, columncount)
 	projectids := make(map[string]bool)
 	for i := 0; i < columncount; i++ {
 		columns[i] = &sdk.AgileSprintColumns{
+			Name:     cols[i].Name,
 			IssueIds: make([]string, 0),
 		}
 	}
@@ -681,7 +683,7 @@ func (a *agileAPI) fetchOneSprint(sprintRefID int, boardRefID int) (*sdk.AgileSp
 	}
 	_, _, _, _, statusmapping, filteredcolumns := buildKanbanColumns(cols, true)
 	bid := sdk.NewAgileBoardID(a.customerID, strconv.Itoa(board.ID), refType)
-	return a.fetchSprint(sprintRefID, bid, board.ProjectKey, statusmapping, len(filteredcolumns))
+	return a.fetchSprint(sprintRefID, bid, board.ProjectKey, statusmapping, filteredcolumns)
 }
 
 // easyjson:skip
@@ -944,7 +946,7 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 				// already processed it since we have same sprint pointing at other boards
 				continue
 			}
-			sprint, err := api.fetchSprint(sid, theboard.ID, board.ProjectKey, statusmapping, len(filteredcolumns))
+			sprint, err := api.fetchSprint(sid, theboard.ID, board.ProjectKey, statusmapping, filteredcolumns)
 			if err != nil {
 				return err
 			}
