@@ -110,6 +110,7 @@ func (i *JiraIntegration) Validate(validate sdk.Validate) (map[string]interface{
 			TotalCount:  resp.Total,
 			Type:        "ORG",
 			Public:      false,
+			Selected:    true,
 		}
 		return map[string]interface{}{
 			"accounts": acc,

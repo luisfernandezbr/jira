@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@pinpt/agent.websdk": "^1.0.58",
-    "@pinpt/uic.next": "^1.0.115",
+    "@pinpt/agent.websdk": "^1.0.60",
+    "@pinpt/uic.next": "^1.0.117",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
