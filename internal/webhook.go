@@ -144,15 +144,8 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 			} `json:"fields"`
 		}
 		Changelog struct {
-			ID    string `json:"id"`
-			Items []struct {
-				Field      string `json:"field"`
-				FieldType  string `json:"fieldtype"`
-				From       string `json:"from"`
-				FromString string `json:"fromString"`
-				To         string `json:"to"`
-				ToString   string `json:"toString"`
-			} `json:"items"`
+			ID    string          `json:"id"`
+			Items []changeLogItem `json:"items"`
 		} `json:"changelog"`
 	}
 	if err := json.Unmarshal(rawdata, &changelog); err != nil {
@@ -162,66 +155,54 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 	val := sdk.WorkIssueUpdate{}
 	var updatedStatus bool
 	for i, change := range changelog.Changelog.Items {
-		var field sdk.WorkIssueChangeLogField
 		var skip bool
-		switch change.Field {
-		case "summary":
-			field = sdk.WorkIssueChangeLogFieldTitle
+		changeItem := createChangeLog(customerID, changelog.Changelog.ID, changelog.User.RefID(), ts, changelog.Timestamp+int64(i), change)
+		if changeItem == nil {
+			skip = true
+		}
+		switch changeItem.Field {
+		case sdk.WorkIssueChangeLogFieldTitle:
 			val.Set.Title = sdk.StringPointer(change.ToString)
-		case "description":
-			val.Set.Description = sdk.StringPointer(change.ToString)
-			skip = true // TODO: add description to the datamodel so we can send it in changelog
-		case "status":
-			field = sdk.WorkIssueChangeLogFieldStatus
+		case sdk.WorkIssueChangeLogFieldStatus:
 			val.Set.Status = &sdk.NameID{
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssueStatusID(customerID, refType, change.To)),
 			}
 			updatedStatus = true
-		case "Epic Link":
-			field = sdk.WorkIssueChangeLogFieldEpicID
+		case sdk.WorkIssueChangeLogFieldEpicID:
 			if change.To == "" {
 				val.Unset.EpicID = sdk.BoolPointer(true)
 			} else {
 				val.Set.EpicID = sdk.StringPointer(sdk.NewWorkIssueID(customerID, change.To, refType))
 			}
-		case "priority":
-			field = sdk.WorkIssueChangeLogFieldPriority
+		case sdk.WorkIssueChangeLogFieldPriority:
 			val.Set.Priority = &sdk.NameID{
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssuePriorityID(customerID, refType, change.To)),
 			}
-		case "assignee":
-			field = sdk.WorkIssueChangeLogFieldAssigneeRefID
+		case sdk.WorkIssueChangeLogFieldAssigneeRefID:
 			val.Set.AssigneeRefID = sdk.StringPointer(change.To)
-		case "labels":
-			field = sdk.WorkIssueChangeLogFieldTags
+		case sdk.WorkIssueChangeLogFieldTags:
 			tags := strings.Split(change.ToString, " ")
 			val.Set.Tags = &tags
 			change.To = change.ToString // to is null, this api is lousy
-		case "resolution":
-			field = sdk.WorkIssueChangeLogFieldResolution
+		case sdk.WorkIssueChangeLogFieldResolution:
 			val.Set.Resolution = sdk.StringPointer(change.ToString)
-		case "issuetype":
-			field = sdk.WorkIssueChangeLogFieldType
+		case sdk.WorkIssueChangeLogFieldType:
 			val.Set.Type = &sdk.NameID{
 				Name: sdk.StringPointer(change.ToString),
 				ID:   sdk.StringPointer(sdk.NewWorkIssueTypeID(customerID, refType, change.To)),
 			}
-		case "project":
-			field = sdk.WorkIssueChangeLogFieldProjectID
+		case sdk.WorkIssueChangeLogFieldProjectID:
 			projectID := sdk.NewWorkProjectID(customerID, change.To, refType)
 			val.Set.ProjectID = &projectID
-		case "Key":
-			field = sdk.WorkIssueChangeLogFieldIdentifier
+		case sdk.WorkIssueChangeLogFieldIdentifier:
 			val.Set.Identifier = sdk.StringPointer(change.ToString)
 			change.To = change.ToString // to is null
-		case "Sprint":
-			field = sdk.WorkIssueChangeLogFieldSprintIds
+		case sdk.WorkIssueChangeLogFieldSprintIds:
 			sprintID := []string{sdk.NewAgileSprintID(customerID, change.To, refType)}
 			val.Set.SprintIDs = &sprintID
-		case "duedate":
-			field = sdk.WorkIssueChangeLogFieldDueDate
+		case sdk.WorkIssueChangeLogFieldDueDate:
 			if change.To == "" {
 				val.Unset.DueDate = sdk.BoolPointer(true)
 			} else {
@@ -232,24 +213,18 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 				val.Set.DueDate = &t
 			}
 		}
+		if change.Field == "description" {
+			// TODO: add description to the datamodel so we can send it in changelog
+			val.Set.Description = sdk.StringPointer(change.ToString)
+		}
+
 		// TODO: find a way to replicate "PARENT_ID" webhook
 		if !skip {
-			changeItem := sdk.WorkIssueChangeLog{
-				RefID:      changelog.Changelog.ID,
-				Field:      field,
-				From:       change.From,
-				FromString: change.FromString,
-				To:         change.To,
-				ToString:   change.ToString,
-				UserID:     changelog.User.RefID(),
-				Ordinal:    changelog.Timestamp + int64(i),
-			}
-			sdk.ConvertTimeToDateModel(ts, &changeItem.CreatedDate)
 			if val.Push.ChangeLogs == nil {
 				l := make([]sdk.WorkIssueChangeLog, 0)
 				val.Push.ChangeLogs = &l
 			}
-			cl := append(*val.Push.ChangeLogs, changeItem)
+			cl := append(*val.Push.ChangeLogs, *changeItem)
 			val.Push.ChangeLogs = &cl
 		}
 	}

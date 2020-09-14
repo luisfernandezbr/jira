@@ -2348,17 +2348,10 @@ func easyjson2a877177Encode7(out *jwriter.Writer, in struct {
 }
 func easyjson2a877177Decode6(in *jlexer.Lexer, out *struct {
 	Histories []struct {
-		ID      string `json:"id"`
-		Author  user   `json:"author"`
-		Created string `json:"created"`
-		Items   []struct {
-			Field      string `json:"field"`
-			FieldType  string `json:"fieldtype"`
-			From       string `json:"from"`
-			FromString string `json:"fromString"`
-			To         string `json:"to"`
-			ToString   string `json:"toString"`
-		} `json:"items"`
+		ID      string          `json:"id"`
+		Author  user            `json:"author"`
+		Created string          `json:"created"`
+		Items   []changeLogItem `json:"items"`
 	} `json:"histories"`
 }) {
 	isTopLevel := in.IsStart()
@@ -2388,31 +2381,17 @@ func easyjson2a877177Decode6(in *jlexer.Lexer, out *struct {
 				if out.Histories == nil {
 					if !in.IsDelim(']') {
 						out.Histories = make([]struct {
-							ID      string `json:"id"`
-							Author  user   `json:"author"`
-							Created string `json:"created"`
-							Items   []struct {
-								Field      string `json:"field"`
-								FieldType  string `json:"fieldtype"`
-								From       string `json:"from"`
-								FromString string `json:"fromString"`
-								To         string `json:"to"`
-								ToString   string `json:"toString"`
-							} `json:"items"`
+							ID      string          `json:"id"`
+							Author  user            `json:"author"`
+							Created string          `json:"created"`
+							Items   []changeLogItem `json:"items"`
 						}, 0, 1)
 					} else {
 						out.Histories = []struct {
-							ID      string `json:"id"`
-							Author  user   `json:"author"`
-							Created string `json:"created"`
-							Items   []struct {
-								Field      string `json:"field"`
-								FieldType  string `json:"fieldtype"`
-								From       string `json:"from"`
-								FromString string `json:"fromString"`
-								To         string `json:"to"`
-								ToString   string `json:"toString"`
-							} `json:"items"`
+							ID      string          `json:"id"`
+							Author  user            `json:"author"`
+							Created string          `json:"created"`
+							Items   []changeLogItem `json:"items"`
 						}{}
 					}
 				} else {
@@ -2420,17 +2399,10 @@ func easyjson2a877177Decode6(in *jlexer.Lexer, out *struct {
 				}
 				for !in.IsDelim(']') {
 					var v25 struct {
-						ID      string `json:"id"`
-						Author  user   `json:"author"`
-						Created string `json:"created"`
-						Items   []struct {
-							Field      string `json:"field"`
-							FieldType  string `json:"fieldtype"`
-							From       string `json:"from"`
-							FromString string `json:"fromString"`
-							To         string `json:"to"`
-							ToString   string `json:"toString"`
-						} `json:"items"`
+						ID      string          `json:"id"`
+						Author  user            `json:"author"`
+						Created string          `json:"created"`
+						Items   []changeLogItem `json:"items"`
 					}
 					easyjson2a877177Decode8(in, &v25)
 					out.Histories = append(out.Histories, v25)
@@ -2450,17 +2422,10 @@ func easyjson2a877177Decode6(in *jlexer.Lexer, out *struct {
 }
 func easyjson2a877177Encode6(out *jwriter.Writer, in struct {
 	Histories []struct {
-		ID      string `json:"id"`
-		Author  user   `json:"author"`
-		Created string `json:"created"`
-		Items   []struct {
-			Field      string `json:"field"`
-			FieldType  string `json:"fieldtype"`
-			From       string `json:"from"`
-			FromString string `json:"fromString"`
-			To         string `json:"to"`
-			ToString   string `json:"toString"`
-		} `json:"items"`
+		ID      string          `json:"id"`
+		Author  user            `json:"author"`
+		Created string          `json:"created"`
+		Items   []changeLogItem `json:"items"`
 	} `json:"histories"`
 }) {
 	out.RawByte('{')
@@ -2485,17 +2450,10 @@ func easyjson2a877177Encode6(out *jwriter.Writer, in struct {
 	out.RawByte('}')
 }
 func easyjson2a877177Decode8(in *jlexer.Lexer, out *struct {
-	ID      string `json:"id"`
-	Author  user   `json:"author"`
-	Created string `json:"created"`
-	Items   []struct {
-		Field      string `json:"field"`
-		FieldType  string `json:"fieldtype"`
-		From       string `json:"from"`
-		FromString string `json:"fromString"`
-		To         string `json:"to"`
-		ToString   string `json:"toString"`
-	} `json:"items"`
+	ID      string          `json:"id"`
+	Author  user            `json:"author"`
+	Created string          `json:"created"`
+	Items   []changeLogItem `json:"items"`
 }) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
@@ -2529,37 +2487,16 @@ func easyjson2a877177Decode8(in *jlexer.Lexer, out *struct {
 				in.Delim('[')
 				if out.Items == nil {
 					if !in.IsDelim(']') {
-						out.Items = make([]struct {
-							Field      string `json:"field"`
-							FieldType  string `json:"fieldtype"`
-							From       string `json:"from"`
-							FromString string `json:"fromString"`
-							To         string `json:"to"`
-							ToString   string `json:"toString"`
-						}, 0, 1)
+						out.Items = make([]changeLogItem, 0, 1)
 					} else {
-						out.Items = []struct {
-							Field      string `json:"field"`
-							FieldType  string `json:"fieldtype"`
-							From       string `json:"from"`
-							FromString string `json:"fromString"`
-							To         string `json:"to"`
-							ToString   string `json:"toString"`
-						}{}
+						out.Items = []changeLogItem{}
 					}
 				} else {
 					out.Items = (out.Items)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v28 struct {
-						Field      string `json:"field"`
-						FieldType  string `json:"fieldtype"`
-						From       string `json:"from"`
-						FromString string `json:"fromString"`
-						To         string `json:"to"`
-						ToString   string `json:"toString"`
-					}
-					easyjson2a877177Decode9(in, &v28)
+					var v28 changeLogItem
+					(v28).UnmarshalEasyJSON(in)
 					out.Items = append(out.Items, v28)
 					in.WantComma()
 				}
@@ -2576,17 +2513,10 @@ func easyjson2a877177Decode8(in *jlexer.Lexer, out *struct {
 	}
 }
 func easyjson2a877177Encode8(out *jwriter.Writer, in struct {
-	ID      string `json:"id"`
-	Author  user   `json:"author"`
-	Created string `json:"created"`
-	Items   []struct {
-		Field      string `json:"field"`
-		FieldType  string `json:"fieldtype"`
-		From       string `json:"from"`
-		FromString string `json:"fromString"`
-		To         string `json:"to"`
-		ToString   string `json:"toString"`
-	} `json:"items"`
+	ID      string          `json:"id"`
+	Author  user            `json:"author"`
+	Created string          `json:"created"`
+	Items   []changeLogItem `json:"items"`
 }) {
 	out.RawByte('{')
 	first := true
@@ -2617,101 +2547,10 @@ func easyjson2a877177Encode8(out *jwriter.Writer, in struct {
 				if v29 > 0 {
 					out.RawByte(',')
 				}
-				easyjson2a877177Encode9(out, v30)
+				(v30).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
-	}
-	out.RawByte('}')
-}
-func easyjson2a877177Decode9(in *jlexer.Lexer, out *struct {
-	Field      string `json:"field"`
-	FieldType  string `json:"fieldtype"`
-	From       string `json:"from"`
-	FromString string `json:"fromString"`
-	To         string `json:"to"`
-	ToString   string `json:"toString"`
-}) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "field":
-			out.Field = string(in.String())
-		case "fieldtype":
-			out.FieldType = string(in.String())
-		case "from":
-			out.From = string(in.String())
-		case "fromString":
-			out.FromString = string(in.String())
-		case "to":
-			out.To = string(in.String())
-		case "toString":
-			out.ToString = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson2a877177Encode9(out *jwriter.Writer, in struct {
-	Field      string `json:"field"`
-	FieldType  string `json:"fieldtype"`
-	From       string `json:"from"`
-	FromString string `json:"fromString"`
-	To         string `json:"to"`
-	ToString   string `json:"toString"`
-}) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"field\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Field))
-	}
-	{
-		const prefix string = ",\"fieldtype\":"
-		out.RawString(prefix)
-		out.String(string(in.FieldType))
-	}
-	{
-		const prefix string = ",\"from\":"
-		out.RawString(prefix)
-		out.String(string(in.From))
-	}
-	{
-		const prefix string = ",\"fromString\":"
-		out.RawString(prefix)
-		out.String(string(in.FromString))
-	}
-	{
-		const prefix string = ",\"to\":"
-		out.RawString(prefix)
-		out.String(string(in.To))
-	}
-	{
-		const prefix string = ",\"toString\":"
-		out.RawString(prefix)
-		out.String(string(in.ToString))
 	}
 	out.RawByte('}')
 }
@@ -2934,13 +2773,13 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal18(in *jlexer.Lexe
 		}
 		switch key {
 		case "project":
-			easyjson2a877177Decode10(in, &out.Project)
+			easyjson2a877177Decode9(in, &out.Project)
 		case "description":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Description).UnmarshalJSON(data))
 			}
 		case "comment":
-			easyjson2a877177Decode11(in, &out.Comment)
+			easyjson2a877177Decode10(in, &out.Comment)
 		case "summary":
 			out.Summary = string(in.String())
 		case "duedate":
@@ -2960,16 +2799,16 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal18(in *jlexer.Lexe
 						Key string `json:"key"`
 					})
 				}
-				easyjson2a877177Decode10(in, out.Parent)
+				easyjson2a877177Decode9(in, out.Parent)
 			}
 		case "priority":
 			easyjson2a877177Decode7(in, &out.Priority)
 		case "issuetype":
 			easyjson2a877177Decode7(in, &out.IssueType)
 		case "status":
-			easyjson2a877177Decode12(in, &out.Status)
+			easyjson2a877177Decode11(in, &out.Status)
 		case "resolution":
-			easyjson2a877177Decode13(in, &out.Resolution)
+			easyjson2a877177Decode12(in, &out.Resolution)
 		case "creator":
 			(out.Creator).UnmarshalEasyJSON(in)
 		case "reporter":
@@ -3037,7 +2876,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal18(in *jlexer.Lexe
 						OutwardIssue linkedIssue `json:"outwardIssue"`
 						InwardIssue  linkedIssue `json:"inwardIssue"`
 					}
-					easyjson2a877177Decode14(in, &v35)
+					easyjson2a877177Decode13(in, &v35)
 					out.IssueLinks = append(out.IssueLinks, v35)
 					in.WantComma()
 				}
@@ -3096,7 +2935,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal18(in *jlexer.Lexe
 						Content   string `json:"content"`
 						Thumbnail string `json:"thumbnail"`
 					}
-					easyjson2a877177Decode15(in, &v36)
+					easyjson2a877177Decode14(in, &v36)
 					out.Attachment = append(out.Attachment, v36)
 					in.WantComma()
 				}
@@ -3119,7 +2958,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 	{
 		const prefix string = ",\"project\":"
 		out.RawString(prefix[1:])
-		easyjson2a877177Encode10(out, in.Project)
+		easyjson2a877177Encode9(out, in.Project)
 	}
 	{
 		const prefix string = ",\"description\":"
@@ -3129,7 +2968,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 	{
 		const prefix string = ",\"comment\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode11(out, in.Comment)
+		easyjson2a877177Encode10(out, in.Comment)
 	}
 	{
 		const prefix string = ",\"summary\":"
@@ -3154,7 +2993,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 	if in.Parent != nil {
 		const prefix string = ",\"parent\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode10(out, *in.Parent)
+		easyjson2a877177Encode9(out, *in.Parent)
 	}
 	{
 		const prefix string = ",\"priority\":"
@@ -3169,12 +3008,12 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 	{
 		const prefix string = ",\"status\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode12(out, in.Status)
+		easyjson2a877177Encode11(out, in.Status)
 	}
 	{
 		const prefix string = ",\"resolution\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode13(out, in.Resolution)
+		easyjson2a877177Encode12(out, in.Resolution)
 	}
 	{
 		const prefix string = ",\"creator\":"
@@ -3218,7 +3057,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 				if v39 > 0 {
 					out.RawByte(',')
 				}
-				easyjson2a877177Encode14(out, v40)
+				easyjson2a877177Encode13(out, v40)
 			}
 			out.RawByte(']')
 		}
@@ -3234,7 +3073,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal18(out *jwriter.Wr
 				if v41 > 0 {
 					out.RawByte(',')
 				}
-				easyjson2a877177Encode15(out, v42)
+				easyjson2a877177Encode14(out, v42)
 			}
 			out.RawByte(']')
 		}
@@ -3265,7 +3104,7 @@ func (v *issueFields) UnmarshalJSON(data []byte) error {
 func (v *issueFields) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal18(l, v)
 }
-func easyjson2a877177Decode15(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode14(in *jlexer.Lexer, out *struct {
 	ID       string `json:"id"`
 	Filename string `json:"filename"`
 	Author   struct {
@@ -3301,7 +3140,7 @@ func easyjson2a877177Decode15(in *jlexer.Lexer, out *struct {
 		case "filename":
 			out.Filename = string(in.String())
 		case "author":
-			easyjson2a877177Decode16(in, &out.Author)
+			easyjson2a877177Decode15(in, &out.Author)
 		case "created":
 			out.Created = string(in.String())
 		case "size":
@@ -3322,7 +3161,7 @@ func easyjson2a877177Decode15(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode15(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode14(out *jwriter.Writer, in struct {
 	ID       string `json:"id"`
 	Filename string `json:"filename"`
 	Author   struct {
@@ -3351,7 +3190,7 @@ func easyjson2a877177Encode15(out *jwriter.Writer, in struct {
 	{
 		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode16(out, in.Author)
+		easyjson2a877177Encode15(out, in.Author)
 	}
 	{
 		const prefix string = ",\"created\":"
@@ -3380,7 +3219,7 @@ func easyjson2a877177Encode15(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode16(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode15(in *jlexer.Lexer, out *struct {
 	Key       string `json:"key"`
 	AccountID string `json:"accountId"`
 }) {
@@ -3416,7 +3255,7 @@ func easyjson2a877177Decode16(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode16(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode15(out *jwriter.Writer, in struct {
 	Key       string `json:"key"`
 	AccountID string `json:"accountId"`
 }) {
@@ -3435,7 +3274,7 @@ func easyjson2a877177Encode16(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode14(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode13(in *jlexer.Lexer, out *struct {
 	ID   string `json:"id"`
 	Type struct {
 		Name string `json:"name"`
@@ -3464,7 +3303,7 @@ func easyjson2a877177Decode14(in *jlexer.Lexer, out *struct {
 		case "id":
 			out.ID = string(in.String())
 		case "type":
-			easyjson2a877177Decode13(in, &out.Type)
+			easyjson2a877177Decode12(in, &out.Type)
 		case "outwardIssue":
 			(out.OutwardIssue).UnmarshalEasyJSON(in)
 		case "inwardIssue":
@@ -3479,7 +3318,7 @@ func easyjson2a877177Decode14(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode14(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode13(out *jwriter.Writer, in struct {
 	ID   string `json:"id"`
 	Type struct {
 		Name string `json:"name"`
@@ -3498,7 +3337,7 @@ func easyjson2a877177Encode14(out *jwriter.Writer, in struct {
 	{
 		const prefix string = ",\"type\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode13(out, in.Type)
+		easyjson2a877177Encode12(out, in.Type)
 	}
 	{
 		const prefix string = ",\"outwardIssue\":"
@@ -3512,7 +3351,7 @@ func easyjson2a877177Encode14(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode13(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode12(in *jlexer.Lexer, out *struct {
 	Name string `json:"name"`
 }) {
 	isTopLevel := in.IsStart()
@@ -3545,7 +3384,7 @@ func easyjson2a877177Decode13(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode13(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode12(out *jwriter.Writer, in struct {
 	Name string `json:"name"`
 }) {
 	out.RawByte('{')
@@ -3558,7 +3397,7 @@ func easyjson2a877177Encode13(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode12(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode11(in *jlexer.Lexer, out *struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 }) {
@@ -3594,7 +3433,7 @@ func easyjson2a877177Decode12(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode12(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode11(out *jwriter.Writer, in struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 }) {
@@ -3613,7 +3452,7 @@ func easyjson2a877177Encode12(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode11(in *jlexer.Lexer, out *struct{ Comments []comment }) {
+func easyjson2a877177Decode10(in *jlexer.Lexer, out *struct{ Comments []comment }) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -3665,7 +3504,7 @@ func easyjson2a877177Decode11(in *jlexer.Lexer, out *struct{ Comments []comment 
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode11(out *jwriter.Writer, in struct{ Comments []comment }) {
+func easyjson2a877177Encode10(out *jwriter.Writer, in struct{ Comments []comment }) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -3687,7 +3526,7 @@ func easyjson2a877177Encode11(out *jwriter.Writer, in struct{ Comments []comment
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177Decode10(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode9(in *jlexer.Lexer, out *struct {
 	ID  string `json:"id"`
 	Key string `json:"key"`
 }) {
@@ -3723,7 +3562,7 @@ func easyjson2a877177Decode10(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode10(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode9(out *jwriter.Writer, in struct {
 	ID  string `json:"id"`
 	Key string `json:"key"`
 }) {
@@ -3991,7 +3830,108 @@ func (v *comment) UnmarshalJSON(data []byte) error {
 func (v *comment) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal21(l, v)
 }
-func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(in *jlexer.Lexer, out *boardSource) {
+func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(in *jlexer.Lexer, out *changeLogItem) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "field":
+			out.Field = string(in.String())
+		case "fieldtype":
+			out.FieldType = string(in.String())
+		case "from":
+			out.From = string(in.String())
+		case "fromString":
+			out.FromString = string(in.String())
+		case "to":
+			out.To = string(in.String())
+		case "toString":
+			out.ToString = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(out *jwriter.Writer, in changeLogItem) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"field\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Field))
+	}
+	{
+		const prefix string = ",\"fieldtype\":"
+		out.RawString(prefix)
+		out.String(string(in.FieldType))
+	}
+	{
+		const prefix string = ",\"from\":"
+		out.RawString(prefix)
+		out.String(string(in.From))
+	}
+	{
+		const prefix string = ",\"fromString\":"
+		out.RawString(prefix)
+		out.String(string(in.FromString))
+	}
+	{
+		const prefix string = ",\"to\":"
+		out.RawString(prefix)
+		out.String(string(in.To))
+	}
+	{
+		const prefix string = ",\"toString\":"
+		out.RawString(prefix)
+		out.String(string(in.ToString))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v changeLogItem) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v changeLogItem) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *changeLogItem) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *changeLogItem) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(l, v)
+}
+func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(in *jlexer.Lexer, out *boardSource) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -4019,7 +3959,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(in *jlexer.Lexe
 		case "type":
 			out.Type = string(in.String())
 		case "location":
-			easyjson2a877177Decode17(in, &out.Location)
+			easyjson2a877177Decode16(in, &out.Location)
 		default:
 			in.SkipRecursive()
 		}
@@ -4030,7 +3970,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(out *jwriter.Writer, in boardSource) {
+func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(out *jwriter.Writer, in boardSource) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -4057,7 +3997,7 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(out *jwriter.Wr
 	{
 		const prefix string = ",\"location\":"
 		out.RawString(prefix)
-		easyjson2a877177Encode17(out, in.Location)
+		easyjson2a877177Encode16(out, in.Location)
 	}
 	out.RawByte('}')
 }
@@ -4065,27 +4005,27 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v boardSource) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(&w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v boardSource) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal22(w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *boardSource) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(&r, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *boardSource) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal22(l, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(l, v)
 }
-func easyjson2a877177Decode17(in *jlexer.Lexer, out *struct {
+func easyjson2a877177Decode16(in *jlexer.Lexer, out *struct {
 	ID         int    `json:"projectId"`
 	ProjectKey string `json:"projectKey"`
 }) {
@@ -4121,7 +4061,7 @@ func easyjson2a877177Decode17(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2a877177Encode17(out *jwriter.Writer, in struct {
+func easyjson2a877177Encode16(out *jwriter.Writer, in struct {
 	ID         int    `json:"projectId"`
 	ProjectKey string `json:"projectKey"`
 }) {
@@ -4140,7 +4080,7 @@ func easyjson2a877177Encode17(out *jwriter.Writer, in struct {
 	}
 	out.RawByte('}')
 }
-func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(in *jlexer.Lexer, out *boardIssueRes) {
+func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(in *jlexer.Lexer, out *boardIssueRes) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -4171,7 +4111,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(out *jwriter.Writer, in boardIssueRes) {
+func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(out *jwriter.Writer, in boardIssueRes) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -4186,27 +4126,27 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v boardIssueRes) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(&w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v boardIssueRes) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal23(w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *boardIssueRes) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(&r, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *boardIssueRes) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal23(l, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(l, v)
 }
-func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(in *jlexer.Lexer, out *Avatars) {
+func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal25(in *jlexer.Lexer, out *Avatars) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -4243,7 +4183,7 @@ func easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(out *jwriter.Writer, in Avatars) {
+func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal25(out *jwriter.Writer, in Avatars) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -4273,23 +4213,23 @@ func easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v Avatars) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(&w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal25(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Avatars) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal24(w, v)
+	easyjson2a877177EncodeGithubComPinptAgentNextJiraInternal25(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Avatars) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(&r, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal25(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Avatars) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal24(l, v)
+	easyjson2a877177DecodeGithubComPinptAgentNextJiraInternal25(l, v)
 }

@@ -45,6 +45,15 @@ type Avatars struct {
 	Large  string `json:"48x48"`
 }
 
+type changeLogItem struct {
+	Field      string `json:"field"`
+	FieldType  string `json:"fieldtype"`
+	From       string `json:"from"`
+	FromString string `json:"fromString"`
+	To         string `json:"to"`
+	ToString   string `json:"toString"`
+}
+
 type issueSource struct {
 	ID  string `json:"id"`
 	Key string `json:"key"`
@@ -55,17 +64,10 @@ type issueSource struct {
 	Fields    map[string]interface{} `json:"fields"`
 	Changelog struct {
 		Histories []struct {
-			ID      string `json:"id"`
-			Author  user   `json:"author"`
-			Created string `json:"created"`
-			Items   []struct {
-				Field      string `json:"field"`
-				FieldType  string `json:"fieldtype"`
-				From       string `json:"from"`
-				FromString string `json:"fromString"`
-				To         string `json:"to"`
-				ToString   string `json:"toString"`
-			} `json:"items"`
+			ID      string          `json:"id"`
+			Author  user            `json:"author"`
+			Created string          `json:"created"`
+			Items   []changeLogItem `json:"items"`
 		} `json:"histories"`
 	} `json:"changelog"`
 	Transitions []struct {
