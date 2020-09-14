@@ -169,8 +169,9 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 			field = sdk.WorkIssueChangeLogFieldTitle
 			val.Set.Title = sdk.StringPointer(change.ToString)
 		case "description":
-			val.Set.Description = sdk.StringPointer(change.ToString)
-			skip = true // TODO: add description to the datamodel so we can send it in changelog
+			desc := change.ToString
+			val.Set.Description = &desc // sdk.StringPointer returns nil if string is empty
+			skip = true                 // TODO: add description to the datamodel so we can send it in changelog
 		case "status":
 			field = sdk.WorkIssueChangeLogFieldStatus
 			val.Set.Status = &sdk.NameID{
