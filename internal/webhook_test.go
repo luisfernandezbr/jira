@@ -107,7 +107,7 @@ func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 	webhook := newMockWebHook("testdata/jira:issue_updated.resolution.json")
 	err := i.webhookUpdateIssue(webhook)
 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
-	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
+	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth1, oauth2 and basic authentication")
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"Won't Do\"", update.Set["resolution"])
@@ -117,10 +117,10 @@ func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
 	assert.Len(res, 2)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldResolution, res[0].Field)
-	assert.EqualValues("10001", res[0].To)
+	assert.EqualValues("Won't Do", res[0].To)
 	assert.EqualValues(1596506483154, res[0].CreatedDate.Epoch)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldStatus, res[1].Field)
-	assert.EqualValues("6", res[1].To)
+	assert.EqualValues("Closed", res[1].To)
 	assert.EqualValues(1596506483154, res[1].CreatedDate.Epoch)
 }
 
@@ -139,7 +139,7 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldType, res[0].Field)
-	assert.EqualValues("Task", res[0].ToString)
+	assert.EqualValues("Task @ 10101", res[0].ToString)
 	assert.EqualValues(1596507496902, res[0].CreatedDate.Epoch)
 }
 
@@ -151,7 +151,7 @@ func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 	webhook := newMockWebHook("testdata/jira:issue_updated.project.json")
 	err := i.webhookUpdateIssue(webhook)
 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
-	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth2 and basic authentication")
+	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth1, oauth2 and basic authentication")
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues(quoteString(sdk.NewWorkProjectID("1234", "10639", refType)), update.Set["project_id"])
@@ -160,16 +160,16 @@ func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 	assert.EqualValues(quoteString("GOLD-208"), update.Set["identifier"])
 	var res []sdk.WorkIssueChangeLog
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
-	assert.Len(res, 4)
+	assert.Len(res, 3)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldProjectID, res[0].Field)
-	assert.EqualValues("10639", res[0].To)
+	assert.EqualValues("1bea74697103c17c", res[0].To)
 	assert.EqualValues(1596507921569, res[0].CreatedDate.Epoch)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldStatus, res[1].Field)
-	assert.EqualValues("1", res[1].To)
+	assert.EqualValues("Work Required", res[1].To)
 	assert.EqualValues(1596507921569, res[1].CreatedDate.Epoch)
-	assert.EqualValues(sdk.WorkIssueChangeLogFieldIdentifier, res[3].Field)
-	assert.EqualValues("GOLD-208", res[3].To)
-	assert.EqualValues(1596507921569, res[3].CreatedDate.Epoch)
+	assert.EqualValues(sdk.WorkIssueChangeLogFieldIdentifier, res[2].Field)
+	assert.EqualValues("GOLD-208", res[2].To)
+	assert.EqualValues(1596507921569, res[2].CreatedDate.Epoch)
 }
 
 func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
@@ -186,7 +186,7 @@ func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldSprintIds, res[0].Field)
-	assert.EqualValues("197", res[0].To)
+	assert.EqualValues("b3f7731318b71f15", res[0].To)
 	assert.EqualValues(1596508629814, res[0].CreatedDate.Epoch)
 }
 

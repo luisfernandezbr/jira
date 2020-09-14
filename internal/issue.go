@@ -102,8 +102,8 @@ func createChangeLog(customerID string, refID string, userRefID string, createdA
 		change.To = item.ToString
 	case "duedate":
 		change.Field = sdk.WorkIssueChangeLogFieldDueDate
-		change.From = item.FromString
-		change.To = item.ToString
+		change.From = item.From
+		change.To = item.To
 	case "issuetype":
 		change.Field = sdk.WorkIssueChangeLogFieldType
 		change.From = item.FromString
@@ -122,7 +122,7 @@ func createChangeLog(customerID string, refID string, userRefID string, createdA
 			change.From = sdk.NewWorkProjectID(customerID, item.From, refType)
 		}
 		if item.To != "" {
-			change.From = sdk.NewWorkProjectID(customerID, item.To, refType)
+			change.To = sdk.NewWorkProjectID(customerID, item.To, refType)
 		}
 	case "key":
 		change.Field = sdk.WorkIssueChangeLogFieldIdentifier
@@ -459,6 +459,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 
 	// now go in one shot and resolve all transitive issue keys
 	if len(transitiveIssueKeys) > 0 && fetchTransitive {
+		delete(transitiveIssueKeys, "")
 		keys := sdk.Keys(transitiveIssueKeys)
 		found, err := issueManager.getRefIDsFromKeys(keys)
 		if err != nil {

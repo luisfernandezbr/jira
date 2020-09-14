@@ -157,62 +157,64 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 	for i, change := range changelog.Changelog.Items {
 		var skip bool
 		changeItem := createChangeLog(customerID, changelog.Changelog.ID, changelog.User.RefID(), ts, changelog.Timestamp+int64(i), change)
-		if changeItem == nil {
+		if changeItem != nil {
+			switch changeItem.Field {
+			case sdk.WorkIssueChangeLogFieldTitle:
+				val.Set.Title = sdk.StringPointer(change.ToString)
+			case sdk.WorkIssueChangeLogFieldStatus:
+				val.Set.Status = &sdk.NameID{
+					Name: sdk.StringPointer(change.ToString),
+					ID:   sdk.StringPointer(sdk.NewWorkIssueStatusID(customerID, refType, change.To)),
+				}
+				updatedStatus = true
+			case sdk.WorkIssueChangeLogFieldEpicID:
+				if change.To == "" {
+					val.Unset.EpicID = sdk.BoolPointer(true)
+				} else {
+					val.Set.EpicID = sdk.StringPointer(sdk.NewWorkIssueID(customerID, change.To, refType))
+				}
+			case sdk.WorkIssueChangeLogFieldPriority:
+				val.Set.Priority = &sdk.NameID{
+					Name: sdk.StringPointer(change.ToString),
+					ID:   sdk.StringPointer(sdk.NewWorkIssuePriorityID(customerID, refType, change.To)),
+				}
+			case sdk.WorkIssueChangeLogFieldAssigneeRefID:
+				val.Set.AssigneeRefID = sdk.StringPointer(change.To)
+			case sdk.WorkIssueChangeLogFieldTags:
+				tags := strings.Split(change.ToString, " ")
+				val.Set.Tags = &tags
+				change.To = change.ToString // to is null, this api is lousy
+			case sdk.WorkIssueChangeLogFieldResolution:
+				val.Set.Resolution = sdk.StringPointer(change.ToString)
+			case sdk.WorkIssueChangeLogFieldType:
+				val.Set.Type = &sdk.NameID{
+					Name: sdk.StringPointer(change.ToString),
+					ID:   sdk.StringPointer(sdk.NewWorkIssueTypeID(customerID, refType, change.To)),
+				}
+			case sdk.WorkIssueChangeLogFieldProjectID:
+				projectID := sdk.NewWorkProjectID(customerID, change.To, refType)
+				val.Set.ProjectID = &projectID
+			case sdk.WorkIssueChangeLogFieldIdentifier:
+				val.Set.Identifier = sdk.StringPointer(change.ToString)
+				change.To = change.ToString // to is null
+			case sdk.WorkIssueChangeLogFieldSprintIds:
+				sprintID := []string{sdk.NewAgileSprintID(customerID, change.To, refType)}
+				val.Set.SprintIDs = &sprintID
+			case sdk.WorkIssueChangeLogFieldDueDate:
+				if change.To == "" {
+					val.Unset.DueDate = sdk.BoolPointer(true)
+				} else {
+					t, err := time.Parse("2006-01-02", change.To)
+					if err != nil {
+						return fmt.Errorf("error parsing due date time: %w", err)
+					}
+					val.Set.DueDate = &t
+				}
+			}
+		} else {
 			skip = true
 		}
-		switch changeItem.Field {
-		case sdk.WorkIssueChangeLogFieldTitle:
-			val.Set.Title = sdk.StringPointer(change.ToString)
-		case sdk.WorkIssueChangeLogFieldStatus:
-			val.Set.Status = &sdk.NameID{
-				Name: sdk.StringPointer(change.ToString),
-				ID:   sdk.StringPointer(sdk.NewWorkIssueStatusID(customerID, refType, change.To)),
-			}
-			updatedStatus = true
-		case sdk.WorkIssueChangeLogFieldEpicID:
-			if change.To == "" {
-				val.Unset.EpicID = sdk.BoolPointer(true)
-			} else {
-				val.Set.EpicID = sdk.StringPointer(sdk.NewWorkIssueID(customerID, change.To, refType))
-			}
-		case sdk.WorkIssueChangeLogFieldPriority:
-			val.Set.Priority = &sdk.NameID{
-				Name: sdk.StringPointer(change.ToString),
-				ID:   sdk.StringPointer(sdk.NewWorkIssuePriorityID(customerID, refType, change.To)),
-			}
-		case sdk.WorkIssueChangeLogFieldAssigneeRefID:
-			val.Set.AssigneeRefID = sdk.StringPointer(change.To)
-		case sdk.WorkIssueChangeLogFieldTags:
-			tags := strings.Split(change.ToString, " ")
-			val.Set.Tags = &tags
-			change.To = change.ToString // to is null, this api is lousy
-		case sdk.WorkIssueChangeLogFieldResolution:
-			val.Set.Resolution = sdk.StringPointer(change.ToString)
-		case sdk.WorkIssueChangeLogFieldType:
-			val.Set.Type = &sdk.NameID{
-				Name: sdk.StringPointer(change.ToString),
-				ID:   sdk.StringPointer(sdk.NewWorkIssueTypeID(customerID, refType, change.To)),
-			}
-		case sdk.WorkIssueChangeLogFieldProjectID:
-			projectID := sdk.NewWorkProjectID(customerID, change.To, refType)
-			val.Set.ProjectID = &projectID
-		case sdk.WorkIssueChangeLogFieldIdentifier:
-			val.Set.Identifier = sdk.StringPointer(change.ToString)
-			change.To = change.ToString // to is null
-		case sdk.WorkIssueChangeLogFieldSprintIds:
-			sprintID := []string{sdk.NewAgileSprintID(customerID, change.To, refType)}
-			val.Set.SprintIDs = &sprintID
-		case sdk.WorkIssueChangeLogFieldDueDate:
-			if change.To == "" {
-				val.Unset.DueDate = sdk.BoolPointer(true)
-			} else {
-				t, err := time.Parse("2006-01-02", change.To)
-				if err != nil {
-					return fmt.Errorf("error parsing due date time: %w", err)
-				}
-				val.Set.DueDate = &t
-			}
-		}
+
 		if change.Field == "description" {
 			// TODO: add description to the datamodel so we can send it in changelog
 			val.Set.Description = sdk.StringPointer(change.ToString)
