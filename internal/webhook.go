@@ -217,7 +217,8 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 
 		if change.Field == "description" {
 			// TODO: add description to the datamodel so we can send it in changelog
-			val.Set.Description = sdk.StringPointer(change.ToString)
+			desc := change.ToString
+			val.Set.Description = &desc // sdk.StringPointer returns nil if string is empty
 		}
 
 		// TODO: find a way to replicate "PARENT_ID" webhook
