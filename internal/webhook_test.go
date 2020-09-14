@@ -139,7 +139,7 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	json.Unmarshal([]byte(update.Push["change_log"]), &res)
 	assert.Len(res, 1)
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldType, res[0].Field)
-	assert.EqualValues("Task @ 10101", res[0].ToString)
+	assert.EqualValues("Task", res[0].To)
 	assert.EqualValues(1596507496902, res[0].CreatedDate.Epoch)
 }
 
