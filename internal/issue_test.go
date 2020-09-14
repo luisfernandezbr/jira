@@ -2,6 +2,10 @@ package internal
 
 import (
 	"testing"
+	"time"
+
+	"github.com/pinpt/agent.next/sdk"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSprintRegexp(t *testing.T) {
@@ -96,4 +100,21 @@ func TestAdjustRenderedHTML(t *testing.T) {
 			t.Errorf("failed case\n%v\nwant\n%v\ngot\n%v", c.Label, c.Want, got)
 		}
 	}
+}
+
+func TestCreateChangeLog(t *testing.T) {
+	assert := assert.New(t)
+	ts := time.Now()
+	item := changeLogItem{
+		Field:      "status",
+		From:       "1",
+		FromString: "To Do",
+		To:         "6",
+		ToString:   "Closed",
+	}
+	c := createChangeLog("1234", "1", "robin", ts, 1, item)
+	assert.NotNil(c)
+	assert.Equal(sdk.WorkIssueChangeLogFieldStatus, c.Field)
+	assert.Equal("Closed", c.To)
+	assert.Equal("To Do", c.From)
 }
