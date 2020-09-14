@@ -62,6 +62,109 @@ func extractSprints(fields map[string]interface{}, ids customFieldIDs) ([]sprint
 	return nil, false, nil
 }
 
+func createChangeLog(customerID string, refID string, userRefID string, createdAt time.Time, ordinal int64, item changeLogItem) *sdk.WorkIssueChangeLog {
+	change := sdk.WorkIssueChangeLog{
+		RefID:   refID,
+		UserID:  userRefID,
+		Ordinal: ordinal,
+	}
+
+	sdk.ConvertTimeToDateModel(createdAt, &change.CreatedDate)
+
+	// TODO(robin): remove this once everything is working
+	change.FromString = item.FromString + " @ " + item.From
+	change.ToString = item.ToString + " @ " + item.To
+
+	switch strings.ToLower(item.Field) {
+	case "status":
+		change.Field = sdk.WorkIssueChangeLogFieldStatus
+		change.From = item.FromString
+		change.To = item.ToString
+	case "resolution":
+		change.Field = sdk.WorkIssueChangeLogFieldResolution
+		change.From = item.FromString
+		change.To = item.ToString
+	case "assignee":
+		change.Field = sdk.WorkIssueChangeLogFieldAssigneeRefID
+		if item.From != "" {
+			change.From = item.From
+		}
+		if item.To != "" {
+			change.To = item.To
+		}
+	case "reporter":
+		change.Field = sdk.WorkIssueChangeLogFieldReporterRefID
+		change.From = item.From
+		change.To = item.To
+	case "summary":
+		change.Field = sdk.WorkIssueChangeLogFieldTitle
+		change.From = item.FromString
+		change.To = item.ToString
+	case "duedate":
+		change.Field = sdk.WorkIssueChangeLogFieldDueDate
+		change.From = item.From
+		change.To = item.To
+	case "issuetype":
+		change.Field = sdk.WorkIssueChangeLogFieldType
+		change.From = item.FromString
+		change.To = item.ToString
+	case "labels":
+		change.Field = sdk.WorkIssueChangeLogFieldTags
+		change.From = item.FromString
+		change.To = item.ToString
+	case "priority":
+		change.Field = sdk.WorkIssueChangeLogFieldPriority
+		change.From = item.FromString
+		change.To = item.ToString
+	case "project":
+		change.Field = sdk.WorkIssueChangeLogFieldProjectID
+		if item.From != "" {
+			change.From = sdk.NewWorkProjectID(customerID, item.From, refType)
+		}
+		if item.To != "" {
+			change.To = sdk.NewWorkProjectID(customerID, item.To, refType)
+		}
+	case "key":
+		change.Field = sdk.WorkIssueChangeLogFieldIdentifier
+		change.From = item.FromString
+		change.To = item.ToString
+	case "sprint":
+		change.Field = sdk.WorkIssueChangeLogFieldSprintIds
+		var from, to []string
+		if item.From != "" {
+			for _, s := range strings.Split(item.From, ",") {
+				from = append(from, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
+			}
+		}
+		if item.To != "" {
+			for _, s := range strings.Split(item.To, ",") {
+				to = append(to, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
+			}
+		}
+		change.From = strings.Join(from, ",")
+		change.To = strings.Join(to, ",")
+	case "parent":
+		change.Field = sdk.WorkIssueChangeLogFieldParentID
+		if item.From != "" {
+			change.From = sdk.NewWorkIssueID(customerID, item.From, refType)
+		}
+		if item.To != "" {
+			change.To = sdk.NewWorkIssueID(customerID, item.To, refType)
+		}
+	case "epic link":
+		change.Field = sdk.WorkIssueChangeLogFieldEpicID
+		if item.From != "" {
+			change.From = sdk.NewWorkIssueID(customerID, item.From, refType)
+		}
+		if item.To != "" {
+			change.To = sdk.NewWorkIssueID(customerID, item.To, refType)
+		}
+	default:
+		return nil
+	}
+	return &change
+}
+
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
 func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
@@ -325,116 +428,20 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	for h := len(i.Changelog.Histories) - 1; h >= 0; h-- {
 		cl := i.Changelog.Histories[h]
 		for _, data := range cl.Items {
-
-			item := sdk.WorkIssueChangeLog{}
-			item.RefID = cl.ID
-			item.Ordinal = ordinal
-
 			ordinal++
-
 			createdAt, err := parseTime(cl.Created)
 			if err != nil {
 				return nil, nil, fmt.Errorf("could not parse created time of changelog for issue: %v err: %v", issue.RefID, err)
 			}
-			sdk.ConvertTimeToDateModel(createdAt, &item.CreatedDate)
-			item.UserID = cl.Author.RefID()
-
-			item.FromString = data.FromString + " @ " + data.From
-			item.ToString = data.ToString + " @ " + data.To
-
-			switch strings.ToLower(data.Field) {
-			case "status":
-				item.Field = sdk.WorkIssueChangeLogFieldStatus
-				item.From = data.FromString
-				item.To = data.ToString
-			case "resolution":
-				item.Field = sdk.WorkIssueChangeLogFieldResolution
-				item.From = data.FromString
-				item.To = data.ToString
-			case "assignee":
-				item.Field = sdk.WorkIssueChangeLogFieldAssigneeRefID
-				if data.From != "" {
-					item.From = data.From
-				}
-				if data.To != "" {
-					item.To = data.To
-				}
-			case "reporter":
-				item.Field = sdk.WorkIssueChangeLogFieldReporterRefID
-				item.From = data.From
-				item.To = data.To
-			case "summary":
-				item.Field = sdk.WorkIssueChangeLogFieldTitle
-				item.From = data.FromString
-				item.To = data.ToString
-			case "duedate":
-				item.Field = sdk.WorkIssueChangeLogFieldDueDate
-				item.From = data.FromString
-				item.To = data.ToString
-			case "issuetype":
-				item.Field = sdk.WorkIssueChangeLogFieldType
-				item.From = data.FromString
-				item.To = data.ToString
-			case "labels":
-				item.Field = sdk.WorkIssueChangeLogFieldTags
-				item.From = data.FromString
-				item.To = data.ToString
-			case "priority":
-				item.Field = sdk.WorkIssueChangeLogFieldPriority
-				item.From = data.FromString
-				item.To = data.ToString
-			case "project":
-				item.Field = sdk.WorkIssueChangeLogFieldProjectID
-				if data.From != "" {
-					item.From = sdk.NewWorkProjectID(customerID, data.From, refType)
-				}
-				if data.To != "" {
-					item.From = sdk.NewWorkProjectID(customerID, data.To, refType)
-				}
-			case "key":
-				item.Field = sdk.WorkIssueChangeLogFieldIdentifier
-				item.From = data.FromString
-				item.To = data.ToString
-			case "sprint":
-				item.Field = sdk.WorkIssueChangeLogFieldSprintIds
-				var from, to []string
-				if data.From != "" {
-					for _, s := range strings.Split(data.From, ",") {
-						from = append(from, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
-					}
-				}
-				if data.To != "" {
-					for _, s := range strings.Split(data.To, ",") {
-						to = append(to, sdk.NewAgileSprintID(customerID, strings.TrimSpace(s), refType))
-					}
-				}
-				item.From = strings.Join(from, ",")
-				item.To = strings.Join(to, ",")
-			case "parent":
-				item.Field = sdk.WorkIssueChangeLogFieldParentID
-				if data.From != "" {
-					item.From = sdk.NewWorkIssueID(customerID, data.From, refType)
-					transitiveIssueKeys[data.From] = true
-				}
-				if data.To != "" {
-					item.To = sdk.NewWorkIssueID(customerID, data.To, refType)
-					transitiveIssueKeys[data.To] = true
-				}
-			case "epic link":
-				item.Field = sdk.WorkIssueChangeLogFieldEpicID
-				if data.From != "" {
-					item.From = sdk.NewWorkIssueID(customerID, data.From, refType)
-					transitiveIssueKeys[data.From] = true
-				}
-				if data.To != "" {
-					item.To = sdk.NewWorkIssueID(customerID, data.To, refType)
-					transitiveIssueKeys[data.To] = true
-				}
-			default:
-				// Ignore other change types
+			item := createChangeLog(customerID, cl.ID, cl.Author.RefID(), createdAt, ordinal, data)
+			if item == nil {
 				continue
 			}
-			issue.ChangeLog = append(issue.ChangeLog, item)
+			if item.Field == sdk.WorkIssueChangeLogFieldParentID || item.Field == sdk.WorkIssueChangeLogFieldEpicID {
+				transitiveIssueKeys[data.To] = true
+				transitiveIssueKeys[data.From] = true
+			}
+			issue.ChangeLog = append(issue.ChangeLog, *item)
 		}
 	}
 
@@ -452,6 +459,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 
 	// now go in one shot and resolve all transitive issue keys
 	if len(transitiveIssueKeys) > 0 && fetchTransitive {
+		delete(transitiveIssueKeys, "")
 		keys := sdk.Keys(transitiveIssueKeys)
 		found, err := issueManager.getRefIDsFromKeys(keys)
 		if err != nil {
@@ -644,7 +652,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 	updateMutation := newMutation()
 	if event.Set.Title != nil {
 		updateMutation.Update["summary"] = []setMutationOperation{
-			setMutationOperation{
+			{
 				Set: event.Set.Title,
 			},
 		}
@@ -652,7 +660,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 	}
 	if event.Set.Priority != nil {
 		updateMutation.Update["priority"] = []setMutationOperation{
-			setMutationOperation{
+			{
 				Set: idValue{*event.Set.Priority.ID},
 			},
 		}
@@ -676,13 +684,13 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		}
 		if event.Unset.Epic {
 			updateMutation.Update[epicFieldID] = []setMutationOperation{
-				setMutationOperation{
+				{
 					Set: nil,
 				},
 			}
 		} else {
 			updateMutation.Update[epicFieldID] = []setMutationOperation{
-				setMutationOperation{
+				{
 					Set: *event.Set.Epic.Name, // we use the name which should be set to the identifier in the case of an epic
 				},
 			}
