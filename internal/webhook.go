@@ -416,7 +416,7 @@ func (i *JiraIntegration) webhookDeleteComment(customerID string, integrationIns
 	val := sdk.WorkIssueCommentUpdate{}
 	active := false
 	val.Set.Active = &active
-	update := sdk.NewWorkIssueCommentUpdate(customerID, integrationInstanceID, deleted.Comment.ID, refType, deleted.Issue.Fields.Project.ID, val)
+	update := sdk.NewWorkIssueCommentUpdate(customerID, integrationInstanceID, deleted.Comment.ID, refType, val)
 	sdk.LogDebug(i.logger, "deleting Comment", "comment", deleted.Comment.ID)
 	return pipe.Write(update)
 }
