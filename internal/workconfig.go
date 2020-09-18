@@ -8,14 +8,11 @@ import (
 )
 
 type status struct {
-	Name           string `json:"name"`
-	StatusCategory struct {
-		Key  string `json:"key"`
-		Name string `json:"name"`
-	} `json:"statusCategory"`
-	ID          string `json:"id"`
-	Description string `json:"description"`
-	IconURL     string `json:"iconUrl"`
+	Name           string         `json:"name"`
+	StatusCategory statusCategory `json:"statusCategory"`
+	ID             string         `json:"id"`
+	Description    string         `json:"description"`
+	IconURL        string         `json:"iconUrl"`
 }
 
 const cacheKeyWorkConfig = "work_config"
@@ -52,11 +49,11 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 		if !found[status.Name] {
 			found[status.Name] = true
 			switch status.StatusCategory.Key {
-			case "new":
+			case statusCategoryNew:
 				wc.Statuses.OpenStatus = append(wc.Statuses.OpenStatus, status.Name)
-			case "done":
+			case statusCategoryDone:
 				wc.Statuses.ClosedStatus = append(wc.Statuses.ClosedStatus, status.Name)
-			case "indeterminate":
+			case statusCategoryIntermediate:
 				wc.Statuses.InProgressStatus = append(wc.Statuses.InProgressStatus, status.Name)
 			}
 		}

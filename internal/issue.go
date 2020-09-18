@@ -450,10 +450,15 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	for _, t := range i.Transitions {
 		// transition will include the current status which is a bit weird so exclude that
 		if t.Name != issue.Status {
-			issue.Transitions = append(issue.Transitions, sdk.WorkIssueTransitions{
+			tx := sdk.WorkIssueTransitions{
 				Name:  t.Name,
 				RefID: t.ID, // the transition id, not the issue type id
-			})
+			}
+			if t.StatusCategory.Key == statusCategoryDone {
+				tx.Terminal = true
+				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
+			}
+			issue.Transitions = append(issue.Transitions, tx)
 		}
 	}
 

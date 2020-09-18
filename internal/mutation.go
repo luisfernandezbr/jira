@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/pinpt/agent.next/sdk"
 )
@@ -55,9 +56,12 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 		switch v := mutation.Payload().(type) {
 		case *sdk.WorkIssueUpdateMutation:
 			return i.updateIssue(state, mutation, v)
+		default:
+			sdk.LogInfo(logger, "unexpected update type", "type", reflect.TypeOf(v))
 		}
 	case sdk.DeleteAction:
 		break
 	}
+	sdk.LogInfo(logger, "unhandled mutation request", "type", reflect.TypeOf(mutation.Payload()))
 	return nil
 }

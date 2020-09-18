@@ -71,10 +71,22 @@ type issueSource struct {
 		} `json:"histories"`
 	} `json:"changelog"`
 	Transitions []struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID             string         `json:"id"`
+		Name           string         `json:"name"`
+		StatusCategory statusCategory `json:"statusCategory"`
 	} `json:"transitions"`
 }
+
+type statusCategory struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+const (
+	statusCategoryNew          = "new"
+	statusCategoryIntermediate = "indeterminate"
+	statusCategoryDone         = "done"
+)
 
 type linkedIssue struct {
 	ID  string `json:"id"`
