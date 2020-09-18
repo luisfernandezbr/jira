@@ -35,6 +35,7 @@ func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.A
 	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)
 	sprint.BoardID = sdk.StringPointer(sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType))
+	sprint.BoardIds = []string{*sprint.BoardID}
 	sprint.ID = sdk.NewAgileSprintID(customerID, sprint.RefID, refType)
 	sprint.Goal = s.Goal
 	sprint.Name = s.Name
