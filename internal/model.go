@@ -71,9 +71,11 @@ type issueSource struct {
 		} `json:"histories"`
 	} `json:"changelog"`
 	Transitions []struct {
-		ID             string         `json:"id"`
-		Name           string         `json:"name"`
-		StatusCategory statusCategory `json:"statusCategory"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		To   struct {
+			StatusCategory statusCategory `json:"statusCategory"`
+		} `json:"to"`
 	} `json:"transitions"`
 }
 

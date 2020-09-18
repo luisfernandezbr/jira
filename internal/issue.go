@@ -454,7 +454,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 				Name:  t.Name,
 				RefID: t.ID, // the transition id, not the issue type id
 			}
-			if t.StatusCategory.Key == statusCategoryDone {
+			if t.To.StatusCategory.Key == statusCategoryDone {
 				tx.Terminal = true
 				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
 			}
