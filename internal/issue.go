@@ -165,6 +165,25 @@ func createChangeLog(customerID string, refID string, userRefID string, createdA
 	return &change
 }
 
+func makeTransitions(currentStatus string, raw []transitionSource) []sdk.WorkIssueTransitions {
+	transitions := make([]sdk.WorkIssueTransitions, 0)
+	for _, t := range raw {
+		// transition will include the current status which is a bit weird so exclude that
+		if t.Name != currentStatus {
+			tx := sdk.WorkIssueTransitions{
+				Name:  t.Name,
+				RefID: t.ID, // the transition id, not the issue type id
+			}
+			if t.To.StatusCategory.Key == statusCategoryDone {
+				tx.Terminal = true
+				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
+			}
+			transitions = append(transitions, tx)
+		}
+	}
+	return transitions
+}
+
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
 func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
@@ -446,21 +465,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	}
 
 	// handle transition mapping
-	issue.Transitions = make([]sdk.WorkIssueTransitions, 0)
-	for _, t := range i.Transitions {
-		// transition will include the current status which is a bit weird so exclude that
-		if t.Name != issue.Status {
-			tx := sdk.WorkIssueTransitions{
-				Name:  t.Name,
-				RefID: t.ID, // the transition id, not the issue type id
-			}
-			if t.To.StatusCategory.Key == statusCategoryDone {
-				tx.Terminal = true
-				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
-			}
-			issue.Transitions = append(issue.Transitions, tx)
-		}
-	}
+	issue.Transitions = makeTransitions(issue.Status, i.Transitions)
 
 	// now go in one shot and resolve all transitive issue keys
 	if len(transitiveIssueKeys) > 0 && fetchTransitive {
