@@ -70,13 +70,15 @@ type issueSource struct {
 			Items   []changeLogItem `json:"items"`
 		} `json:"histories"`
 	} `json:"changelog"`
-	Transitions []struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-		To   struct {
-			StatusCategory statusCategory `json:"statusCategory"`
-		} `json:"to"`
-	} `json:"transitions"`
+	Transitions []transitionSource `json:"transitions"`
+}
+
+type transitionSource struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	To   struct {
+		StatusCategory statusCategory `json:"statusCategory"`
+	} `json:"to"`
 }
 
 type statusCategory struct {
