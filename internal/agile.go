@@ -538,6 +538,7 @@ func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey str
 	sprint.Name = s.Name
 	sprint.ID = sdk.NewAgileSprintID(sprint.CustomerID, sprint.RefID, refType)
 	sprint.BoardID = sdk.StringPointer(boardID)
+	sprint.BoardIds = []string{boardID}
 	sprint.Active = true
 	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
 	sdk.ConvertTimeToDateModel(s.EndDate, &sprint.EndedDate)
