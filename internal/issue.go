@@ -677,10 +677,20 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		hasMutation = true
 	}
 	if event.Set.AssigneeRefID != nil {
-		updateMutation.Update["assignee"] = []setMutationOperation{
-			{
-				Set: userValue{AccountID: *event.Set.AssigneeRefID},
-			},
+		assigneeRefID := *event.Set.AssigneeRefID
+		if assigneeRefID == "" {
+			// null value means unassigned
+			updateMutation.Update["assignee"] = []setMutationOperation{
+				{
+					Set: userValue{AccountID: nil},
+				},
+			}
+		} else {
+			updateMutation.Update["assignee"] = []setMutationOperation{
+				{
+					Set: userValue{AccountID: &assigneeRefID},
+				},
+			}
 		}
 		hasMutation = true
 	}

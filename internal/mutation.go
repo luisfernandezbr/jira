@@ -12,7 +12,7 @@ type idValue struct {
 }
 
 type userValue struct {
-	AccountID string `json:"accountId"`
+	AccountID *string `json:"accountId"`
 }
 
 type valueValue struct {
