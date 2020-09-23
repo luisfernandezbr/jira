@@ -11,6 +11,10 @@ type idValue struct {
 	ID string `json:"id"`
 }
 
+type userValue struct {
+	AccountID string `json:"accountId"`
+}
+
 type valueValue struct {
 	Value string `json:"value"`
 }

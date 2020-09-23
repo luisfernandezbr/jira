@@ -676,6 +676,14 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		}
 		hasMutation = true
 	}
+	if event.Set.AssigneeRefID != nil {
+		updateMutation.Update["assignee"] = []setMutationOperation{
+			{
+				Set: userValue{AccountID: *event.Set.AssigneeRefID},
+			},
+		}
+		hasMutation = true
+	}
 	if event.Set.Epic != nil || event.Unset.Epic {
 		var epicFieldID string
 		if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
