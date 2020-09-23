@@ -179,7 +179,8 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 					ID:   sdk.StringPointer(sdk.NewWorkIssuePriorityID(customerID, refType, change.To)),
 				}
 			case sdk.WorkIssueChangeLogFieldAssigneeRefID:
-				val.Set.AssigneeRefID = sdk.StringPointer(change.To)
+				assignee := change.To
+				val.Set.AssigneeRefID = &assignee
 			case sdk.WorkIssueChangeLogFieldTags:
 				tags := strings.Split(change.ToString, " ")
 				val.Set.Tags = &tags
