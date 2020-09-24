@@ -59,18 +59,6 @@ func TestMakeSprintUpdateEndDate(t *testing.T) {
 	assert.Equal("{\"id\":5,\"endDate\":\"2020-09-22T00:00:00Z\"}", sdk.Stringify(update))
 }
 
-func TestMakeSprintUpdateCompletedDate(t *testing.T) {
-	assert := assert.New(t)
-	evt := sdk.AgileSprintUpdateMutation{}
-	ts, err := time.Parse("2006-01-02", "2020-09-22")
-	assert.NoError(err)
-	evt.Set.CompletedDate = &ts
-	update, updated, err := makeSprintUpdate("5", &evt)
-	assert.NoError(err)
-	assert.True(updated)
-	assert.Equal("{\"id\":5,\"completeDate\":\"2020-09-22T00:00:00Z\"}", sdk.Stringify(update))
-}
-
 func TestMakeSprintUpdateStatus(t *testing.T) {
 	assert := assert.New(t)
 	evt := sdk.AgileSprintUpdateMutation{}

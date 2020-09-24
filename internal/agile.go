@@ -1098,6 +1098,19 @@ type sprintUpdate struct {
 	// OriginBoardID *int    `json:"originBoardId,omitempty"` // not sure we want to allow this to be updated yet
 }
 
+func parseUpdateStatus(status sdk.AgileSprintStatus) (string, error) {
+	switch status {
+	case sdk.AgileSprintStatusActive:
+		return "active", nil
+	case sdk.AgileSprintStatusClosed:
+		return "closed", nil
+	case sdk.AgileSprintStatusFuture:
+		return "future", nil
+	default:
+		return "", fmt.Errorf("unsupported sprint state: %s", status.String())
+	}
+}
+
 func makeSprintUpdate(refID string, event *sdk.AgileSprintUpdateMutation) (*sprintUpdate, bool, error) {
 	sprintRefID, err := strconv.Atoi(refID)
 	if err != nil {
@@ -1124,16 +1137,11 @@ func makeSprintUpdate(refID string, event *sdk.AgileSprintUpdateMutation) (*spri
 		hasMutation = true
 	}
 	if event.Set.Status != nil {
-		switch *event.Set.Status {
-		case sdk.AgileSprintStatusActive:
-			update.State = sdk.StringPointer("active")
-		case sdk.AgileSprintStatusClosed:
-			update.State = sdk.StringPointer("closed")
-		case sdk.AgileSprintStatusFuture:
-			update.State = sdk.StringPointer("future")
-		default:
-			return nil, false, fmt.Errorf("unsupported sprint state: %s", event.Set.Status.String())
+		state, err := parseUpdateStatus(*event.Set.Status)
+		if err != nil {
+			return nil, false, err
 		}
+		update.State = &state
 		hasMutation = true
 	}
 	return &update, hasMutation, nil
@@ -1155,6 +1163,50 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 		if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
 			return fmt.Errorf("error updating sprint %s: %w", refID, err)
 		}
+	}
+	return nil
+}
+
+type sprintCreate struct {
+	Name          string    `json:"name"`
+	StartDate     time.Time `json:"startDate"`
+	EndDate       time.Time `json:"endDate"`
+	OriginBoardID int       `json:"originBoardId"`
+	Goal          string    `json:"goal"`
+}
+
+func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintCreateMutation) error {
+	if event.Name == "" {
+		return errors.New("sprint name cannot be empty")
+	}
+	if len(event.BoardRefIDs) == 0 || len(event.BoardRefIDs) > 1 {
+		return errors.New("exactly one board ref id is required")
+	}
+	boardRefID, err := strconv.Atoi(event.BoardRefIDs[0])
+	if err != nil {
+		return fmt.Errorf("unable to convert board ref_id %s to int: %w", event.BoardRefIDs[0], err)
+	}
+	if event.StartDate.IsZero() || event.EndDate.IsZero() {
+		return errors.New("start date and end date must both be set")
+	}
+	create := sprintCreate{
+		Name:          event.Name,
+		StartDate:     event.StartDate,
+		EndDate:       event.EndDate,
+		OriginBoardID: boardRefID,
+	}
+	if event.Goal != nil {
+		create.Goal = *event.Goal
+	}
+	create.EndDate = event.EndDate
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/agile/1.0/sprint")
+	client := i.httpmanager.New(theurl, nil)
+	buf, err := json.Marshal(create)
+	if err != nil {
+		return fmt.Errorf("error marshaling sprint update: %w", err)
+	}
+	if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
+		return fmt.Errorf("error creating sprint: %w", err)
 	}
 	return nil
 }
