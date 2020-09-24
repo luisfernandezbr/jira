@@ -1147,6 +1147,32 @@ func makeSprintUpdate(refID string, event *sdk.AgileSprintUpdateMutation) (*spri
 	return &update, hasMutation, nil
 }
 
+func chunkArray(arr []string, chunksize int, callback func([]string) error) error {
+	if len(arr) <= chunksize {
+		return callback(arr)
+	}
+	var done bool
+	for !done {
+		chunkSize := 50
+		if len(arr) < chunkSize {
+			chunkSize = len(arr)
+			done = true
+		}
+		chunk := arr[:chunkSize]
+		if err := callback(chunk); err != nil {
+			return err
+		}
+		if !done {
+			arr = arr[50:]
+		}
+	}
+	return nil
+}
+
+type issueMover struct {
+	IssueRefIDs []string `json:"issues"`
+}
+
 func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintUpdateMutation) error {
 	refID := mutation.ID()
 	update, hasMutation, err := makeSprintUpdate(refID, event)
@@ -1162,6 +1188,24 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 		}
 		if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
 			return fmt.Errorf("error updating sprint %s: %w", refID, err)
+		}
+	}
+	if len(event.Set.IssueRefIDs) > 0 {
+		theurl := sdk.JoinURL(authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/sprint/%s/issue", refID))
+		client := i.httpmanager.New(theurl, nil)
+		// the agile api only allows 50 issues to be moved at once
+		err := chunkArray(event.Set.IssueRefIDs, 50, func(issueRefIDs []string) error {
+			buf, err := json.Marshal(issueMover{IssueRefIDs: issueRefIDs})
+			if err != nil {
+				return fmt.Errorf("error marshaling sprint issue mover: %w", err)
+			}
+			if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
+				return fmt.Errorf("error updating sprint (%s) issues: %w", refID, err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("error moving issues: %w", err)
 		}
 	}
 	return nil
