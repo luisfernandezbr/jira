@@ -1233,6 +1233,9 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 	if event.StartDate.IsZero() || event.EndDate.IsZero() {
 		return errors.New("start date and end date must both be set")
 	}
+	if len(event.IssueRefIDs) > 0 {
+		return errors.New("adding issues to a new sprint is not supported yet")
+	}
 	create := sprintCreate{
 		Name:          event.Name,
 		StartDate:     event.StartDate,
