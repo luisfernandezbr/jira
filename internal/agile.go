@@ -1089,12 +1089,12 @@ func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats, integratio
 }
 
 type sprintUpdate struct {
-	ID        int        `json:"id,omitempty"`
-	State     *string    `json:"state,omitempty"`
-	Name      *string    `json:"name,omitempty"`
-	StartDate *time.Time `json:"startDate,omitempty"`
-	EndDate   *time.Time `json:"endDate,omitempty"`
-	Goal      *string    `json:"goal,omitempty"`
+	ID        int     `json:"id,omitempty"`
+	State     *string `json:"state,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
+	Goal      *string `json:"goal,omitempty"`
 	// OriginBoardID *int    `json:"originBoardId,omitempty"` // not sure we want to allow this to be updated yet
 }
 
@@ -1129,11 +1129,11 @@ func makeSprintUpdate(refID string, event *sdk.AgileSprintUpdateMutation) (*spri
 		hasMutation = true
 	}
 	if event.Set.StartDate != nil {
-		update.StartDate = event.Set.StartDate
+		update.StartDate = &event.Set.StartDate.Rfc3339
 		hasMutation = true
 	}
 	if event.Set.EndDate != nil {
-		update.EndDate = event.Set.EndDate
+		update.EndDate = &event.Set.EndDate.Rfc3339
 		hasMutation = true
 	}
 	if event.Set.Status != nil {
@@ -1215,11 +1215,11 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 }
 
 type sprintCreate struct {
-	Name          string    `json:"name"`
-	StartDate     time.Time `json:"startDate"`
-	EndDate       time.Time `json:"endDate"`
-	OriginBoardID int       `json:"originBoardId"`
-	Goal          string    `json:"goal"`
+	Name          string `json:"name"`
+	StartDate     string `json:"startDate"`
+	EndDate       string `json:"endDate"`
+	OriginBoardID int    `json:"originBoardId"`
+	Goal          string `json:"goal"`
 }
 
 func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintCreateMutation) error {
@@ -1233,7 +1233,7 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 	if err != nil {
 		return fmt.Errorf("unable to convert board ref_id %s to int: %w", event.BoardRefIDs[0], err)
 	}
-	if event.StartDate.IsZero() || event.EndDate.IsZero() {
+	if event.StartDate.Epoch == 0 || event.EndDate.Epoch == 0 {
 		return errors.New("start date and end date must both be set")
 	}
 	if len(event.IssueRefIDs) > 0 {
@@ -1241,14 +1241,13 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 	}
 	create := sprintCreate{
 		Name:          event.Name,
-		StartDate:     event.StartDate,
-		EndDate:       event.EndDate,
+		StartDate:     event.StartDate.Rfc3339,
+		EndDate:       event.EndDate.Rfc3339,
 		OriginBoardID: boardRefID,
 	}
 	if event.Goal != nil {
 		create.Goal = *event.Goal
 	}
-	create.EndDate = event.EndDate
 	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/agile/1.0/sprint")
 	client := i.httpmanager.New(theurl, nil)
 	buf, err := json.Marshal(create)

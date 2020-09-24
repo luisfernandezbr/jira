@@ -671,7 +671,7 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if event.Set.Priority != nil {
 		updateMutation.Update["priority"] = []setMutationOperation{
 			{
-				Set: idValue{*event.Set.Priority.ID},
+				Set: idValue{*event.Set.Priority.RefID},
 			},
 		}
 		hasMutation = true
@@ -735,7 +735,7 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	}
 	if event.Set.Transition != nil {
 		updateMutation = newMutation()
-		updateMutation.Transition = &idValue{*event.Set.Transition.ID}
+		updateMutation.Transition = &idValue{*event.Set.Transition.RefID}
 		if event.Set.Resolution != nil {
 			if event.Set.Resolution.Name == nil {
 				return fmt.Errorf("resolution name property must be set")
