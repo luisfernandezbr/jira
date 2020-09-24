@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1085,4 +1086,80 @@ func newSprintManager(customerID string, pipe sdk.Pipe, stats *stats, integratio
 		usingAgileAPI:         usingAgileAPI,
 		async:                 sdk.NewAsync(10),
 	}
+}
+
+type sprintUpdate struct {
+	ID           int        `json:"id,omitempty"`
+	State        *string    `json:"state,omitempty"`
+	Name         *string    `json:"name,omitempty"`
+	StartDate    *time.Time `json:"startDate,omitempty"`
+	EndDate      *time.Time `json:"endDate,omitempty"`
+	CompleteDate *time.Time `json:"completeDate,omitempty"`
+	Goal         *string    `json:"goal,omitempty"`
+	// OriginBoardID *int    `json:"originBoardId,omitempty"` // not sure we want to allow this to be updated yet
+}
+
+func makeSprintUpdate(refID string, event *sdk.AgileSprintUpdateMutation) (*sprintUpdate, bool, error) {
+	sprintRefID, err := strconv.Atoi(refID)
+	if err != nil {
+		return nil, false, fmt.Errorf("unable to convert sprint ref_id %s to int: %w", refID, err)
+	}
+	var hasMutation bool
+	update := sprintUpdate{
+		ID: sprintRefID,
+	}
+	if event.Set.Name != nil {
+		update.Name = event.Set.Name
+		hasMutation = true
+	}
+	if event.Set.Goal != nil {
+		update.Goal = event.Set.Goal
+		hasMutation = true
+	}
+	if event.Set.StartDate != nil {
+		update.StartDate = event.Set.StartDate
+		hasMutation = true
+	}
+	if event.Set.EndDate != nil {
+		update.EndDate = event.Set.EndDate
+		hasMutation = true
+	}
+	if event.Set.CompletedDate != nil {
+		update.CompleteDate = event.Set.CompletedDate
+		hasMutation = true
+	}
+	if event.Set.Status != nil {
+		switch *event.Set.Status {
+		case sdk.AgileSprintStatusActive:
+			update.State = sdk.StringPointer("active")
+		case sdk.AgileSprintStatusClosed:
+			update.State = sdk.StringPointer("closed")
+		case sdk.AgileSprintStatusFuture:
+			update.State = sdk.StringPointer("future")
+		default:
+			return nil, false, fmt.Errorf("unsupported sprint state: %s", event.Set.Status.String())
+		}
+		hasMutation = true
+	}
+	return &update, hasMutation, nil
+}
+
+func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintUpdateMutation) error {
+	refID := mutation.ID()
+	update, hasMutation, err := makeSprintUpdate(refID, event)
+	if err != nil {
+		return err
+	}
+	if hasMutation {
+		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/agile/1.0/sprint/", refID)
+		client := i.httpmanager.New(theurl, nil)
+		buf, err := json.Marshal(update)
+		if err != nil {
+			return fmt.Errorf("error marshaling sprint update: %w", err)
+		}
+		if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
+			return fmt.Errorf("error updating sprint %s: %w", refID, err)
+		}
+	}
+	return nil
 }

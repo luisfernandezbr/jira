@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -45,11 +46,11 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 	c.APIKeyAuth = user.APIKeyAuth
 	c.BasicAuth = user.BasicAuth
 	c.OAuth2Auth = user.OAuth2Auth
+	c.OAuth1Auth = user.OAuth1Auth
 	authConfig, err := i.createAuthConfigFromConfig(mutation, c)
 	if err != nil {
 		return fmt.Errorf("error creating auth config: %w", err)
 	}
-	state := i.newState(logger, mutation.Pipe(), authConfig, c, false, mutation.IntegrationInstanceID())
 	// TODO:
 	// create/update sprint
 	// create issue
@@ -59,7 +60,12 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 	case sdk.UpdateAction:
 		switch v := mutation.Payload().(type) {
 		case *sdk.WorkIssueUpdateMutation:
-			return i.updateIssue(state, mutation, v)
+			return i.updateIssue(logger, mutation, authConfig, v)
+		case *sdk.AgileSprintUpdateMutation:
+			if !authConfig.SupportsAgileAPI {
+				return errors.New("current authentication does not support agile api")
+			}
+			return i.updateSprint(logger, mutation, authConfig, v)
 		default:
 			sdk.LogInfo(logger, "unexpected update type", "type", reflect.TypeOf(v))
 		}
