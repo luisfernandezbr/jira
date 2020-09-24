@@ -1208,6 +1208,9 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 			return fmt.Errorf("error moving issues: %w", err)
 		}
 	}
+	if len(event.Unset.IssueRefIDs) > 0 {
+		return errors.New("removing issues from sprints is not supported")
+	}
 	return nil
 }
 
