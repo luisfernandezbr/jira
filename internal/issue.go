@@ -734,6 +734,9 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		}
 	}
 	if event.Set.Transition != nil {
+		if event.Set.Transition.RefID == nil {
+			return fmt.Errorf("error ref_id was nil for transition: %v", event.Set.Transition)
+		}
 		updateMutation = newMutation()
 		updateMutation.Transition = &idValue{*event.Set.Transition.RefID}
 		if event.Set.Resolution != nil {
