@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -654,7 +655,84 @@ func setIssueExpand(qs url.Values) {
 	qs.Set("expand", "changelog,fields,comments,transitions")
 }
 
+func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueCreateMutation) error {
+	createMutation := newMutation()
+	if event.Type == nil {
+		return errors.New("issue type is required")
+	}
+	if event.Type.RefID == nil {
+		return errors.New("issue type ref_id cannot be nil")
+	}
+	if event.ProjectRefID == "" {
+		return errors.New("project ref id cannot be empty")
+	}
+	reporterRefID := mutation.User().RefID
+	if reporterRefID == "" {
+		return errors.New("no ref_id found for requesting user")
+	}
+	createMutation.Fields["reporter"] = idValue{reporterRefID}
+	createMutation.Fields["summary"] = event.Title
+	createMutation.Fields["issuetype"] = idValue{*event.Type.RefID}
+	createMutation.Fields["project"] = idValue{event.ProjectRefID}
+	if event.AssigneeRefID != nil {
+		createMutation.Fields["assignee"] = idValue{*event.AssigneeRefID}
+	}
+	if event.Priority != nil {
+		if event.Priority.RefID == nil {
+			return errors.New("priority ref id cannot be empty")
+		}
+		createMutation.Fields["priority"] = idValue{*event.Priority.RefID}
+	}
+	if event.Priority != nil {
+		if event.Priority.RefID == nil {
+			return errors.New("priority ref id cannot be empty")
+		}
+		createMutation.Fields["priority"] = idValue{*event.Priority.RefID}
+	}
+	if event.Epic != nil {
+		if event.Epic.Name == nil {
+			return errors.New("epic name cannot be empty")
+		}
+		epicFieldID, err := i.getEpicFieldID(logger, mutation, authConfig)
+		if err != nil {
+			return err
+		}
+		createMutation.Fields[epicFieldID] = event.Epic.Name
+	}
+	if event.ParentRefID != nil {
+		createMutation.Fields["parent"] = idValue{*event.ParentRefID}
+	}
+	if len(event.Labels) > 0 {
+		createMutation.Fields["labels"] = event.Labels
+	}
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue")
+	client := i.httpmanager.New(theurl, nil)
+	if _, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...); err != nil {
+		return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
+	}
+	return nil
+}
+
 const epicCustomFieldIDCacheKey = "epic_id_custom_field"
+
+func (i *JiraIntegration) getEpicFieldID(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig) (string, error) {
+	var epicFieldID string
+	if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
+		// fetch the custom fields and find the custom field value for the Epic Link
+		customfields, err := i.fetchCustomFields(logger, mutation, mutation.CustomerID(), authConfig)
+		if err != nil {
+			return "", fmt.Errorf("error fetching custom fields for setting the epic id. %w", err)
+		}
+		for _, field := range customfields {
+			if field.Name == "Epic Link" {
+				epicFieldID = field.ID
+				mutation.State().Set(epicCustomFieldIDCacheKey, epicFieldID)
+				break
+			}
+		}
+	}
+	return epicFieldID, nil
+}
 
 func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueUpdateMutation) error {
 	started := time.Now()
@@ -695,20 +773,9 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		hasMutation = true
 	}
 	if event.Set.Epic != nil || event.Unset.Epic {
-		var epicFieldID string
-		if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
-			// fetch the custom fields and find the custom field value for the Epic Link
-			customfields, err := i.fetchCustomFields(logger, mutation, mutation.CustomerID(), authConfig)
-			if err != nil {
-				return fmt.Errorf("error fetching custom fields for setting the epic id. %w", err)
-			}
-			for _, field := range customfields {
-				if field.Name == "Epic Link" {
-					epicFieldID = field.ID
-					mutation.State().Set(epicCustomFieldIDCacheKey, epicFieldID)
-					break
-				}
-			}
+		epicFieldID, err := i.getEpicFieldID(logger, mutation, authConfig)
+		if err != nil {
+			return err
 		}
 		if event.Unset.Epic {
 			updateMutation.Update[epicFieldID] = []setMutationOperation{
