@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 func relativeDuration(d time.Duration) string {

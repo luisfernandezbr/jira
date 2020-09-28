@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 func (i *JiraIntegration) fetchIssueResolutions(state *state) ([]sdk.WorkProjectIssueResolutions, error) {

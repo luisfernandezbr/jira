@@ -3,7 +3,7 @@ package internal
 import (
 	"sync"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 // JiraIntegration is an integration for Jira

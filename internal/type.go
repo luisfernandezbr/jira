@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 func getMappedIssueType(name string, subtask bool) sdk.WorkIssueTypeMappedType {

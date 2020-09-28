@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 // sprint is for non-agile api, ie. issue scraping

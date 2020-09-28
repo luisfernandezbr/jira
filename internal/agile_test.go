@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 	"github.com/stretchr/testify/assert"
 )
 
