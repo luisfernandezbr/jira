@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/pinpt/adf"
-	"github.com/pinpt/agent/sdk"
+	"github.com/pinpt/agent/v4/sdk"
 )
 
 // easyjson:skip

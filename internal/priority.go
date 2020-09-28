@@ -1,6 +1,6 @@
 package internal
 
-import "github.com/pinpt/agent/sdk"
+import "github.com/pinpt/agent/v4/sdk"
 
 func (p issuePriority) ToModel(customerID string, integrationInstanceID string) (*sdk.WorkIssuePriority, error) {
 	priority := &sdk.WorkIssuePriority{}
