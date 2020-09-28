@@ -416,7 +416,11 @@ const Integration = () => {
 			setState(State.AgentSelector);
 		} else if (isFromReAuth) {
 			setState(State.AgentSelector);
-		} else if (installed || config?.accounts) {
+		} else if (installed && accounts.current?.length === 0) {
+			// if accounts get removed post install then re-validate
+			setState(State.Validate);
+		} else if (installed || accounts.current?.length > 0) {
+			console.log('JIRA: ay', config?.accounts)
 			setState(State.Projects);
 			if (installed && inupgrade) {
 				completeUpgrade();
@@ -454,7 +458,7 @@ const Integration = () => {
 		} else if (accounts.current?.length > 0) {
 			setState(State.Projects);
 		}
-	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, setState, completeUpgrade, setInstallLocation]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, accounts, setState, completeUpgrade, setInstallLocation]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
