@@ -20,6 +20,10 @@ type valueValue struct {
 	Value string `json:"value"`
 }
 
+type keyValue struct {
+	Key string `json:"key"`
+}
+
 type setMutationOperation struct {
 	Set interface{} `json:"set"`
 }
@@ -55,6 +59,8 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) error {
 	// Issue
 	case *sdk.WorkIssueUpdateMutation:
 		return i.updateIssue(logger, mutation, authConfig, v)
+	case *sdk.WorkIssueCreateMutation:
+		return i.createIssue(logger, mutation, authConfig, v)
 
 	// Sprint
 	case *sdk.AgileSprintUpdateMutation:
