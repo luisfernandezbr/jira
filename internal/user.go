@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/pinpt/agent/sdk"
+	"github.com/pinpt/agent/v4/sdk"
 )
 
 func (u user) ToModel(customerID string, integrationInstanceID string, websiteURL string) *sdk.WorkUser {

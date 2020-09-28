@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/pinpt/agent/sdk"
+	"github.com/pinpt/agent/v4/sdk"
 )
 
 // AutoConfigure is called when a cloud integration has requested to be auto configured

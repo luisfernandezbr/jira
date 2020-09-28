@@ -3,7 +3,7 @@ package internal
 import (
 	"crypto/rsa"
 
-	"github.com/pinpt/agent/sdk"
+	"github.com/pinpt/agent/v4/sdk"
 )
 
 var _ sdk.OAuth1Integration = (*JiraIntegration)(nil)
