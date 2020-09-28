@@ -458,7 +458,7 @@ const Integration = () => {
 		} else if (accounts.current?.length > 0) {
 			setState(State.Projects);
 		}
-	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired,accounts, setState, completeUpgrade, setInstallLocation]);
+	}, [config, location, installed, isFromReAuth, currentURL, isFromRedirect, upgradeRequired, accounts, setState, completeUpgrade, setInstallLocation]);
 
 	const selfManagedCallback = useCallback((err: Error | undefined, theurl?: string) => {
 		setError(err);
