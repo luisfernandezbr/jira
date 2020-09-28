@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 var webhookEvents = []string{

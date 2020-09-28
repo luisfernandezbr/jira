@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
-	"github.com/pinpt/agent.next/sdk/sdktest"
+	"github.com/pinpt/agent/sdk"
+	"github.com/pinpt/agent/sdk/sdktest"
 	"github.com/pinpt/integration-sdk/agent"
 	"github.com/stretchr/testify/assert"
 )

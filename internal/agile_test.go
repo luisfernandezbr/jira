@@ -3,7 +3,7 @@ package internal
 import (
 	"testing"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 	"github.com/stretchr/testify/assert"
 )
 

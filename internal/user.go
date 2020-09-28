@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 func (u user) ToModel(customerID string, integrationInstanceID string, websiteURL string) *sdk.WorkUser {

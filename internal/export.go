@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 func (i *JiraIntegration) checkForRateLimit(control sdk.Control, customerID string, rerr error, header http.Header) error {

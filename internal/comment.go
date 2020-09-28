@@ -7,7 +7,7 @@ import (
 	"net/url"
 
 	"github.com/pinpt/adf"
-	"github.com/pinpt/agent.next/sdk"
+	"github.com/pinpt/agent/sdk"
 )
 
 type comment struct {

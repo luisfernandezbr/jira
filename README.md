@@ -58,19 +58,19 @@ You will need the following to build and run locally:
 You can run locally to test against a repo with the following command (assuming you already have the Agent SDK installed):
 
 ```
-agent.next dev . --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
+agent dev . --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
 ```
 
-From agent.next repo:
+From agent repo:
 
 ```
-go run . -tags dev . dev ../agent.next.jira --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
+go run . -tags dev . dev ../agent.jira --log-level=debug --log-level=debug --channel edge --set "basic_auth={\"url\":\"$PP_JIRA_URL\",\"username\":\"$PP_JIRA_USERNAME\",\"password\":\"$PP_JIRA_PASSWORD\"}"
 ```
 
 Example using an OAuth2 token:
 
 ```
-go run -tags dev . dev ../agent.next.jira --log-level=debug --channel edge --set "oauth2_auth={\"access_token\":\"TOKEN\",\"refresh_token\":\"REFRESH_TOKEN\"}"
+go run -tags dev . dev ../agent.jira --log-level=debug --channel edge --set "oauth2_auth={\"access_token\":\"TOKEN\",\"refresh_token\":\"REFRESH_TOKEN\"}"
 ```
 
 Make sure you replace TOKEN and REFRESH_TOKEN.
@@ -80,7 +80,7 @@ Make sure you replace TOKEN and REFRESH_TOKEN.
 You can run a specific mutation from the dev command like this:
 
 ```
-agent.next dev mutation .  --input '{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"20297","action":"update","model":"work.Issue","payload":{"transition":{"id":"11"},"set":{"resolution":{"name":"Done"}}},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}'
+agent dev mutation .  --input '{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"20297","action":"update","model":"work.Issue","payload":{"transition":{"id":"11"},"set":{"resolution":{"name":"Done"}}},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}'
 ```
 
 Make sure you update the `--input` values.
@@ -90,7 +90,7 @@ Make sure you update the `--input` values.
 You can run a specific webhook from the dev command like this:
 
 ```
-agent.next dev webhook . --header customer_id=a8a78d9c16839b97 --header ref_type=jira --header location=CLOUD  --input '{"customer_id":"a8a78d9c16839b97","integration_instance_id":"c0b35e2adea4fd37","id":"1234","payload":{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"71abd3b10639575c","action":"update","model":"work.Issue","payload":{"title":"Hi"},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}}'
+agent dev webhook . --header customer_id=a8a78d9c16839b97 --header ref_type=jira --header location=CLOUD  --input '{"customer_id":"a8a78d9c16839b97","integration_instance_id":"c0b35e2adea4fd37","id":"1234","payload":{"customer_id":"a8a78d9c16839b97","ref_type":"jira","id":"71abd3b10639575c","action":"update","model":"work.Issue","payload":{"title":"Hi"},"user":{"basic_auth":{"username":"USERNAME","password":"PASSWORD","url":"https://pinpt-hq.atlassian.net/rest"}}}}'
 ```
 
 Make sure you update the `--input` values.
