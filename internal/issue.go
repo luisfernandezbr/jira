@@ -165,6 +165,25 @@ func createChangeLog(customerID string, refID string, userRefID string, createdA
 	return &change
 }
 
+func makeTransitions(currentStatus string, raw []transitionSource) []sdk.WorkIssueTransitions {
+	transitions := make([]sdk.WorkIssueTransitions, 0)
+	for _, t := range raw {
+		// transition will include the current status which is a bit weird so exclude that
+		if t.Name != currentStatus {
+			tx := sdk.WorkIssueTransitions{
+				Name:  t.Name,
+				RefID: t.ID, // the transition id, not the issue type id
+			}
+			if t.To.StatusCategory.Key == statusCategoryDone {
+				tx.Terminal = true
+				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
+			}
+			transitions = append(transitions, tx)
+		}
+	}
+	return transitions
+}
+
 // ToModel will convert a issueSource (from Jira) to a sdk.WorkIssue object
 func (i issueSource) ToModel(customerID string, integrationInstanceID string, issueManager *issueIDManager, sprintManager *sprintManager, userManager UserManager, fieldByID map[string]customField, websiteURL string, fetchTransitive bool) (*sdk.WorkIssue, []*sdk.WorkIssueComment, error) {
 	var fields issueFields
@@ -446,21 +465,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	}
 
 	// handle transition mapping
-	issue.Transitions = make([]sdk.WorkIssueTransitions, 0)
-	for _, t := range i.Transitions {
-		// transition will include the current status which is a bit weird so exclude that
-		if t.Name != issue.Status {
-			tx := sdk.WorkIssueTransitions{
-				Name:  t.Name,
-				RefID: t.ID, // the transition id, not the issue type id
-			}
-			if t.To.StatusCategory.Key == statusCategoryDone {
-				tx.Terminal = true
-				tx.Requires = []string{sdk.WorkIssueTransitionRequiresResolution}
-			}
-			issue.Transitions = append(issue.Transitions, tx)
-		}
-	}
+	issue.Transitions = makeTransitions(issue.Status, i.Transitions)
 
 	// now go in one shot and resolve all transitive issue keys
 	if len(transitiveIssueKeys) > 0 && fetchTransitive {
@@ -651,7 +656,7 @@ func setIssueExpand(qs url.Values) {
 
 const epicCustomFieldIDCacheKey = "epic_id_custom_field"
 
-func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event *sdk.WorkIssueUpdateMutation) error {
+func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueUpdateMutation) error {
 	started := time.Now()
 	var hasMutation bool
 	updateMutation := newMutation()
@@ -666,8 +671,26 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 	if event.Set.Priority != nil {
 		updateMutation.Update["priority"] = []setMutationOperation{
 			{
-				Set: idValue{*event.Set.Priority.ID},
+				Set: idValue{*event.Set.Priority.RefID},
 			},
+		}
+		hasMutation = true
+	}
+	if event.Set.AssigneeRefID != nil {
+		assigneeRefID := *event.Set.AssigneeRefID
+		if assigneeRefID == "" {
+			// null value means unassigned
+			updateMutation.Update["assignee"] = []setMutationOperation{
+				{
+					Set: userValue{AccountID: nil},
+				},
+			}
+		} else {
+			updateMutation.Update["assignee"] = []setMutationOperation{
+				{
+					Set: userValue{AccountID: &assigneeRefID},
+				},
+			}
 		}
 		hasMutation = true
 	}
@@ -675,7 +698,7 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		var epicFieldID string
 		if ok, _ := mutation.State().Get(epicCustomFieldIDCacheKey, &epicFieldID); !ok {
 			// fetch the custom fields and find the custom field value for the Epic Link
-			customfields, err := i.fetchCustomFields(state.logger, mutation, mutation.CustomerID(), state.authConfig)
+			customfields, err := i.fetchCustomFields(logger, mutation, mutation.CustomerID(), authConfig)
 			if err != nil {
 				return fmt.Errorf("error fetching custom fields for setting the epic id. %w", err)
 			}
@@ -702,18 +725,20 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 		}
 		hasMutation = true
 	}
-	sdk.LogDebug(state.logger, "sending mutation", "payload", sdk.Stringify(updateMutation), "has_mutation", hasMutation)
+	sdk.LogDebug(logger, "sending mutation", "payload", sdk.Stringify(updateMutation), "has_mutation", hasMutation)
 	if hasMutation {
-		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
+		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
 		client := i.httpmanager.New(theurl, nil)
-		_, err := client.Put(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
-		if err != nil {
+		if _, err := client.Put(sdk.StringifyReader(updateMutation), nil, authConfig.Middleware...); err != nil {
 			return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 		}
 	}
 	if event.Set.Transition != nil {
+		if event.Set.Transition.RefID == nil {
+			return fmt.Errorf("error ref_id was nil for transition: %v", event.Set.Transition)
+		}
 		updateMutation = newMutation()
-		updateMutation.Transition = &idValue{*event.Set.Transition.ID}
+		updateMutation.Transition = &idValue{*event.Set.Transition.RefID}
 		if event.Set.Resolution != nil {
 			if event.Set.Resolution.Name == nil {
 				return fmt.Errorf("resolution name property must be set")
@@ -722,14 +747,14 @@ func (i *JiraIntegration) updateIssue(state *state, mutation sdk.Mutation, event
 				"resolution": map[string]string{"name": *event.Set.Resolution.Name},
 			}
 		}
-		sdk.LogDebug(state.logger, "sending transition mutation", "payload", sdk.Stringify(updateMutation))
-		theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID()+"/transitions")
+		sdk.LogDebug(logger, "sending transition mutation", "payload", sdk.Stringify(updateMutation))
+		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID()+"/transitions")
 		client := i.httpmanager.New(theurl, nil)
-		_, err := client.Post(sdk.StringifyReader(updateMutation), nil, state.authConfig.Middleware...)
+		_, err := client.Post(sdk.StringifyReader(updateMutation), nil, authConfig.Middleware...)
 		if err != nil {
 			return fmt.Errorf("mutation transition failed: %s", getJiraErrorMessage(err))
 		}
 	}
-	sdk.LogDebug(state.logger, "completed mutation response", "payload", sdk.Stringify(updateMutation), "duration", time.Since(started))
+	sdk.LogDebug(logger, "completed mutation response", "payload", sdk.Stringify(updateMutation), "duration", time.Since(started))
 	return nil
 }

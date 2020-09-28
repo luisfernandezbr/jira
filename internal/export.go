@@ -239,6 +239,23 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 	return keys, nil
 }
 
+type issueTransitionSource struct {
+	Transitions []transitionSource `json:"transitions"`
+}
+
+func (i *JiraIntegration) fetchIssueTransitions(control sdk.Control, authConfig authConfig, customerID string, issueRefID string) ([]sdk.WorkIssueTransitions, error) {
+	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue", issueRefID, "/transitions")
+	client := i.httpmanager.New(theurl, nil)
+	params := url.Values{}
+	params.Add("expand", "transitions")
+	var resp issueTransitionSource
+	r, err := client.Get(&resp, append(authConfig.Middleware, sdk.WithGetQueryParameters(params))...)
+	if err := i.checkForRateLimit(control, customerID, err, r.Headers); err != nil {
+		return nil, err
+	}
+	return makeTransitions("", resp.Transitions), nil
+}
+
 func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField, projectKeys []string) error {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/search")
 	client := i.httpmanager.New(theurl, nil)

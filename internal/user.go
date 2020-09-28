@@ -47,7 +47,7 @@ func (m *userManager) Emit(user user) error {
 	if m.users[refid] {
 		return nil
 	}
-	object := user.ToModel(m.customerID, m.websiteURL, m.integrationInstanceID)
+	object := user.ToModel(m.customerID, m.integrationInstanceID, m.websiteURL)
 	if err := m.pipe.Write(object); err != nil {
 		return nil
 	}

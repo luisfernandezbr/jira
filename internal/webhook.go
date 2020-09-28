@@ -179,7 +179,8 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 					ID:   sdk.StringPointer(sdk.NewWorkIssuePriorityID(customerID, refType, change.To)),
 				}
 			case sdk.WorkIssueChangeLogFieldAssigneeRefID:
-				val.Set.AssigneeRefID = sdk.StringPointer(change.To)
+				assignee := change.To
+				val.Set.AssigneeRefID = &assignee
 			case sdk.WorkIssueChangeLogFieldTags:
 				tags := strings.Split(change.ToString, " ")
 				val.Set.Tags = &tags
@@ -231,6 +232,22 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 			val.Push.ChangeLogs = &cl
 		}
 	}
+
+	var authCfg authConfig
+	if updatedStatus {
+		// need to fetch new transitions
+		var err error
+		authCfg, err = i.createAuthConfig(webhook)
+		if err != nil {
+			return fmt.Errorf("error creating authconfig: %w", err)
+		}
+		transitions, err := i.fetchIssueTransitions(webhook, authCfg, customerID, changelog.Issue.ID)
+		if err != nil {
+			return fmt.Errorf("error fetching new transitions: %w", err)
+		}
+		val.Set.Transitions = &transitions
+	}
+
 	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
 	sdk.LogDebug(i.logger, "sending issue update", "data", sdk.Stringify(update))
 	if err := pipe.Write(update); err != nil {
@@ -238,11 +255,7 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 	}
 
 	if updatedStatus {
-		ts := time.Now()
-		authCfg, err := i.createAuthConfig(webhook)
-		if err != nil {
-			return fmt.Errorf("error creating authconfig: %w", err)
-		}
+		// need to fetch
 		api := newAgileAPI(i.logger, authCfg, customerID, integrationInstanceID, i.httpmanager)
 		projectID := sdk.NewWorkProjectID(customerID, changelog.Issue.Fields.Project.ID, refType)
 		sdk.LogDebug(i.logger, "updating board for issue", "issue", changelog.Issue.ID)
