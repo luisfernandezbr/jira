@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +144,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 	customerID := state.export.CustomerID()
 	started := time.Now()
 	savedProjects := make(map[string]*sdk.WorkProject)
+	projectSort := make(map[string]int64)
 	var hasPreviousProjects bool
 	previousProjects := make(map[string]*sdk.WorkProject)
 	if state.export.State().Exists(savedPreviousProjectsStateKey) {
@@ -164,6 +166,18 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			if p.ProjectTypeKey != "software" {
 				sdk.LogInfo(state.logger, "skipping project which isn't a software type", "key", p.Key)
 				continue
+			}
+			if p.Insight != nil {
+				if p.Insight.TotalIssueCount == 0 {
+					sdk.LogInfo(state.logger, "skipping project because it has no issues yet", "key", p.Key)
+					continue
+				}
+				if p.Insight.LastIssueUpdateTime != "" {
+					// try and sort our projects we processed by the ones that have had the most recent changes
+					ts, _ := parseTime(p.Insight.LastIssueUpdateTime)
+					projectSort[p.ID] = sdk.TimeToEpoch(ts)
+					sdk.LogDebug(state.logger, fmt.Sprintf("project %s (%s) total issues=%d, last issue time=%v", p.Key, p.ID, p.Insight.TotalIssueCount, p.Insight.LastIssueUpdateTime))
+				}
 			}
 			count++
 			issueTypes, err := i.fetchIssueTypesForProject(state, p.ID)
@@ -223,11 +237,19 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			return nil, err
 		}
 		if project.Active {
-
 			keys = append(keys, key)
 			state.stats.incProject()
 			active++
 		}
+	}
+
+	// sort the projects by most recently modified so we process them in that order
+	if len(projectSort) > 0 {
+		sort.Slice(keys, func(i, j int) bool {
+			a := projectSort[keys[i]]
+			b := projectSort[keys[j]]
+			return a > b
+		})
 	}
 
 	// save the state so we can check the next time

@@ -195,10 +195,12 @@ type project struct {
 	Simplified     bool   `json:"simplified"`
 	Style          string `json:"style"`
 	IsPrivate      bool   `json:"isPrivate"`
-	Properties     struct {
-	} `json:"properties"`
-	EntityID string `json:"entityId,omitempty"`
-	UUID     string `json:"uuid,omitempty"`
+	EntityID       string `json:"entityId,omitempty"`
+	UUID           string `json:"uuid,omitempty"`
+	Insight        *struct {
+		TotalIssueCount     int    `json:"totalIssueCount"`
+		LastIssueUpdateTime string `json:"lastIssueUpdateTime"`
+	} `json:"insight,omitempty"`
 }
 
 type projectQueryResult struct {
