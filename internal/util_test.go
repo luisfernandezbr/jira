@@ -11,3 +11,14 @@ func TestReverseString(t *testing.T) {
 	s := "hello world"
 	assert.Equal("dlrow olleh", reverseString(s))
 }
+
+func TestRemove(t *testing.T) {
+	assert := assert.New(t)
+	vals := []string{
+		"1",
+		"2",
+		"a",
+		"q",
+	}
+	assert.EqualValues([]string{"1", "a"}, removeKeys(vals, []string{"2", "q"}))
+}
