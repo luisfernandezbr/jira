@@ -259,3 +259,12 @@ func reverseString(s string) string {
 	}
 	return string(runes)
 }
+
+func removeKeys(s []string, remove []string) (spliced []string) {
+	for _, maybe := range s {
+		if !sliceContains(remove, maybe) {
+			spliced = append(spliced, maybe)
+		}
+	}
+	return
+}

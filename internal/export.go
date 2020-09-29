@@ -1,9 +1,11 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -278,19 +280,51 @@ func (i *JiraIntegration) fetchIssueTransitions(control sdk.Control, authConfig 
 	return makeTransitions("", resp.Transitions), nil
 }
 
-func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField, projectKeys []string) error {
-	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/search")
-	client := i.httpmanager.New(theurl, nil)
-	queryParams := make(url.Values)
+type issuesErr struct {
+	ErrorMessages []string `json:"errorMessages"`
+}
+
+var invalidProjectRE = regexp.MustCompile(`A value with ID '(\w+)' does not exist for the field 'project`)
+
+func (i *issuesErr) getInvalidProjects() []string {
+	var projectIDs []string
+	for _, errorMsg := range i.ErrorMessages {
+		if invalidProjectRE.MatchString(errorMsg) {
+			id := invalidProjectRE.FindStringSubmatch(errorMsg)[1]
+			projectIDs = append(projectIDs, id)
+		}
+	}
+	return projectIDs
+}
+
+func toIssueError(responseBody []byte) (issuesErr, bool) {
+	var ie issuesErr
+	if err := json.Unmarshal(responseBody, &ie); err != nil {
+		return issuesErr{}, false
+	}
+	if len(ie.ErrorMessages) == 0 {
+		return issuesErr{}, false
+	}
+	return ie, true
+}
+
+func issueSearchJQL(projectKeys []string, fromTime time.Time) string {
 	jql := "project in (" + strings.Join(projectKeys, ",") + ") "
 	if !fromTime.IsZero() {
 		s := relativeDuration(time.Since(fromTime))
 		jql += fmt.Sprintf(`AND (created >= "%s" or updated >= "%s") `, s, s)
 	}
 	jql += "ORDER BY updated DESC" // search for the most recent changes first
+	return jql
+}
+
+func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time, customfields map[string]customField, projectKeys []string) error {
+	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/search")
+	client := i.httpmanager.New(theurl, nil)
+	queryParams := make(url.Values)
 	queryParams.Set("expand", "changelog,fields,comments,transitions")
 	queryParams.Set("fields", "*navigable,attachment")
-	queryParams.Set("jql", jql)
+	queryParams.Set("jql", issueSearchJQL(projectKeys, fromTime))
 	queryParams.Set("maxResults", "100") // 100 is the max, 50 is the default
 	var count int
 	customerID := state.export.CustomerID()
@@ -301,7 +335,15 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		ts := time.Now()
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
 		if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
-			return err
+			if issueError, ok := toIssueError(r.Body); ok {
+				invalidProjectIDs := issueError.getInvalidProjects()
+				if len(invalidProjectIDs) > 0 {
+					queryParams.Set("jql", issueSearchJQL(removeKeys(projectKeys, invalidProjectIDs), fromTime))
+					sdk.LogInfo(state.logger, "found invalid projects, removing from query", "projects", invalidProjectIDs)
+					continue
+				}
+			}
+			return fmt.Errorf("error fetching issues: %w", err)
 		}
 		toprocess := make([]issueSource, 0)
 		for _, i := range resp.Issues {
