@@ -65,7 +65,7 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 }
 
 func setProjectExpand(qs url.Values) {
-	qs.Set("expand", "description,url,issueTypes,projectKeys")
+	qs.Set("expand", "description,url,issueTypes,projectKeys,insight")
 }
 
 func (i *JiraIntegration) fetchProject(state *state, customerID, refID string) (*sdk.WorkProject, error) {
