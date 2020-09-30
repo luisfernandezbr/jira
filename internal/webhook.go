@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pinpt/adf"
 	"github.com/pinpt/agent/v4/sdk"
 )
 
@@ -225,10 +224,9 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 			// TODO: add description to the datamodel so we can send it in changelog
 			desc := change.ToString
 			if desc != "" {
-				html, err := adf.GenerateHTMLFromADF([]byte(desc))
-				if err == nil {
-					desc = adjustRenderedHTML(authCfg.WebsiteURL, html)
-				}
+				// NOTE: yes, Jira is that insane. If you fetch the issue the format is ADF
+				// but in a webhook callback, the format is Markdown. I mean, why not?
+				desc = sdk.ConvertMarkdownToHTML(desc)
 			}
 			val.Set.Description = &desc // sdk.StringPointer returns nil if string is empty
 		}
