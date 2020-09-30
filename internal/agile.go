@@ -35,8 +35,7 @@ func (s sprint) ToModel(customerID string, integrationInstanceID string) (*sdk.A
 	sprint.CustomerID = customerID
 	sprint.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	sprint.RefID = strconv.Itoa(s.ID)
-	sprint.BoardID = sdk.StringPointer(sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType))
-	sprint.BoardIds = []string{*sprint.BoardID}
+	sprint.BoardIds = []string{sdk.NewAgileBoardID(customerID, strconv.Itoa(s.OriginBoardID), refType)}
 	sprint.ID = sdk.NewAgileSprintID(customerID, sprint.RefID, refType)
 	sprint.Goal = s.Goal
 	sprint.Name = s.Name
@@ -406,8 +405,13 @@ func (a *agileAPI) issueIsOnBoard(boardRefID string, issueKey string) (bool, err
 	qs.Set("jql", fmt.Sprintf("issue=%s", issueKey))
 	qs.Set("fields", strings.Join(removeIssueFields, ","))
 	var resp boardIssueRes
-	_, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...)
-	if err != nil {
+
+	if resp, err := client.Get(&resp, append(a.authConfig.Middleware, sdk.WithGetQueryParameters(qs))...); err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			// issue can't be on a board that doesnt exist 🤷‍♀️
+			sdk.LogDebug(a.logger, "recieved 404 when searching for issue board", "board", boardRefID, "issue", issueKey)
+			return false, nil
+		}
 		return false, err
 	}
 	return resp.Total > 0, nil
@@ -538,7 +542,6 @@ func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey str
 	sprint.RefType = refType
 	sprint.Name = s.Name
 	sprint.ID = sdk.NewAgileSprintID(sprint.CustomerID, sprint.RefID, refType)
-	sprint.BoardID = sdk.StringPointer(boardID)
 	sprint.BoardIds = []string{boardID}
 	sprint.Active = true
 	sdk.ConvertTimeToDateModel(s.StartDate, &sprint.StartedDate)
