@@ -110,6 +110,9 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, control sdk.Contr
 	resp := make([]customFieldQueryResult, 0)
 	ts := time.Now()
 	r, err := client.Get(&resp, authConfig.Middleware...)
+	if err != nil {
+		return nil, err
+	}
 	if err := i.checkForRateLimit(control, customerID, err, r.Headers); err != nil {
 		return nil, err
 	}
