@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pinpt/adf"
 	"github.com/pinpt/agent/v4/sdk"
 )
 
@@ -151,6 +152,10 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 	if err := json.Unmarshal(rawdata, &changelog); err != nil {
 		return fmt.Errorf("error parsing json for changelog: %w", err)
 	}
+	authCfg, err := i.createAuthConfig(webhook)
+	if err != nil {
+		return fmt.Errorf("error creating authconfig: %w", err)
+	}
 	ts := sdk.DateFromEpoch(changelog.Timestamp)
 	val := sdk.WorkIssueUpdate{}
 	var updatedStatus bool
@@ -219,6 +224,12 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 		if change.Field == "description" {
 			// TODO: add description to the datamodel so we can send it in changelog
 			desc := change.ToString
+			if desc != "" {
+				html, err := adf.GenerateHTMLFromADF([]byte(desc))
+				if err == nil {
+					desc = adjustRenderedHTML(authCfg.WebsiteURL, html)
+				}
+			}
 			val.Set.Description = &desc // sdk.StringPointer returns nil if string is empty
 		}
 
@@ -233,14 +244,8 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 		}
 	}
 
-	var authCfg authConfig
 	if updatedStatus {
 		// need to fetch new transitions
-		var err error
-		authCfg, err = i.createAuthConfig(webhook)
-		if err != nil {
-			return fmt.Errorf("error creating authconfig: %w", err)
-		}
 		transitions, err := i.fetchIssueTransitions(webhook, authCfg, customerID, changelog.Issue.ID)
 		if err != nil {
 			return fmt.Errorf("error fetching new transitions: %w", err)
