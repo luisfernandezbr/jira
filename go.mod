@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/mailru/easyjson v0.7.1
-	github.com/pinpt/adf v1.1.0
+	github.com/pinpt/adf v1.2.0
 	github.com/pinpt/agent/v4 v4.0.0
 	github.com/pinpt/integration-sdk v0.0.1223
 	github.com/stretchr/testify v1.6.1
