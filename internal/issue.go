@@ -677,8 +677,8 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 
 	if event.Description != "" {
 		createMutation.Fields["description"] = adf.Node{
-			Type: "doc",
-			// might require version
+			Type:    "doc",
+			Version: 1,
 			Content: []adf.Node{
 				{
 					Type: "paragraph",
