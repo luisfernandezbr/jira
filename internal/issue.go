@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -726,8 +727,40 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	}
 	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue")
 	client := i.httpmanager.New(theurl, nil)
-	if _, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...); err != nil {
+	resp, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...)
+	if err != nil {
 		return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
+	}
+	var respStruct struct {
+		RefID string `json:"id"`
+		Key   string `json:"key"`
+	}
+	sdk.LogDebug(logger, "created issue", "result", string(resp.Body), "customer_id", mutation.CustomerID())
+	// create a remote link from this issue back to Pinpoint
+	if err := json.Unmarshal(resp.Body, &respStruct); err == nil {
+		issueid := sdk.NewWorkIssueID(mutation.CustomerID(), respStruct.RefID, refType)
+		sdk.LogDebug(logger, "making issue remote link", "key", respStruct.Key, "ref_id", respStruct.RefID, "customer_id", mutation.CustomerID(), "id", issueid)
+		env := os.Getenv("PP_ENV")
+		urlprefix := "https://app.pinpoint.com/issue/"
+		if env == "edge" {
+			urlprefix = "https://app.edge.pinpoint.com/issue/"
+		}
+		remoteLink := map[string]interface{}{
+			"object": map[string]interface{}{
+				"url":     urlprefix + issueid,
+				"title":   "Get more detail about this issue and related activity in Pinpoint",
+				"summary": "Direct link to this issue and more in Pinpoint",
+				"icon": map[string]interface{}{
+					"url16x16": "https://pinpoint.com/icons/icon-48x48.png",
+					"title":    "Pinpoint",
+				},
+			},
+		}
+		theurl = sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue/"+respStruct.Key+"/remotelink")
+		client = i.httpmanager.New(theurl, nil)
+		if _, err := client.Post(sdk.StringifyReader(remoteLink), nil, authConfig.Middleware...); err != nil {
+			sdk.LogError(logger, "error creating remote link on create mutation", "err", getJiraErrorMessage(err))
+		}
 	}
 	return nil
 }
