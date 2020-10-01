@@ -193,14 +193,15 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			if err != nil {
 				return nil, err
 			}
+			entityID := state.authConfig.APIURL
 			if state.config.Exclusions != nil {
-				if state.config.Exclusions.Matches("jira", p.Name) || state.config.Exclusions.Matches("jira", p.Key) || state.config.Exclusions.Matches("jira", p.ID) {
+				if state.config.Exclusions.Matches(entityID, p.Name) || state.config.Exclusions.Matches(entityID, p.Key) || state.config.Exclusions.Matches(entityID, p.ID) {
 					sdk.LogInfo(state.logger, "marking excluded project inactive: "+p.Name, "id", p.ID, "key", p.Key)
 					project.Active = false
 				}
 			}
 			if state.config.Inclusions != nil {
-				if !state.config.Inclusions.Matches("jira", p.Name) && !state.config.Inclusions.Matches("jira", p.Key) && !state.config.Inclusions.Matches("jira", p.ID) {
+				if !state.config.Inclusions.Matches(entityID, p.Name) && !state.config.Inclusions.Matches(entityID, p.Key) && !state.config.Inclusions.Matches(entityID, p.ID) {
 					sdk.LogInfo(state.logger, "marking not included project inactive: "+p.Name, "id", p.ID, "key", p.Key)
 					project.Active = false
 				}

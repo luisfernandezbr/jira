@@ -674,6 +674,25 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	createMutation.Fields["summary"] = event.Title
 	createMutation.Fields["issuetype"] = idValue{*event.Type.RefID}
 	createMutation.Fields["project"] = idValue{event.ProjectRefID}
+
+	if event.Description != "" {
+		createMutation.Fields["description"] = adf.Node{
+			Type:    "doc",
+			Version: 1,
+			Content: []adf.Node{
+				{
+					Type: "paragraph",
+					Content: []adf.Node{
+						{
+							Text: event.Description,
+							Type: "text",
+						},
+					},
+				},
+			},
+		}
+	}
+
 	if event.AssigneeRefID != nil {
 		createMutation.Fields["assignee"] = idValue{*event.AssigneeRefID}
 	}
