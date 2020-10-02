@@ -1176,21 +1176,21 @@ type issueMover struct {
 	IssueRefIDs []string `json:"issues"`
 }
 
-func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintUpdateMutation) error {
+func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintUpdateMutation) (*sdk.MutationResponse, error) {
 	refID := mutation.ID()
 	update, hasMutation, err := makeSprintUpdate(refID, event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if hasMutation {
 		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/agile/1.0/sprint/", refID)
 		client := i.httpmanager.New(theurl, nil)
 		buf, err := json.Marshal(update)
 		if err != nil {
-			return fmt.Errorf("error marshaling sprint update: %w", err)
+			return nil, fmt.Errorf("error marshaling sprint update: %w", err)
 		}
 		if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
-			return fmt.Errorf("error updating sprint %s: %w", refID, err)
+			return nil, fmt.Errorf("error updating sprint %s: %w", refID, err)
 		}
 	}
 	if len(event.Set.IssueRefIDs) > 0 {
@@ -1208,13 +1208,16 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("error moving issues: %w", err)
+			return nil, fmt.Errorf("error moving issues: %w", err)
 		}
 	}
 	if len(event.Unset.IssueRefIDs) > 0 {
-		return errors.New("removing issues from sprints is not supported")
+		return nil, errors.New("removing issues from sprints is not supported")
 	}
-	return nil
+	return &sdk.MutationResponse{
+		RefID:    sdk.StringPointer(refID),
+		EntityID: sdk.StringPointer(sdk.NewAgileSprintID(mutation.CustomerID(), refID, refType)),
+	}, nil
 }
 
 type sprintCreate struct {
@@ -1225,22 +1228,22 @@ type sprintCreate struct {
 	Goal          string `json:"goal"`
 }
 
-func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintCreateMutation) error {
+func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.AgileSprintCreateMutation) (*sdk.MutationResponse, error) {
 	if event.Name == "" {
-		return errors.New("sprint name cannot be empty")
+		return nil, errors.New("sprint name cannot be empty")
 	}
 	if len(event.BoardRefIDs) == 0 || len(event.BoardRefIDs) > 1 {
-		return errors.New("exactly one board ref id is required")
+		return nil, errors.New("exactly one board ref id is required")
 	}
 	boardRefID, err := strconv.Atoi(event.BoardRefIDs[0])
 	if err != nil {
-		return fmt.Errorf("unable to convert board ref_id %s to int: %w", event.BoardRefIDs[0], err)
+		return nil, fmt.Errorf("unable to convert board ref_id %s to int: %w", event.BoardRefIDs[0], err)
 	}
 	if event.StartDate.Epoch == 0 || event.EndDate.Epoch == 0 {
-		return errors.New("start date and end date must both be set")
+		return nil, errors.New("start date and end date must both be set")
 	}
 	if len(event.IssueRefIDs) > 0 {
-		return errors.New("adding issues to a new sprint is not supported yet")
+		return nil, errors.New("adding issues to a new sprint is not supported yet")
 	}
 	create := sprintCreate{
 		Name:          event.Name,
@@ -1255,10 +1258,14 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 	client := i.httpmanager.New(theurl, nil)
 	buf, err := json.Marshal(create)
 	if err != nil {
-		return fmt.Errorf("error marshaling sprint update: %w", err)
+		return nil, fmt.Errorf("error marshaling sprint update: %w", err)
 	}
 	if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
-		return fmt.Errorf("error creating sprint: %w", err)
+		return nil, fmt.Errorf("error creating sprint: %w", err)
 	}
-	return nil
+	refID := event.BoardRefIDs[0]
+	return &sdk.MutationResponse{
+		RefID:    &refID,
+		EntityID: sdk.StringPointer(sdk.NewAgileSprintID(mutation.CustomerID(), refID, refType)),
+	}, nil
 }

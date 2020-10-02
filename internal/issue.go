@@ -656,20 +656,20 @@ func setIssueExpand(qs url.Values) {
 	qs.Set("expand", "changelog,fields,comments,transitions")
 }
 
-func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueCreateMutation) error {
+func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueCreateMutation) (*sdk.MutationResponse, error) {
 	createMutation := newMutation()
 	if event.Type == nil {
-		return errors.New("issue type is required")
+		return nil, errors.New("issue type is required")
 	}
 	if event.Type.RefID == nil {
-		return errors.New("issue type ref_id cannot be nil")
+		return nil, errors.New("issue type ref_id cannot be nil")
 	}
 	if event.ProjectRefID == "" {
-		return errors.New("project ref id cannot be empty")
+		return nil, errors.New("project ref id cannot be empty")
 	}
 	reporterRefID := mutation.User().RefID
 	if reporterRefID == "" {
-		return errors.New("no ref_id found for requesting user")
+		return nil, errors.New("no ref_id found for requesting user")
 	}
 	createMutation.Fields["reporter"] = idValue{reporterRefID}
 	createMutation.Fields["summary"] = event.Title
@@ -699,23 +699,23 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	}
 	if event.Priority != nil {
 		if event.Priority.RefID == nil {
-			return errors.New("priority ref id cannot be empty")
+			return nil, errors.New("priority ref id cannot be empty")
 		}
 		createMutation.Fields["priority"] = idValue{*event.Priority.RefID}
 	}
 	if event.Priority != nil {
 		if event.Priority.RefID == nil {
-			return errors.New("priority ref id cannot be empty")
+			return nil, errors.New("priority ref id cannot be empty")
 		}
 		createMutation.Fields["priority"] = idValue{*event.Priority.RefID}
 	}
 	if event.Epic != nil {
 		if event.Epic.Name == nil {
-			return errors.New("epic name cannot be empty")
+			return nil, errors.New("epic name cannot be empty")
 		}
 		epicFieldID, err := i.getEpicFieldID(logger, mutation, authConfig)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		createMutation.Fields[epicFieldID] = event.Epic.Name
 	}
@@ -729,7 +729,8 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	client := i.httpmanager.New(theurl, nil)
 	resp, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...)
 	if err != nil {
-		return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
+		sdk.LogError(logger, "error creating an issue", "err", getJiraErrorMessage(err), "body", string(resp.Body), "customer_id", mutation.CustomerID(), "request", sdk.Stringify(createMutation))
+		return nil, fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 	}
 	var respStruct struct {
 		RefID string `json:"id"`
@@ -761,8 +762,13 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		if _, err := client.Post(sdk.StringifyReader(remoteLink), nil, authConfig.Middleware...); err != nil {
 			sdk.LogError(logger, "error creating remote link on create mutation", "err", getJiraErrorMessage(err))
 		}
+		return &sdk.MutationResponse{
+			RefID:    sdk.StringPointer(respStruct.RefID),
+			EntityID: sdk.StringPointer(issueid),
+			URL:      sdk.StringPointer(issueURL(authConfig.WebsiteURL, respStruct.Key)),
+		}, nil
 	}
-	return nil
+	return nil, fmt.Errorf("unknown error creating issue")
 }
 
 const epicCustomFieldIDCacheKey = "epic_id_custom_field"
@@ -786,7 +792,7 @@ func (i *JiraIntegration) getEpicFieldID(logger sdk.Logger, mutation sdk.Mutatio
 	return epicFieldID, nil
 }
 
-func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueUpdateMutation) error {
+func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueUpdateMutation) (*sdk.MutationResponse, error) {
 	started := time.Now()
 	var hasMutation bool
 	updateMutation := newMutation()
@@ -827,7 +833,7 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if event.Set.Epic != nil || event.Unset.Epic {
 		epicFieldID, err := i.getEpicFieldID(logger, mutation, authConfig)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if event.Unset.Epic {
 			updateMutation.Update[epicFieldID] = []setMutationOperation{
@@ -849,18 +855,18 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue/"+mutation.ID())
 		client := i.httpmanager.New(theurl, nil)
 		if _, err := client.Put(sdk.StringifyReader(updateMutation), nil, authConfig.Middleware...); err != nil {
-			return fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
+			return nil, fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 		}
 	}
 	if event.Set.Transition != nil {
 		if event.Set.Transition.RefID == nil {
-			return fmt.Errorf("error ref_id was nil for transition: %v", event.Set.Transition)
+			return nil, fmt.Errorf("error ref_id was nil for transition: %v", event.Set.Transition)
 		}
 		updateMutation = newMutation()
 		updateMutation.Transition = &idValue{*event.Set.Transition.RefID}
 		if event.Set.Resolution != nil {
 			if event.Set.Resolution.Name == nil {
-				return fmt.Errorf("resolution name property must be set")
+				return nil, fmt.Errorf("resolution name property must be set")
 			}
 			updateMutation.Fields = map[string]interface{}{
 				"resolution": map[string]string{"name": *event.Set.Resolution.Name},
@@ -871,9 +877,12 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		client := i.httpmanager.New(theurl, nil)
 		_, err := client.Post(sdk.StringifyReader(updateMutation), nil, authConfig.Middleware...)
 		if err != nil {
-			return fmt.Errorf("mutation transition failed: %s", getJiraErrorMessage(err))
+			return nil, fmt.Errorf("mutation transition failed: %s", getJiraErrorMessage(err))
 		}
 	}
 	sdk.LogDebug(logger, "completed mutation response", "payload", sdk.Stringify(updateMutation), "duration", time.Since(started))
-	return nil
+	return &sdk.MutationResponse{
+		RefID:    sdk.StringPointer(mutation.ID()),
+		EntityID: sdk.StringPointer(sdk.NewWorkIssueID(mutation.CustomerID(), mutation.ID(), refType)),
+	}, nil
 }
