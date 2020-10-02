@@ -49,9 +49,22 @@ func (h *mockWebHook) CustomerID() string                    { return "1234" }
 func (h *mockWebHook) IntegrationInstanceID() string         { return "1" }
 func (h *mockWebHook) RefType() string                       { return "jira" }
 
+func makeMockAuth(url string) []byte {
+	return []byte(fmt.Sprintf(`{
+		"basic_auth": {
+			"url": "%s",
+			"username": "foo",
+			"password": "bar"
+		}
+	}`, url))
+}
+
 func newMockWebHook(fn string) *mockWebHook {
 	pipe := &sdktest.MockPipe{}
 	config := sdk.Config{}
+	if err := config.Parse(makeMockAuth("http://foo.bar/rest")); err != nil {
+		panic(err)
+	}
 	buf := loadFile(fn)
 	return &mockWebHook{
 		config: config,
@@ -188,6 +201,19 @@ func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 	assert.EqualValues(sdk.WorkIssueChangeLogFieldSprintIds, res[0].Field)
 	assert.EqualValues("b3f7731318b71f15", res[0].To)
 	assert.EqualValues(1596508629814, res[0].CreatedDate.Epoch)
+}
+
+func TestWebhookJiraIssueUpdatedDescription(t *testing.T) {
+	assert := assert.New(t)
+	i := JiraIntegration{
+		logger: sdk.NewNoOpTestLogger(),
+	}
+	webhook := newMockWebHook("testdata/jira:issue_updated.description.json")
+
+	assert.NoError(i.webhookUpdateIssue(webhook))
+	assert.Len(webhook.pipe.Written, 1)
+	update := webhook.pipe.Written[0].(*agent.UpdateData)
+	assert.EqualValues(`<div class="source-jira"><p>Look at this bug in stable on Pinpoint customer:</p><p><a href="https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total">https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total</a></p><p>Compare that to formatting in: <a href="GOLD-367">GOLD-367</a></p><p>Looks like regressed again. 🎉</p></div>`, update.Set["description"])
 }
 
 func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {

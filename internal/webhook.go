@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pinpt/agent/v4/sdk"
+	"github.com/pinpt/confluence"
 )
 
 var webhookEvents = []string{
@@ -225,8 +226,11 @@ func (i *JiraIntegration) webhookUpdateIssue(webhook sdk.WebHook) error {
 			desc := change.ToString
 			if desc != "" {
 				// NOTE: yes, Jira is that insane. If you fetch the issue the format is ADF
-				// but in a webhook callback, the format is Markdown. I mean, why not?
-				desc = sdk.ConvertMarkdownToHTML(desc)
+				// but in a webhook callback, the format is Confluence Wiki Format. I mean, why not?
+				desc, err = confluence.ParseToHTML([]byte(desc))
+				if err != nil {
+					return fmt.Errorf("error parsing issue description: %w", err)
+				}
 			}
 			val.Set.Description = &desc // sdk.StringPointer returns nil if string is empty
 		}

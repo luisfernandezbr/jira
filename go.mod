@@ -8,6 +8,7 @@ require (
 	github.com/mailru/easyjson v0.7.6
 	github.com/pinpt/adf v1.2.1
 	github.com/pinpt/agent/v4 v4.0.2
+	github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95
 	github.com/pinpt/integration-sdk v0.0.1233
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/otel v0.12.0 // indirect
