@@ -1,0 +1,250 @@
+{
+  "timestamp": 1601576496260,
+  "webhookEvent": "jira:issue_updated",
+  "issue_event_type_name": "issue_updated",
+  "user": {
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+    "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+    "avatarUrls": {
+      "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+      "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+    },
+    "displayName": "Robin Diddams",
+    "active": true,
+    "timeZone": "America/Los_Angeles",
+    "accountType": "atlassian"
+  },
+  "issue": {
+    "id": "21644",
+    "self": "https://pinpt-hq.atlassian.net/rest/api/2/21644",
+    "key": "PROD-1142",
+    "fields": {
+      "statuscategorychangedate": "2020-09-30T14:15:10.726-0700",
+      "issuetype": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issuetype/10103",
+        "id": "10103",
+        "description": "A problem which impairs or prevents the functions of the product.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10303
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/project/10609",
+        "id": "10609",
+        "key": "PROD",
+        "name": "Product",
+        "projectTypeKey": "software",
+        "simplified": false,
+        "avatarUrls": {
+          "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10609&avatarId=10979",
+          "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10609&avatarId=10979",
+          "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10609&avatarId=10979",
+          "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10609&avatarId=10979"
+        },
+        "projectCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/projectCategory/10001",
+          "id": "10001",
+          "description": "",
+          "name": "Development"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "resolution": null,
+      "customfield_10510": null,
+      "customfield_10104": null,
+      "customfield_10105": null,
+      "customfield_10501": null,
+      "customfield_10106": null,
+      "customfield_10502": null,
+      "customfield_10107": null,
+      "customfield_10503": null,
+      "customfield_10504": null,
+      "customfield_10108": "0|i01gaf:",
+      "customfield_10505": null,
+      "customfield_10109": null,
+      "customfield_10506": null,
+      "resolutiondate": null,
+      "customfield_10507": null,
+      "customfield_10508": null,
+      "workratio": -1,
+      "customfield_10509": null,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": false
+      },
+      "watches": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/PROD-1142/watchers",
+        "watchCount": 2,
+        "isWatching": false
+      },
+      "lastViewed": "2020-10-01T11:14:33.535-0700",
+      "created": "2020-09-30T14:10:14.584-0700",
+      "customfield_10100": "2020-10-01T06:55:53.513-0700",
+      "priority": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/priority/2",
+        "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+        "name": "High",
+        "id": "2"
+      },
+      "customfield_10101": null,
+      "customfield_10102": null,
+      "customfield_10300": null,
+      "customfield_10103": [],
+      "labels": [],
+      "customfield_10301": null,
+      "aggregatetimeoriginalestimate": null,
+      "timeestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=557058%3A8b6b268b-17b3-407b-8974-bed4042fa709",
+        "accountId": "557058:8b6b268b-17b3-407b-8974-bed4042fa709",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/RD-6.png"
+        },
+        "displayName": "Robin Diddams",
+        "active": true,
+        "timeZone": "America/Los_Angeles",
+        "accountType": "atlassian"
+      },
+      "updated": "2020-10-01T11:21:36.202-0700",
+      "status": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/status/3",
+        "description": "This issue is being actively worked on at the moment by the assignee.",
+        "iconUrl": "https://pinpt-hq.atlassian.net/images/icons/statuses/inprogress.png",
+        "name": "In Progress",
+        "id": "3",
+        "statusCategory": {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/statuscategory/4",
+          "id": 4,
+          "key": "indeterminate",
+          "colorName": "yellow",
+          "name": "In Progress"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": "Look at this bug in stable on Pinpoint customer:\n\n[https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total|https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total]\n\nCompare that to formatting in: [GOLD-367]\n\nLooks like regressed again. 🎉",
+      "customfield_10210": null,
+      "timetracking": {},
+      "customfield_10006": null,
+      "security": null,
+      "customfield_10007": {
+        "hasEpicLinkFieldDependency": false,
+        "showField": false,
+        "nonEditableReason": {
+          "reason": "PLUGIN_LICENSE_ERROR",
+          "message": "The Parent Link is only available to Jira Premium users."
+        }
+      },
+      "attachment": [
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/2/attachment/12470",
+          "id": "12470",
+          "filename": "Screen Shot 2020-09-30 at 5.11.00 PM.png",
+          "author": {
+            "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5de6d79e29c2b10cf4ee47ca",
+            "accountId": "5de6d79e29c2b10cf4ee47ca",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png"
+            },
+            "displayName": "Matthew Tibbit",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2020-09-30T14:11:31.392-0700",
+          "size": 179520,
+          "mimeType": "image/png",
+          "content": "https://pinpt-hq.atlassian.net/secure/attachment/12470/Screen+Shot+2020-09-30+at+5.11.00+PM.png",
+          "thumbnail": "https://pinpt-hq.atlassian.net/secure/thumbnail/12470/Screen+Shot+2020-09-30+at+5.11.00+PM.png"
+        }
+      ],
+      "aggregatetimeestimate": null,
+      "customfield_10208": null,
+      "customfield_10209": null,
+      "summary": "Issue description not formatting correctly",
+      "creator": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5de6d79e29c2b10cf4ee47ca",
+        "accountId": "5de6d79e29c2b10cf4ee47ca",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png"
+        },
+        "displayName": "Matthew Tibbit",
+        "active": true,
+        "timeZone": "America/New_York",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/user?accountId=5de6d79e29c2b10cf4ee47ca",
+        "accountId": "5de6d79e29c2b10cf4ee47ca",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/MT-6.png"
+        },
+        "displayName": "Matthew Tibbit",
+        "active": true,
+        "timeZone": "America/New_York",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10000": "{pullrequest={dataType=pullrequest, state=MERGED, stateCount=1}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":1,\"lastUpdated\":\"2020-09-30T15:34:44.000-0700\",\"stateCount\":1,\"state\":\"MERGED\",\"dataType\":\"pullrequest\",\"open\":false},\"byInstanceType\":{\"GitHub\":{\"count\":1,\"name\":\"GitHub\"}}}}},\"isStale\":true}}",
+      "customfield_10001": null,
+      "customfield_10002": null,
+      "customfield_10520": null,
+      "customfield_10400": null,
+      "customfield_10511": null,
+      "customfield_10512": null,
+      "customfield_10513": null,
+      "environment": null,
+      "customfield_10514": null,
+      "duedate": null,
+      "customfield_10517": null,
+      "customfield_10518": null,
+      "customfield_10519": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://pinpt-hq.atlassian.net/rest/api/2/issue/PROD-1142/votes",
+        "votes": 0,
+        "hasVoted": false
+      }
+    }
+  },
+  "changelog": {
+    "id": "109005",
+    "items": [
+      {
+        "field": "description",
+        "fieldtype": "jira",
+        "fieldId": "description",
+        "from": "{\"id\":\"ari:cloud:jira:1f1c69f7-36aa-4b09-8cd6-3db4c615e1ab:issuefieldvalue/21644/description\",\"version\":\"1\"}",
+        "fromString": "Look at this bug in stable on Pinpoint customer:\r\n\r\nhttps://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total\r\n\r\nCompare that to formatting in: GOLD-367\r\n\r\nLooks like regressed again.",
+        "to": "{\"id\":\"ari:cloud:jira:1f1c69f7-36aa-4b09-8cd6-3db4c615e1ab:issuefieldvalue/21644/description\",\"version\":\"2\"}",
+        "toString": "Look at this bug in stable on Pinpoint customer:\n\n[https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total|https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total]\n\nCompare that to formatting in: [GOLD-367]\n\nLooks like regressed again. 🎉"
+      }
+    ]
+  }
+}
