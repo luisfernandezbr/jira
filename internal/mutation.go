@@ -75,5 +75,5 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) (*sdk.MutationResponse
 		return i.createSprint(logger, mutation, authConfig, v)
 	}
 	sdk.LogInfo(logger, "unhandled mutation request", "type", reflect.TypeOf(mutation.Payload()))
-	return &sdk.MutationResponse{}, nil
+	return nil, nil
 }
