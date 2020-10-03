@@ -11,7 +11,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pinpt/agent/v4/sdk"
@@ -595,7 +594,10 @@ func getSprintStateKey(id int) string {
 	return fmt.Sprintf("sprint_%d", id)
 }
 
-// TODO(robin): port this to be part of agileAPI
+func getSprintDataStateKey(id int) string {
+	return fmt.Sprintf("sprint_data_%d", id)
+}
+
 func (a *agileAPI) fetchSprints(state sdk.State, boardID int, projectKey string, projectID string, historical bool) ([]int, error) {
 	theurl := sdk.JoinURL(a.authConfig.APIURL, fmt.Sprintf("/rest/agile/1.0/board/%d/sprint", boardID))
 	client := a.httpmanager.New(theurl, nil)
@@ -855,18 +857,6 @@ func (m *sprintManager) exportBoards(state *state) error {
 		return left.ID > right.ID
 	})
 
-	var lock sync.Mutex
-	sprintids := make(map[int]bool)
-	cb := func(sid int) bool {
-		lock.Lock()
-		f := sprintids[sid]
-		if !f {
-			sprintids[sid] = true
-		}
-		lock.Unlock()
-		return f
-	}
-
 	var boardsExported []string
 
 	for _, _board := range boards {
@@ -883,7 +873,7 @@ func (m *sprintManager) exportBoards(state *state) error {
 		boardsExported = append(boardsExported, strconv.Itoa(board.ID))
 
 		m.async.Do(func() error {
-			return exportBoard(api, state.export.State(), state.pipe, customerID, state.integrationInstanceID, cb, board, state.historical)
+			return exportBoard(api, state.export.State(), state.pipe, customerID, state.integrationInstanceID, board, state.historical)
 		})
 	}
 	if len(boardsExported) > 0 {
@@ -895,9 +885,7 @@ func (m *sprintManager) exportBoards(state *state) error {
 	return nil
 }
 
-type exportedCheck func(sprintID int) bool
-
-func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID string, integrationInstanceID string, sprintExportedAlready exportedCheck, board boardDetail, historical bool) error {
+func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID string, integrationInstanceID string, board boardDetail, historical bool) error {
 	// fetch the board config to get the columns
 	columns, err := api.fetchBoardConfig(board.ID)
 	if err != nil {
@@ -913,7 +901,6 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 	theboard.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 	theboard.Name = board.Name
 
-	// build the kanban columnss
 	isScrum := board.Type == "scrum"
 	cols, backlogIndex, hasBacklogColumn, fetchBacklog, statusmapping, filteredcolumns := buildKanbanColumns(columns, isScrum)
 	theboard.Columns = cols
@@ -946,10 +933,10 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 			return fmt.Errorf("error fetching sprints for board id %d. %w", board.ID, err)
 		}
 		for _, sid := range sids {
-
-			if sprintExportedAlready(sid) {
-				// already processed it since we have same sprint pointing at other boards
-				continue
+			var existingSprint sdk.AgileSprint
+			sprintFound, err := state.Get(getSprintDataStateKey(sid), &existingSprint)
+			if err != nil {
+				return fmt.Errorf("error fetching sprint %v from state: %w", sid, err)
 			}
 			sprint, err := api.fetchSprint(sid, theboard.ID, board.ProjectKey, statusmapping, filteredcolumns)
 			if err != nil {
@@ -963,8 +950,18 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 					return fmt.Errorf("error saving project board: %w", err)
 				}
 			}
+			if sprintFound {
+				// already processed it since we have same sprint pointing at other boards
+				// so in the case we're going to make sure our board is updated with the other board id
+				boardids := existingSprint.BoardIds
+				boardids = appendUnique(boardids, sprint.BoardIds...)
+				sprint.BoardIds = boardids
+			}
 			if err := state.Set(getSprintStateKey(sid), sdk.EpochNow()); err != nil {
 				return fmt.Errorf("error writing sprint key to state: %w", err)
+			}
+			if err := state.Set(getSprintDataStateKey(sid), sprint); err != nil {
+				return fmt.Errorf("error writing sprint data key to state: %w", err)
 			}
 			if err := pipe.Write(sprint); err != nil {
 				return fmt.Errorf("error writing sprint to pipe: %w", err)
@@ -1057,7 +1054,7 @@ func fetchAndExportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customer
 	if board == nil {
 		return fmt.Errorf("no such board: %s", boardRefID)
 	}
-	return exportBoard(api, state, pipe, customerID, integrationInstanceID, func(_ int) bool { return false }, *board, false)
+	return exportBoard(api, state, pipe, customerID, integrationInstanceID, *board, false)
 }
 
 func (m *sprintManager) blockForFetchBoards(logger sdk.Logger) error {
