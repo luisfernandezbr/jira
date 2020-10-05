@@ -1187,7 +1187,7 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 			return nil, fmt.Errorf("error marshaling sprint update: %w", err)
 		}
 		if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
-			return nil, fmt.Errorf("error updating sprint %s: %w", refID, err)
+			return nil, fmt.Errorf("error updating sprint %s: %s", refID, getJiraErrorMessage(err))
 		}
 	}
 	if len(event.Set.IssueRefIDs) > 0 {
@@ -1200,7 +1200,7 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 				return fmt.Errorf("error marshaling sprint issue mover: %w", err)
 			}
 			if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
-				return fmt.Errorf("error updating sprint (%s) issues: %w", refID, err)
+				return fmt.Errorf("error updating sprint (%s) issues: %s", refID, getJiraErrorMessage(err))
 			}
 			return nil
 		})
@@ -1258,7 +1258,7 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 		return nil, fmt.Errorf("error marshaling sprint update: %w", err)
 	}
 	if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
-		return nil, fmt.Errorf("error creating sprint: %w", err)
+		return nil, fmt.Errorf("error creating sprint: %s", getJiraErrorMessage(err))
 	}
 	refID := event.BoardRefIDs[0]
 	return &sdk.MutationResponse{

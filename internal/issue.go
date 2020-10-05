@@ -202,7 +202,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	issue.RefID = i.ID
 	issue.RefType = refType
 	issue.Identifier = i.Key
-	issue.ProjectID = sdk.NewWorkProjectID(customerID, fields.Project.ID, refType)
+	issue.ProjectID = sdk.StringPointer(sdk.NewWorkProjectID(customerID, fields.Project.ID, refType))
 	issue.ID = sdk.NewWorkIssueID(customerID, i.ID, refType)
 	issue.IntegrationInstanceID = sdk.StringPointer(integrationInstanceID)
 
@@ -228,7 +228,7 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 	comments := make([]*sdk.WorkIssueComment, 0)
 
 	for _, comment := range fields.Comment.Comments {
-		thecomment, err := comment.ToModel(customerID, integrationInstanceID, websiteURL, userManager, issue.ProjectID, issue.ID, i.Key)
+		thecomment, err := comment.ToModel(customerID, integrationInstanceID, websiteURL, userManager, *issue.ProjectID, issue.ID, i.Key)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could create issue comment for jira issue: %v err: %v", i.Key, err)
 		}
@@ -671,7 +671,7 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if reporterRefID == "" {
 		return nil, errors.New("no ref_id found for requesting user")
 	}
-	createMutation.Fields["reporter"] = idValue{reporterRefID}
+	// createMutation.Fields["reporter"] = idValue{reporterRefID}
 	createMutation.Fields["summary"] = event.Title
 	createMutation.Fields["issuetype"] = idValue{*event.Type.RefID}
 	createMutation.Fields["project"] = idValue{event.ProjectRefID}

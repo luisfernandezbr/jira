@@ -189,14 +189,23 @@ type state struct {
 	integrationInstanceID string
 }
 
+type jiraErrResp struct {
+	ErrorMessages []string          `json:"errorMessages"`
+	Errors        map[string]string `json:"errors"`
+}
+
 func getJiraErrorMessage(err error) string {
 	if ok, _, r := sdk.IsHTTPError(err); ok {
-		var errResp struct {
-			ErrorMessages []string `json:"errorMessages"`
-		}
+		var errResp jiraErrResp
 		json.NewDecoder(r).Decode(&errResp)
 		if len(errResp.ErrorMessages) > 0 {
 			return errResp.ErrorMessages[0]
+		}
+		if len(errResp.Errors) > 0 {
+			for k, v := range errResp.Errors {
+				// return the first one
+				return fmt.Sprintf("%s: %s", k, v)
+			}
 		}
 	}
 	return err.Error()
