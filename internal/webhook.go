@@ -344,7 +344,7 @@ func (i *JiraIntegration) webhookCreateIssue(logger sdk.Logger, webhook sdk.WebH
 		ts := time.Now()
 		sdk.LogDebug(logger, "updating board for issue", "issue", issue.ID)
 		api := newAgileAPI(logger, state.authConfig, webhook.CustomerID(), webhook.IntegrationInstanceID(), i.httpmanager)
-		if err := updateIssueBoards(webhook.State(), pipe, api, webhook.CustomerID(), webhook.IntegrationInstanceID(), issue.Identifier, issue.ProjectID); err != nil {
+		if err := updateIssueBoards(webhook.State(), pipe, api, webhook.CustomerID(), webhook.IntegrationInstanceID(), issue.Identifier, *issue.ProjectID); err != nil {
 			return fmt.Errorf("error re-exporting board: %w", err)
 		}
 		sdk.LogDebug(logger, "done processing boards for issue", "issue", issue.ID, "duration", time.Since(ts))

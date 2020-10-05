@@ -329,6 +329,8 @@ github.com/pinpt/adf v1.2.1 h1:AI/siyFtTn0bP+QMYoMRLNM6wHtc5BQAF5muYTMJnc8=
 github.com/pinpt/adf v1.2.1/go.mod h1:KUu5fYDXAQjSR/ZNqyLUQHVbMulfe21CCACOH4oXwLE=
 github.com/pinpt/agent/v4 v4.0.4 h1:mDrUDhrqxbJ7tdLH18+6RvU/aM+LTW5p2+E3zvJHI5U=
 github.com/pinpt/agent/v4 v4.0.4/go.mod h1:fBqOPeLNMw3soESSc5x+GhJ2FC/2NXnVS92Cf7cEUjo=
+github.com/pinpt/agent/v4 v4.0.6 h1:oB982G2Pg8NWmPSP4Lh374E0DPxu4pvQJdE2weyrafE=
+github.com/pinpt/agent/v4 v4.0.6/go.mod h1:hi/8XL8eJSCfUpEpLlzOmBtW+4HvnlWEQiunaYB3aNs=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95 h1:Eo5GC829sI+VCBpkHtko3L+b094t94nEK4liSmVZmr0=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95/go.mod h1:vEZ93LbfGGT/02pZdVLcOu8vWUeaeaWzj8JeXrckE2E=
 github.com/pinpt/go-common/v10 v10.0.17 h1:434frXTXGxb/lFrotRL61Y+jpCR+EOtDR67cigyX+Fo=
@@ -341,6 +343,8 @@ github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648 h1:hkfjX+KJmcSLpF
 github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
 github.com/pinpt/integration-sdk v0.0.1233 h1:AE5ab5lGjmQdldli0pz74Ph0Te0wuXInSBtxvn5ycLI=
 github.com/pinpt/integration-sdk v0.0.1233/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
+github.com/pinpt/integration-sdk v0.0.1235 h1:IXuStl7eKxYkjwS6GgeJQM6pTnMmbP6O7hq/C0/ZtDQ=
+github.com/pinpt/integration-sdk v0.0.1235/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 h1:49lOXmGaUpV9Fz3gd7TFZY106KVlPVa5jcYD1gaQf98=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
