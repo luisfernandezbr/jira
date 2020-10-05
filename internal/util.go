@@ -197,7 +197,9 @@ type jiraErrResp struct {
 func getJiraErrorMessage(err error) string {
 	if ok, _, r := sdk.IsHTTPError(err); ok {
 		var errResp jiraErrResp
-		json.NewDecoder(r).Decode(&errResp)
+		if derr := json.NewDecoder(r).Decode(&errResp); derr != nil {
+			return fmt.Sprintf("cannot decode jira error(%s): %s", derr.Error(), err.Error())
+		}
 		if len(errResp.ErrorMessages) > 0 {
 			return errResp.ErrorMessages[0]
 		}
