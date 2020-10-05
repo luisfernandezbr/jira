@@ -671,7 +671,6 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if reporterRefID == "" {
 		return nil, errors.New("no ref_id found for requesting user")
 	}
-	// createMutation.Fields["reporter"] = idValue{reporterRefID}
 	createMutation.Fields["summary"] = event.Title
 	createMutation.Fields["issuetype"] = idValue{*event.Type.RefID}
 	createMutation.Fields["project"] = idValue{event.ProjectRefID}
