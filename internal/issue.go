@@ -728,7 +728,7 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	client := i.httpmanager.New(theurl, nil)
 	resp, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...)
 	if err != nil {
-		sdk.LogError(logger, "error creating an issue", "body", string(resp.Body), "customer_id", mutation.CustomerID(), "request", sdk.Stringify(createMutation))
+		sdk.LogError(logger, "error creating an issue", "err", err, "body", string(resp.Body), "customer_id", mutation.CustomerID(), "request", sdk.Stringify(createMutation))
 		return nil, fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 	}
 	var respStruct struct {
