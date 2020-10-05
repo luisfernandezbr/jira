@@ -1257,10 +1257,15 @@ func (i *JiraIntegration) createSprint(logger sdk.Logger, mutation sdk.Mutation,
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling sprint update: %w", err)
 	}
-	if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
+	var sResp sprint
+	resp, err := client.Post(bytes.NewBuffer(buf), &sResp, authConfig.Middleware...)
+	if err != nil {
 		return nil, fmt.Errorf("error creating sprint: %s", getJiraErrorMessage(err))
 	}
-	refID := event.BoardRefIDs[0]
+	if sResp.ID == 0 {
+		return nil, fmt.Errorf("error returned sprint id was 0, body: %s", string(resp.Body))
+	}
+	refID := strconv.Itoa(sResp.ID)
 	return &sdk.MutationResponse{
 		RefID:    &refID,
 		EntityID: sdk.StringPointer(sdk.NewAgileSprintID(mutation.CustomerID(), refID, refType)),
