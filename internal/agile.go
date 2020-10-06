@@ -1209,7 +1209,21 @@ func (i *JiraIntegration) updateSprint(logger sdk.Logger, mutation sdk.Mutation,
 		}
 	}
 	if len(event.Unset.IssueRefIDs) > 0 {
-		return nil, errors.New("removing issues from sprints is not supported")
+		theurl := sdk.JoinURL(authConfig.APIURL, "/rest/agile/1.0/backlog/issue")
+		client := i.httpmanager.New(theurl, nil)
+		err := chunkArray(event.Unset.IssueRefIDs, 50, func(issueRefIDs []string) error {
+			buf, err := json.Marshal(issueMover{IssueRefIDs: issueRefIDs})
+			if err != nil {
+				return fmt.Errorf("error marshaling sprint issue mover: %w", err)
+			}
+			if _, err := client.Post(bytes.NewBuffer(buf), nil, authConfig.Middleware...); err != nil {
+				return fmt.Errorf("error moving issues [%s] to backlog: %s", strings.Join(issueRefIDs, ","), getJiraErrorMessage(err))
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error moving issues to backlog: %w", err)
+		}
 	}
 	return &sdk.MutationResponse{
 		RefID:    sdk.StringPointer(refID),
