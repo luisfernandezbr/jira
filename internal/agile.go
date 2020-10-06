@@ -480,7 +480,8 @@ func findBoardsForIssue(state sdk.State, api *agileAPI, issueKey string, ignore 
 func searchBoardsForissue(api *agileAPI, boardRefIDs []string, issueKey string) ([]string, error) {
 	pool := sdk.NewAsync(4)
 	foundBoards := make(chan string, len(boardRefIDs))
-	for _, boardID := range boardRefIDs {
+	for _, _boardID := range boardRefIDs {
+		boardID := _boardID
 		pool.Do(func() error {
 			onBoard, err := api.issueIsOnBoard(boardID, issueKey)
 			if err != nil {
