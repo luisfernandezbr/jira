@@ -168,6 +168,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 		}
 		sdk.LogDebug(state.logger, "fetched projects", "len", len(resp.Projects), "total", resp.Total, "count", count, "first", resp.Projects[0].Key, "last", resp.Projects[len(resp.Projects)-1].Key, "duration", time.Since(ts))
 		for _, p := range resp.Projects {
+			count++
 			if p.ProjectTypeKey != "software" {
 				sdk.LogInfo(state.logger, "skipping project which isn't a software type", "key", p.Key)
 				continue
@@ -184,7 +185,6 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 					sdk.LogDebug(state.logger, fmt.Sprintf("project %s (%s) total issues=%d, last issue time=%v", p.Key, p.ID, p.Insight.TotalIssueCount, p.Insight.LastIssueUpdateTime))
 				}
 			}
-			count++
 			issueTypes, err := i.fetchIssueTypesForProject(state, p.ID)
 			if err != nil {
 				return nil, err
