@@ -31,7 +31,10 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 	return project, nil
 }
 
-const projectCapabilityStateKeyPrefix = "project_capability_"
+const (
+	projectCapabilityStateKeyPrefixLegacy = "project_capability_"
+	projectCapabilityStateKeyPrefix       = "project_capability2_"
+)
 
 // its a float so that we can insert stuff betwen ints
 var builtInFieldOrder = map[string]float32{
@@ -200,10 +203,16 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 	return mutFields, nil
 }
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, createMeta projectIssueCreateMeta, project *sdk.WorkProject, historical bool) (*sdk.WorkProjectCapability, error) {
+func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
+	// Delete old project capability state
+	state.Delete(projectCapabilityStateKeyPrefixLegacy + project.ID)
 	if !historical && state.Exists(key) {
 		return nil, nil
+	}
+	createMeta, err := getCreateMeta()
+	if err != nil {
+		return nil, err
 	}
 	var capability sdk.WorkProjectCapability
 	capability.CustomerID = project.CustomerID
@@ -228,7 +237,6 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 	capability.Resolutions = true
 	capability.Sprints = true
 	capability.StoryPoints = true
-	var err error
 	capability.IssueMutationFields, err = createMutationFields(createMeta)
 	if err != nil {
 		return nil, err

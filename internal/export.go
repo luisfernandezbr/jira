@@ -131,10 +131,13 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, control sdk.Contr
 	return customfields, nil
 }
 
-func (i *JiraIntegration) fetchIssueCreateMeta(state *state) ([]projectIssueCreateMeta, error) {
+func (i *JiraIntegration) fetchIssueCreateMeta(state *state, projectIDs []string) ([]projectIssueCreateMeta, error) {
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/createmeta")
 	client := i.httpmanager.New(theurl, nil)
 	queryParams := make(url.Values)
+	if len(projectIDs) > 0 {
+		queryParams.Set("projectIds", strings.Join(projectIDs, ","))
+	}
 	queryParams.Set("expand", "projects.issuetypes.fields")
 	var resp issueCreateMeta
 	r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
@@ -150,14 +153,6 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 	resolutions, err := i.fetchIssueResolutions(state)
 	if err != nil {
 		return nil, err
-	}
-	createMeta, err := i.fetchIssueCreateMeta(state)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching create meta: %w", err)
-	}
-	createMetaMap := make(map[string]projectIssueCreateMeta)
-	for _, meta := range createMeta {
-		createMetaMap[meta.ID] = meta
 	}
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
@@ -228,11 +223,18 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 				}
 			}
 			if project.Active {
-				meta, ok := createMetaMap[p.ID]
-				if !ok {
-					sdk.LogWarn(state.logger, "no create meta found for project....", "project_id", p.ID)
+				// do this out here so we dont need the state in createProjectCapability
+				getCreateMeta := func() (projectIssueCreateMeta, error) {
+					meta, err := i.fetchIssueCreateMeta(state, []string{project.RefID})
+					if err != nil {
+						return projectIssueCreateMeta{}, err
+					}
+					if len(meta) == 0 {
+						return projectIssueCreateMeta{}, fmt.Errorf("no create meta found for project %s", project.RefID)
+					}
+					return meta[0], nil
 				}
-				capability, err := i.createProjectCapability(state.export.State(), p, meta, project, state.historical)
+				capability, err := i.createProjectCapability(state.export.State(), p, project, getCreateMeta, state.historical)
 				if err != nil {
 					return nil, err
 				}
