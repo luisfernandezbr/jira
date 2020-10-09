@@ -667,8 +667,7 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if event.ProjectRefID == "" {
 		return nil, errors.New("project ref id cannot be empty")
 	}
-	reporterRefID := mutation.User().RefID
-	if reporterRefID == "" {
+	if mutation.User().RefID == "" {
 		return nil, errors.New("no ref_id found for requesting user")
 	}
 	createMutation.Fields["summary"] = event.Title

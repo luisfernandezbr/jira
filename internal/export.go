@@ -131,12 +131,33 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, control sdk.Contr
 	return customfields, nil
 }
 
+func (i *JiraIntegration) fetchIssueCreateMeta(state *state) ([]projectIssueCreateMeta, error) {
+	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/issue/createmeta")
+	client := i.httpmanager.New(theurl, nil)
+	queryParams := make(url.Values)
+	queryParams.Set("expand", "projects.issuetypes.fields")
+	var resp issueCreateMeta
+	r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
+	if err := i.checkForRateLimit(state.export, state.export.CustomerID(), err, r.Headers); err != nil {
+		return nil, err
+	}
+	return resp.Projects, nil
+}
+
 const savedPreviousProjectsStateKey = "previous_projects"
 
 func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error) {
 	resolutions, err := i.fetchIssueResolutions(state)
 	if err != nil {
 		return nil, err
+	}
+	createMeta, err := i.fetchIssueCreateMeta(state)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching create meta: %w", err)
+	}
+	createMetaMap := make(map[string]projectIssueCreateMeta)
+	for _, meta := range createMeta {
+		createMetaMap[meta.ID] = meta
 	}
 	theurl := sdk.JoinURL(state.authConfig.APIURL, "/rest/api/3/project/search")
 	client := i.httpmanager.New(theurl, nil)
@@ -207,7 +228,11 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 				}
 			}
 			if project.Active {
-				capability, err := i.createProjectCapability(state.export.State(), p, project, state.historical)
+				meta, ok := createMetaMap[p.ID]
+				if !ok {
+					sdk.LogWarn(state.logger, "no create meta found for project....", "project_id", p.ID)
+				}
+				capability, err := i.createProjectCapability(state.export.State(), p, meta, project, state.historical)
 				if err != nil {
 					return nil, err
 				}
