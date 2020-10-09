@@ -174,13 +174,14 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 					// new non-builtin field
 					if field.Required {
 						fieldType, ok := convertSchemaType(field.Schema.Type)
-						if ok {
-							existingFields[newField.RefID] = &sdk.WorkProjectCapabilityIssueMutationFields{
-								RequiredByTypes: []string{typeRefID},
-								Name:            field.Name,
-								RefID:           field.Key,
-								Type:            fieldType,
-							}
+						if !ok {
+							return nil, fmt.Errorf("unexpected required field %s of type %s", field.Name, field.Schema.Type)
+						}
+						existingFields[newField.RefID] = &sdk.WorkProjectCapabilityIssueMutationFields{
+							RequiredByTypes: []string{typeRefID},
+							Name:            field.Name,
+							RefID:           field.Key,
+							Type:            fieldType,
 						}
 					}
 					// ignore non required fields
