@@ -195,7 +195,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			}
 			entityID := state.authConfig.APIURL
 			if state.config.Exclusions != nil {
-				if state.config.Exclusions.Matches(entityID, p.Name) || state.config.Exclusions.Matches(entityID, p.Key) || state.config.Exclusions.Matches(entityID, p.ID) {
+				if state.config.Exclusions.Matches(entityID, p.Key) {
 					sdk.LogInfo(state.logger, "marking excluded project inactive: "+p.Name, "id", p.ID, "key", p.Key)
 					project.Active = false
 				}
