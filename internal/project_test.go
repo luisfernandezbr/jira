@@ -70,7 +70,7 @@ func TestCreateThing(t *testing.T) {
 	assert.NoError(json.Unmarshal(buf, &resp))
 	fields, err := createMutationFields(resp.Projects[0])
 	assert.NoError(err)
-	assert.Len(fields, 6)
+	assert.Len(fields, 8)
 	var i int
 	assert.Equal("issuetype", fields[i].RefID)
 	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssueType, fields[i].Type)
@@ -85,16 +85,40 @@ func TestCreateThing(t *testing.T) {
 	assert.Equal("description", fields[i].RefID)
 	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, fields[i].Type)
 	assert.Len(fields[i].RequiredByTypes, 0)
+	assert.Len(fields[i].AvailableForTypes, 7)
 	assert.False(fields[i].AlwaysRequired)
 	i++
 	assert.Equal("priority", fields[i].RefID)
 	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssuePriority, fields[i].Type)
 	assert.Len(fields[i].RequiredByTypes, 0)
+	assert.Len(fields[i].AvailableForTypes, 7)
 	assert.False(fields[i].AlwaysRequired)
 	i++
 	assert.Equal("assignee", fields[i].RefID)
 	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeUser, fields[i].Type)
 	assert.Len(fields[i].RequiredByTypes, 0)
+	assert.Len(fields[i].AvailableForTypes, 7)
+	assert.False(fields[i].AlwaysRequired)
+	i++
+	assert.Equal("parent", fields[i].RefID)
+	assert.Equal("Parent", fields[i].Name)
+	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssue, fields[i].Type)
+	assert.Len(fields[i].RequiredByTypes, 1)
+	assert.Equal([]string{"10102"}, fields[i].RequiredByTypes)
+	assert.Len(fields[i].AvailableForTypes, 1)
+	assert.Equal("10102", fields[i].AvailableForTypes[0])
+	assert.False(fields[i].AlwaysRequired)
+	i++
+	assert.True("Epic Name" == fields[i].Name || "Epic Link" == fields[i].Name)
+	if "Epic Name" == fields[i].Name {
+		s := mutationFieldsSortable(fields)
+		s.Swap(i, i+1)
+	}
+	assert.Equal("customfield_10006", fields[i].RefID)
+	assert.Equal("Epic Link", fields[i].Name)
+	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeEpic, fields[i].Type)
+	assert.Len(fields[i].RequiredByTypes, 0)
+	assert.Len(fields[i].AvailableForTypes, 7)
 	assert.False(fields[i].AlwaysRequired)
 	i++
 	assert.Equal("customfield_10003", fields[i].RefID)
@@ -102,6 +126,8 @@ func TestCreateThing(t *testing.T) {
 	assert.Equal(sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, fields[i].Type)
 	assert.Len(fields[i].RequiredByTypes, 1)
 	assert.Equal([]string{"10000"}, fields[i].RequiredByTypes)
+	assert.Len(fields[i].AvailableForTypes, 1)
+	assert.Equal("10000", fields[i].AvailableForTypes[0])
 	assert.False(fields[i].AlwaysRequired)
 
 }
