@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/pinpt/adf v1.2.1
 	github.com/pinpt/agent/v4 v4.0.16
-	github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95
+	github.com/pinpt/confluence v0.0.0-20201016182709-789d054e4ea9
 	github.com/pinpt/integration-sdk v0.0.1243
 	github.com/spf13/cobra v1.1.0 // indirect
 	github.com/stretchr/testify v1.6.1
