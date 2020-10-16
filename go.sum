@@ -376,6 +376,8 @@ github.com/pinpt/agent/v4 v4.0.16 h1:w3Qce7AFfLWaS+M7/amU6hm9xvL3F9B8ptD1Qrr5yzE
 github.com/pinpt/agent/v4 v4.0.16/go.mod h1:rLf4mvR1YQWM0RNWsr8b2t1ALfpe13v8JiNzpPue3pY=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95 h1:Eo5GC829sI+VCBpkHtko3L+b094t94nEK4liSmVZmr0=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95/go.mod h1:vEZ93LbfGGT/02pZdVLcOu8vWUeaeaWzj8JeXrckE2E=
+github.com/pinpt/confluence v0.0.0-20201016182709-789d054e4ea9 h1:tMoblda38xArP5C5IwhNUlIug/i57QpNS4paJuVwzC8=
+github.com/pinpt/confluence v0.0.0-20201016182709-789d054e4ea9/go.mod h1:vEZ93LbfGGT/02pZdVLcOu8vWUeaeaWzj8JeXrckE2E=
 github.com/pinpt/go-common/v10 v10.0.17 h1:434frXTXGxb/lFrotRL61Y+jpCR+EOtDR67cigyX+Fo=
 github.com/pinpt/go-common/v10 v10.0.17/go.mod h1:uRe9KzBE26kjqD+2UgreBQqesesXyBUEIjBT2NEK3kk=
 github.com/pinpt/go-common/v10 v10.0.26 h1:JiVRMYhPwbTLuHqk9nnps95U5eyap7oW0PqEBtz0W84=
