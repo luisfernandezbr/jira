@@ -806,22 +806,24 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		}
 		hasMutation = true
 	}
+	setAssignee := func(to *string) {
+		updateMutation.Update["assignee"] = []setMutationOperation{
+			{
+				Set: userValue{AccountID: to},
+			},
+		}
+	}
 	if event.Set.AssigneeRefID != nil {
 		assigneeRefID := *event.Set.AssigneeRefID
 		if assigneeRefID == "" {
 			// null value means unassigned
-			updateMutation.Update["assignee"] = []setMutationOperation{
-				{
-					Set: userValue{AccountID: nil},
-				},
-			}
+			setAssignee(nil)
 		} else {
-			updateMutation.Update["assignee"] = []setMutationOperation{
-				{
-					Set: userValue{AccountID: &assigneeRefID},
-				},
-			}
+			setAssignee(&assigneeRefID)
 		}
+		hasMutation = true
+	} else if event.Unset.Assignee {
+		setAssignee(nil)
 		hasMutation = true
 	}
 	if event.Set.Epic != nil || event.Unset.Epic {
