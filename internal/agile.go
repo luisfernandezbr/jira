@@ -963,8 +963,8 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 				sprint.BoardIds = boardids
 			}
 			// only cache it if its closed, so open and future sprints always get exported
+			state.Delete(getSprintStateKeyLegacy(sid)) // clean up old key
 			if sprint.Status == sdk.AgileSprintStatusClosed {
-				state.Delete(getSprintStateKeyLegacy(sid)) // clean up old key
 				if err := state.Set(getSprintStateKey(sid), sdk.EpochNow()); err != nil {
 					return fmt.Errorf("error writing sprint key to state: %w", err)
 				}
