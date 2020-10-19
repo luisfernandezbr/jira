@@ -591,6 +591,7 @@ func (a *agileAPI) fetchSprint(sprintID int, boardID string, boardProjectKey str
 	return &sprint, nil
 }
 
+//  used to know if we should skip reading a sprint
 func getSprintStateKey(id int) string {
 	return fmt.Sprintf("sprint_%d", id)
 }
@@ -631,11 +632,9 @@ func (a *agileAPI) fetchSprints(state sdk.State, boardID int, projectKey string,
 			return nil, fmt.Errorf("error fetching agile sprints: %w", err)
 		}
 		for _, s := range resp.Values {
-			if s.State == "closed" && !historical {
-				if state.Exists(getSprintStateKey(s.ID)) {
-					sdk.LogDebug(a.logger, "skipping sprint since we've already processed it", "id", s.ID)
-					continue
-				}
+			if state.Exists(getSprintStateKey(s.ID)) && !historical {
+				sdk.LogDebug(a.logger, "skipping sprint since we've already processed it", "id", s.ID)
+				continue
 			}
 			if s.State == "closed" {
 				oldids = append(oldids, s.ID)
@@ -958,8 +957,11 @@ func exportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customerID strin
 				boardids = appendUnique(boardids, sprint.BoardIds...)
 				sprint.BoardIds = boardids
 			}
-			if err := state.Set(getSprintStateKey(sid), sdk.EpochNow()); err != nil {
-				return fmt.Errorf("error writing sprint key to state: %w", err)
+			// only cache it if its closed, so open and future sprints always get exported
+			if sprint.Status == sdk.AgileSprintStatusClosed {
+				if err := state.Set(getSprintStateKey(sid), sdk.EpochNow()); err != nil {
+					return fmt.Errorf("error writing sprint key to state: %w", err)
+				}
 			}
 			if err := state.Set(getSprintDataStateKey(sid), sprint); err != nil {
 				return fmt.Errorf("error writing sprint data key to state: %w", err)
