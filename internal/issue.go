@@ -19,6 +19,7 @@ import (
 type customFieldIDs struct {
 	StoryPoints string
 	Epic        string
+	EpicName    string
 	StartDate   string
 	EndDate     string
 	Sprint      string
@@ -35,16 +36,6 @@ type customFieldValue struct {
 type customField struct {
 	ID   string
 	Name string
-}
-
-func (s customFieldIDs) missing() (res []string) {
-	if s.StoryPoints == "" {
-		res = append(res, "StoryPoints")
-	}
-	if s.Epic == "" {
-		res = append(res, "Epic")
-	}
-	return
 }
 
 func extractSprints(fields map[string]interface{}, ids customFieldIDs) ([]sprint, bool, error) {
@@ -349,6 +340,8 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 			customFieldIDs.Sprint = key
 		case "Epic Link":
 			customFieldIDs.Epic = key
+		case "Epic Name":
+			customFieldIDs.EpicName = key
 		case "Start Date":
 			customFieldIDs.StartDate = key
 		case "End Date":
@@ -403,6 +396,8 @@ func (i issueSource) ToModel(customerID string, integrationInstanceID string, is
 		case customFieldIDs.Epic:
 			transitiveIssueKeys[v] = true
 			epicKey = v // will get set below
+		case customFieldIDs.EpicName:
+			issue.EpicName = sdk.StringPointer(v)
 		}
 	}
 
@@ -927,22 +922,24 @@ func (i *JiraIntegration) updateIssue(logger sdk.Logger, mutation sdk.Mutation, 
 		}
 		hasMutation = true
 	}
+	setAssignee := func(to *string) {
+		updateMutation.Update["assignee"] = []setMutationOperation{
+			{
+				Set: userValue{AccountID: to},
+			},
+		}
+	}
 	if event.Set.AssigneeRefID != nil {
 		assigneeRefID := *event.Set.AssigneeRefID
 		if assigneeRefID == "" {
 			// null value means unassigned
-			updateMutation.Update["assignee"] = []setMutationOperation{
-				{
-					Set: userValue{AccountID: nil},
-				},
-			}
+			setAssignee(nil)
 		} else {
-			updateMutation.Update["assignee"] = []setMutationOperation{
-				{
-					Set: userValue{AccountID: &assigneeRefID},
-				},
-			}
+			setAssignee(&assigneeRefID)
 		}
+		hasMutation = true
+	} else if event.Unset.Assignee {
+		setAssignee(nil)
 		hasMutation = true
 	}
 	if event.Set.Epic != nil || event.Unset.Epic {
