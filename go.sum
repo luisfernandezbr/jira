@@ -335,6 +335,8 @@ github.com/pinpt/adf v1.2.1 h1:AI/siyFtTn0bP+QMYoMRLNM6wHtc5BQAF5muYTMJnc8=
 github.com/pinpt/adf v1.2.1/go.mod h1:KUu5fYDXAQjSR/ZNqyLUQHVbMulfe21CCACOH4oXwLE=
 github.com/pinpt/agent/v4 v4.0.13-beta.1 h1:tbVOTfe3ToDqqm3Of9X/+MlqUUwUcYc0WBM48n7DilA=
 github.com/pinpt/agent/v4 v4.0.13-beta.1/go.mod h1:k6nIYINT7Chb4nb8TSCUOMdcm3CtEZYp0wke/oootcA=
+github.com/pinpt/agent/v4 v4.0.22-0.20201022205658-8367a643ac76 h1:zad7tJCdRnmqI25gmvl9PocVLCoIcSNWf6qr78HoDbw=
+github.com/pinpt/agent/v4 v4.0.22-0.20201022205658-8367a643ac76/go.mod h1:076kdQXxw/WAgLMkRRBKJOC9Hzzk/g9tazQ0LrtM+yk=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95 h1:Eo5GC829sI+VCBpkHtko3L+b094t94nEK4liSmVZmr0=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95/go.mod h1:vEZ93LbfGGT/02pZdVLcOu8vWUeaeaWzj8JeXrckE2E=
 github.com/pinpt/go-common/v10 v10.0.17 h1:434frXTXGxb/lFrotRL61Y+jpCR+EOtDR67cigyX+Fo=
@@ -343,6 +345,8 @@ github.com/pinpt/go-common/v10 v10.0.25 h1:glnS5b6DoxGbRjo4/iPgDtktEmxAPm75DqRkk
 github.com/pinpt/go-common/v10 v10.0.25/go.mod h1:uRe9KzBE26kjqD+2UgreBQqesesXyBUEIjBT2NEK3kk=
 github.com/pinpt/go-common/v10 v10.0.26 h1:JiVRMYhPwbTLuHqk9nnps95U5eyap7oW0PqEBtz0W84=
 github.com/pinpt/go-common/v10 v10.0.26/go.mod h1:uRe9KzBE26kjqD+2UgreBQqesesXyBUEIjBT2NEK3kk=
+github.com/pinpt/go-common/v10 v10.0.29 h1:ACPeTK+IkPYPNCFbh0ScHZcORh0f5VP27aPJzimyAYs=
+github.com/pinpt/go-common/v10 v10.0.29/go.mod h1:uRe9KzBE26kjqD+2UgreBQqesesXyBUEIjBT2NEK3kk=
 github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067 h1:GG0k6rjX7ywCwYnjVudy3OXXivcMAih8s08+sDrQiEE=
 github.com/pinpt/httpclient v0.0.0-20190815022759-09e0028c9067/go.mod h1:SzzGa0kOT+frqT6ABgV69U9+jlMU98XkmKup+HEZRVI=
 github.com/pinpt/httpclient v0.0.0-20200627153820-d374c2f15648 h1:hkfjX+KJmcSLpFjWqiZtnPIRsJBcOrMdgJD1d5fisB8=
@@ -354,6 +358,8 @@ github.com/pinpt/integration-sdk v0.0.1241 h1:Rlgw/UM6YCQ3uz7keXnCH9eUQbDb419PFY
 github.com/pinpt/integration-sdk v0.0.1241/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pinpt/integration-sdk v0.0.1242 h1:Q8ZQJHlxR+7zXriRISTmJxGp39QV+epOuyEkGK1RZUU=
 github.com/pinpt/integration-sdk v0.0.1242/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
+github.com/pinpt/integration-sdk v0.0.1246 h1:etXziosVo0xnGLCnH0hUsthV1qvWrhgWR6eKctic6EU=
+github.com/pinpt/integration-sdk v0.0.1246/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 h1:49lOXmGaUpV9Fz3gd7TFZY106KVlPVa5jcYD1gaQf98=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -485,6 +491,8 @@ golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0 h1:hb9wdF1z5waM+dSIICn1l0
 golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee h1:4yd7jl+vXjalO5ztz6Vc1VADv+S/80LGJmyl1ROJ2AI=
 golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 h1:pLI5jrR7OSLijeIDcmRxNmw2api+jEfxLoykJVice/E=
+golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
