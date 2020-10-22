@@ -14,12 +14,12 @@ import (
 	"github.com/pinpt/agent/v4/sdk"
 )
 
-func (i *JiraIntegration) checkForRateLimit(control sdk.Control, customerID string, rerr error, header http.Header) error {
+func (i *JiraIntegration) checkForRateLimit(logger sdk.Logger, control sdk.Control, customerID string, rerr error, header http.Header) error {
 	if ok, dur := sdk.IsRateLimitError(rerr); ok {
 		// pause until we are no longer rate limited
-		sdk.LogInfo(i.logger, "rate limited", "until", time.Now().Add(dur), "customer_id", customerID)
+		sdk.LogInfo(logger, "rate limited", "until", time.Now().Add(dur), "customer_id", customerID)
 		time.Sleep(dur)
-		sdk.LogInfo(i.logger, "rate limit wake up", "customer_id", customerID)
+		sdk.LogInfo(logger, "rate limit wake up", "customer_id", customerID)
 		// send a resume now that we're no longer rate limited
 		if err := control.Resumed(); err != nil {
 			return err
@@ -45,9 +45,9 @@ func (i *JiraIntegration) checkForRateLimit(control sdk.Control, customerID stri
 			return err
 		}
 		// pause until we are no longer rate limited
-		sdk.LogInfo(i.logger, "rate limited", "until", resetAt, "customer_id", customerID)
+		sdk.LogInfo(logger, "rate limited", "until", resetAt, "customer_id", customerID)
 		time.Sleep(dur)
-		sdk.LogInfo(i.logger, "rate limit wake up", "customer_id", customerID)
+		sdk.LogInfo(logger, "rate limit wake up", "customer_id", customerID)
 		// send a resume now that we're no longer rate limited
 		if err := control.Resumed(); err != nil {
 			return err
@@ -73,7 +73,7 @@ func (i *JiraIntegration) fetchPriorities(state *state) error {
 		}
 		state.stats.incPriority()
 	}
-	if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(state.logger, state.export, customerID, err, r.Headers); err != nil {
 		return err
 	}
 	sdk.LogDebug(state.logger, "fetched priorities", "len", len(resp), "duration", time.Since(ts))
@@ -97,7 +97,7 @@ func (i *JiraIntegration) fetchTypes(state *state) error {
 		}
 		state.stats.incType()
 	}
-	if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(state.logger, state.export, customerID, err, r.Headers); err != nil {
 		return err
 	}
 	sdk.LogDebug(state.logger, "fetched issue types", "len", len(resp), "duration", time.Since(ts))
@@ -113,7 +113,7 @@ func (i *JiraIntegration) fetchCustomFields(logger sdk.Logger, control sdk.Contr
 	if err != nil {
 		return nil, err
 	}
-	if err := i.checkForRateLimit(control, customerID, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(logger, control, customerID, err, r.Headers); err != nil {
 		return nil, err
 	}
 	customfields := map[string]customField{}
@@ -141,7 +141,7 @@ func (i *JiraIntegration) fetchIssueCreateMeta(state *state, projectIDs []string
 	queryParams.Set("expand", "projects.issuetypes.fields")
 	var resp issueCreateMeta
 	r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
-	if err := i.checkForRateLimit(state.export, state.export.CustomerID(), err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(state.logger, state.export, state.export.CustomerID(), err, r.Headers); err != nil {
 		return nil, err
 	}
 	return resp.Projects, nil
@@ -179,7 +179,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 		var resp projectQueryResult
 		ts := time.Now()
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
-		if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
+		if err := i.checkForRateLimit(state.logger, state.export, customerID, err, r.Headers); err != nil {
 			return nil, err
 		}
 		sdk.LogDebug(state.logger, "fetched projects", "len", len(resp.Projects), "total", resp.Total, "count", count, "first", resp.Projects[0].Key, "last", resp.Projects[len(resp.Projects)-1].Key, "duration", time.Since(ts))
@@ -298,14 +298,14 @@ type issueTransitionSource struct {
 	Transitions []transitionSource `json:"transitions"`
 }
 
-func (i *JiraIntegration) fetchIssueTransitions(control sdk.Control, authConfig authConfig, customerID string, issueRefID string) ([]sdk.WorkIssueTransitions, error) {
+func (i *JiraIntegration) fetchIssueTransitions(logger sdk.Logger, control sdk.Control, authConfig authConfig, customerID string, issueRefID string) ([]sdk.WorkIssueTransitions, error) {
 	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue", issueRefID, "/transitions")
 	client := i.httpmanager.New(theurl, nil)
 	params := url.Values{}
 	params.Add("expand", "transitions")
 	var resp issueTransitionSource
 	r, err := client.Get(&resp, append(authConfig.Middleware, sdk.WithGetQueryParameters(params))...)
-	if err := i.checkForRateLimit(control, customerID, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(logger, control, customerID, err, r.Headers); err != nil {
 		return nil, err
 	}
 	return makeTransitions("", resp.Transitions), nil
@@ -365,7 +365,7 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 		var resp issueQueryResult
 		ts := time.Now()
 		r, err := client.Get(&resp, append(state.authConfig.Middleware, sdk.WithGetQueryParameters(queryParams))...)
-		if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
+		if err := i.checkForRateLimit(state.logger, state.export, customerID, err, r.Headers); err != nil {
 			if issueError, ok := toIssueError(r.Body); ok {
 				invalidProjectIDs := issueError.getInvalidProjects()
 				if len(invalidProjectIDs) > 0 {
@@ -424,14 +424,15 @@ func (i *JiraIntegration) fetchIssuesPaginated(state *state, fromTime time.Time,
 type configIdentifier interface {
 	sdk.Identifier
 	Config() sdk.Config
+	Logger() sdk.Logger
 }
 
 func (i *JiraIntegration) createAuthConfig(ci configIdentifier) (authConfig, error) {
-	return i.createAuthConfigFromConfig(ci, ci.Config())
+	return i.createAuthConfigFromConfig(ci.Logger(), ci, ci.Config())
 }
 
-func (i *JiraIntegration) createAuthConfigFromConfig(identifier sdk.Identifier, config sdk.Config) (authConfig, error) {
-	auth, err := newAuth(i.logger, i.manager, identifier, i.httpmanager, config)
+func (i *JiraIntegration) createAuthConfigFromConfig(logger sdk.Logger, identifier sdk.Identifier, config sdk.Config) (authConfig, error) {
+	auth, err := newAuth(logger, i.manager, identifier, i.httpmanager, config)
 	if err != nil {
 		return authConfig{}, err
 	}
@@ -453,7 +454,7 @@ const configKeyLastExportTimestamp = "last_export_ts"
 
 // Export is called to tell the integration to run an export
 func (i *JiraIntegration) Export(export sdk.Export) error {
-	logger := sdk.LogWith(i.logger, "customer_id", export.CustomerID(), "job_id", export.JobID(), "integration_instance_id", export.IntegrationInstanceID())
+	logger := sdk.LogWith(export.Logger(), "job_id", export.JobID())
 	sdk.LogInfo(logger, "export started")
 	authConfig, err := i.createAuthConfig(export)
 	if err != nil {
@@ -490,7 +491,7 @@ func (i *JiraIntegration) Export(export sdk.Export) error {
 	state.sprintManager = newSprintManager(export.CustomerID(), state.pipe, state.stats, export.IntegrationInstanceID(), state.authConfig.SupportsAgileAPI)
 	state.userManager = newUserManager(export.CustomerID(), state.authConfig.WebsiteURL, state.pipe, state.stats, export.IntegrationInstanceID())
 	state.issueIDManager = newIssueIDManager(logger, i, state.export, state.pipe, state.sprintManager, state.userManager, customfields, state.authConfig, state.stats)
-	if err := i.processWorkConfig(state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationInstanceID(), export.Historical()); err != nil {
+	if err := i.processWorkConfig(logger, state.config, state.pipe, export.State(), export.CustomerID(), export.IntegrationInstanceID(), export.Historical()); err != nil {
 		return err
 	}
 	projectKeys, err := i.fetchProjectsPaginated(state)

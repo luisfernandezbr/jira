@@ -616,7 +616,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 				m.stats.incComment()
 			}
 			m.stats.incIssue()
-			if rerr := m.i.checkForRateLimit(m.control, m.control.CustomerID(), err, resp.Headers); rerr != nil {
+			if rerr := m.i.checkForRateLimit(m.logger, m.control, m.control.CustomerID(), err, resp.Headers); rerr != nil {
 				return nil, rerr
 			}
 		}

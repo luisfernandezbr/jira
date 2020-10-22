@@ -17,10 +17,9 @@ type status struct {
 
 const cacheKeyWorkConfig = "work_config"
 
-func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationInstanceID string, historical bool) error {
-	logger := sdk.LogWith(i.logger, "customer_id", customerID, "integration_instance_id", integrationInstanceID)
+func (i *JiraIntegration) processWorkConfig(logger sdk.Logger, config sdk.Config, pipe sdk.Pipe, istate sdk.State, customerID string, integrationInstanceID string, historical bool) error {
 	sdk.LogInfo(logger, "processing work config started")
-	authConfig, err := i.createAuthConfigFromConfig(sdk.NewSimpleIdentifier(customerID, integrationInstanceID, refType), config)
+	authConfig, err := i.createAuthConfigFromConfig(logger, sdk.NewSimpleIdentifier(customerID, integrationInstanceID, refType), config)
 	if err != nil {
 		return fmt.Errorf("error creating work config: %w", err)
 	}
@@ -31,7 +30,7 @@ func (i *JiraIntegration) processWorkConfig(config sdk.Config, pipe sdk.Pipe, is
 	resp := make([]status, 0)
 	ts := time.Now()
 	r, err := client.Get(&resp, state.authConfig.Middleware...)
-	if err := i.checkForRateLimit(state.export, customerID, err, r.Headers); err != nil {
+	if err := i.checkForRateLimit(logger, state.export, customerID, err, r.Headers); err != nil {
 		return err
 	}
 	var wc sdk.WorkConfig

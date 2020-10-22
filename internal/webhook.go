@@ -248,7 +248,7 @@ func (i *JiraIntegration) webhookUpdateIssue(logger sdk.Logger, webhook sdk.WebH
 
 	if updatedStatus {
 		// need to fetch new transitions
-		transitions, err := i.fetchIssueTransitions(webhook, authCfg, customerID, changelog.Issue.ID)
+		transitions, err := i.fetchIssueTransitions(logger, webhook, authCfg, customerID, changelog.Issue.ID)
 		if err != nil {
 			return fmt.Errorf("error fetching new transitions: %w", err)
 		}
@@ -813,7 +813,7 @@ func webhookHandleIssueLink(logger sdk.Logger, customerID string, integrationIns
 
 // WebHook is called when a webhook is received on behalf of the integration
 func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
-	logger := sdk.LogWith(i.logger, "customer_id", webhook.CustomerID())
+	logger := webhook.Logger()
 	sdk.LogInfo(logger, "webhook request received")
 	var event webhookEvent
 	if err := event.UnmarshalJSON(webhook.Bytes()); err != nil {
@@ -863,7 +863,7 @@ func (i *JiraIntegration) WebHook(webhook sdk.WebHook) error {
 	case "issuelink_deleted":
 		return i.webhookIssueLinkDeleted(logger, customerID, integrationInstanceID, webhook.Bytes(), pipe)
 	default:
-		sdk.LogDebug(i.logger, "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
+		sdk.LogDebug(webhook.Logger(), "webhook event not handled", "event", event.Event, "payload", string(webhook.Bytes()))
 	}
 	return nil
 }

@@ -45,6 +45,7 @@ func (h *mockWebHook) Headers() map[string]string            { return nil }
 func (h *mockWebHook) Scope() sdk.WebHookScope               { return sdk.WebHookScopeOrg }
 func (h *mockWebHook) Paused(resetAt time.Time) error        { return nil }
 func (h *mockWebHook) Resumed() error                        { return nil }
+func (h *mockWebHook) Logger() sdk.Logger                    { return sdk.NewNoOpTestLogger() }
 func (h *mockWebHook) CustomerID() string                    { return "1234" }
 func (h *mockWebHook) IntegrationInstanceID() string         { return "1" }
 func (h *mockWebHook) RefType() string                       { return "jira" }
@@ -76,11 +77,10 @@ func newMockWebHook(fn string) *mockWebHook {
 
 func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.assignee.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
@@ -95,11 +95,10 @@ func TestWebhookJiraIssueUpdatedAssignee(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.tags.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
@@ -116,10 +115,11 @@ func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 // func TestWebhookJiraIssueUpdatedResolution(t *testing.T) {
 // 	assert := assert.New(t)
 // 	i := JiraIntegration{
-// 		logger: sdk.NewNoOpTestLogger(),
+//
 // 	}
+// logger := sdk.NewNoOpTestLogger()
 // 	webhook := newMockWebHook("testdata/jira:issue_updated.resolution.json")
-// 	err := i.webhookUpdateIssue(i.logger, webhook)
+// 	err := i.webhookUpdateIssue(logger, webhook)
 // 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
 // 	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth1, oauth2 and basic authentication")
 // 	assert.Len(webhook.pipe.Written, 1)
@@ -140,11 +140,10 @@ func TestWebhookJiraIssueUpdatedTags(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.type.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"Task\"", update.Set["type"])
@@ -162,10 +161,11 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 // func TestWebhookJiraIssueUpdatedProject(t *testing.T) {
 // 	assert := assert.New(t)
 // 	i := JiraIntegration{
-// 		logger: sdk.NewNoOpTestLogger(),
+//
 // 	}
+// logger := sdk.NewNoOpTestLogger()
 // 	webhook := newMockWebHook("testdata/jira:issue_updated.project.json")
-// 	err := i.webhookUpdateIssue(i.logger, webhook)
+// 	err := i.webhookUpdateIssue(logger, webhook)
 // 	// NOTE: this error is fine since we arent testing that the board gets updated 😅
 // 	assert.EqualError(err, "error creating authconfig: authentication provided is not supported. tried oauth1, oauth2 and basic authentication")
 // 	assert.Len(webhook.pipe.Written, 1)
@@ -190,11 +190,10 @@ func TestWebhookJiraIssueUpdatedType(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.sprint_ids.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("["+quoteString(sdk.NewAgileSprintID("1234", "197", refType))+"]", update.Set["sprint_ids"])
@@ -208,12 +207,11 @@ func TestWebhookJiraIssueUpdatedSprint(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedDescription(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.description.json")
 
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues(sdk.Stringify(`<div class="source-jira"><p>Look at this bug in stable on Pinpoint customer:</p><p><a href="https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total">https://app.pinpoint.com/issue/7db68cb63ea90f2b/GOLD-367/Individual-Meeting-Hours-dont-match-up-to-team-total</a></p><p>Compare that to formatting in: <a href="GOLD-367">GOLD-367</a></p><p>Looks like regressed again. 🎉</p></div>`), update.Set["description"])
@@ -221,11 +219,10 @@ func TestWebhookJiraIssueUpdatedDescription(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.due_date.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("{\"epoch\":1596499200000,\"offset\":0,\"rfc3339\":\"2020-08-04T00:00:00+00:00\"}", update.Set["due_date"])
@@ -239,11 +236,10 @@ func TestWebhookJiraIssueUpdatedDueDate(t *testing.T) {
 
 func TestWebhookJiraIssueUpdatedDueDateUnset(t *testing.T) {
 	assert := assert.New(t)
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
 	webhook := newMockWebHook("testdata/jira:issue_updated.due_date.unset.json")
-	assert.NoError(i.webhookUpdateIssue(i.logger, webhook))
+	assert.NoError(i.webhookUpdateIssue(logger, webhook))
 	assert.Len(webhook.pipe.Written, 1)
 	update := webhook.pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("due_date", update.Unset[0])
@@ -259,10 +255,9 @@ func TestWebhookJiraIssueUpdatedDueDateUnset(t *testing.T) {
 func TestWebhookJiraIssueDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookDeleteIssue(i.logger, "1234", "1", loadFile("testdata/jira:issue_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookDeleteIssue(logger, "1234", "1", loadFile("testdata/jira:issue_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("false", update.Set["active"])
@@ -271,10 +266,9 @@ func TestWebhookJiraIssueDeleted(t *testing.T) {
 func TestWebhookJiraIssueCommentDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookDeleteComment(i.logger, "1234", "1", loadFile("testdata/comment_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookDeleteComment(logger, "1234", "1", loadFile("testdata/comment_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("false", update.Set["active"])
@@ -283,10 +277,9 @@ func TestWebhookJiraIssueCommentDeleted(t *testing.T) {
 func TestWebhookJiraProjectDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookDeleteProject(i.logger, "1234", "1", loadFile("testdata/project_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookDeleteProject(logger, "1234", "1", loadFile("testdata/project_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("false", update.Set["active"])
@@ -315,10 +308,9 @@ func TestWebhookJiraUserUpdated(t *testing.T) {
 func TestWebhookJiraSprintDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookDeleteSprint(i.logger, "1234", "1", loadFile("testdata/sprint_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookDeleteSprint(logger, "1234", "1", loadFile("testdata/sprint_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("false", update.Set["active"])
@@ -425,10 +417,9 @@ func TestWebhookBuildSprintUpdateChangeGoal(t *testing.T) {
 func TestWebhookJiraSprintUpdateStarted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateSprint(i.logger, "1234", "1", loadFile("testdata/sprint_updated.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateSprint(logger, "1234", "1", loadFile("testdata/sprint_updated.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["active"])
@@ -440,10 +431,9 @@ func TestWebhookJiraSprintUpdateStarted(t *testing.T) {
 func TestWebhookJiraSprintUpdateGoalSet(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateSprint(i.logger, "1234", "1", []byte(sprintUpdateGoalAdded), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateSprint(logger, "1234", "1", []byte(sprintUpdateGoalAdded), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["status"])
@@ -454,10 +444,9 @@ func TestWebhookJiraSprintUpdateGoalSet(t *testing.T) {
 func TestWebhookJiraSprintUpdateGoalUpdated(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateSprint(i.logger, "1234", "1", []byte(sprintUpdateGoalUpdated), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateSprint(logger, "1234", "1", []byte(sprintUpdateGoalUpdated), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["status"])
@@ -470,10 +459,9 @@ func TestWebhookJiraSprintUpdateGoalUpdated(t *testing.T) {
 func TestWebhookJiraSprintUpdateEndDate(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateSprint(i.logger, "1234", "1", []byte(sprintUpdatedEndDate), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateSprint(logger, "1234", "1", []byte(sprintUpdatedEndDate), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("", update.Set["status"])
@@ -505,20 +493,18 @@ const sprintUpdateNothing = `{
 func TestWebhookJiraSprintUpdateNothing(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateSprint(i.logger, "1234", "1", []byte(sprintUpdateNothing), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateSprint(logger, "1234", "1", []byte(sprintUpdateNothing), pipe))
 	assert.Len(pipe.Written, 0)
 }
 
 func TestWebhookJiraSprintClosed(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookCloseSprint(i.logger, "1234", "1", loadFile("testdata/sprint_closed.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookCloseSprint(logger, "1234", "1", loadFile("testdata/sprint_closed.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"CLOSED\"", update.Set["status"])
@@ -532,10 +518,9 @@ func TestWebhookJiraSprintClosed(t *testing.T) {
 func TestWebhookBoardUpdated(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookUpdateBoard(i.logger, "1234", "1", loadFile("testdata/board_updated.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookUpdateBoard(logger, "1234", "1", loadFile("testdata/board_updated.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("\"Teamoji Board (updated)\"", update.Set["name"])
@@ -544,10 +529,9 @@ func TestWebhookBoardUpdated(t *testing.T) {
 func TestWebhookBoardDeleted(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookDeleteBoard(i.logger, "1234", "1", loadFile("testdata/board_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookDeleteBoard(logger, "1234", "1", loadFile("testdata/board_deleted.json"), pipe))
 	assert.Len(pipe.Written, 1)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.EqualValues("false", update.Set["active"])
@@ -556,10 +540,9 @@ func TestWebhookBoardDeleted(t *testing.T) {
 func TestWebhookCreateLinkedIssueBlocks(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookIssueLinkCreated(i.logger, "1234", "1", loadFile("testdata/issuelink_created.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookIssueLinkCreated(logger, "1234", "1", loadFile("testdata/issuelink_created.json"), pipe))
 	assert.Len(pipe.Written, 2)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.Len(update.Unset, 0)
@@ -606,10 +589,9 @@ const dupLink = `{
 func TestWebhookCreateLinkedIssueDuplicates(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookIssueLinkCreated(i.logger, "1234", "1", []byte(dupLink), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookIssueLinkCreated(logger, "1234", "1", []byte(dupLink), pipe))
 	assert.Len(pipe.Written, 2)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.Len(update.Unset, 0)
@@ -657,10 +639,9 @@ const cloneLink = `{
 func TestWebhookCreateLinkedIssueClones(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookIssueLinkCreated(i.logger, "1234", "1", []byte(cloneLink), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookIssueLinkCreated(logger, "1234", "1", []byte(cloneLink), pipe))
 	assert.Len(pipe.Written, 2)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.Len(update.Unset, 0)
@@ -708,10 +689,9 @@ const relatesLink = `{
 func TestWebhookCreateLinkedIssueRelates(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookIssueLinkCreated(i.logger, "1234", "1", []byte(relatesLink), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookIssueLinkCreated(logger, "1234", "1", []byte(relatesLink), pipe))
 	assert.Len(pipe.Written, 2)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.Len(update.Unset, 0)
@@ -740,10 +720,9 @@ func TestWebhookCreateLinkedIssueRelates(t *testing.T) {
 func TestWebhookDeleteLinkedIssueBlocks(t *testing.T) {
 	assert := assert.New(t)
 	pipe := &sdktest.MockPipe{}
-	i := JiraIntegration{
-		logger: sdk.NewNoOpTestLogger(),
-	}
-	assert.NoError(i.webhookIssueLinkDeleted(i.logger, "1234", "1", loadFile("testdata/issuelink_deleted.json"), pipe))
+	i := JiraIntegration{}
+	logger := sdk.NewNoOpTestLogger()
+	assert.NoError(i.webhookIssueLinkDeleted(logger, "1234", "1", loadFile("testdata/issuelink_deleted.json"), pipe))
 	assert.Len(pipe.Written, 2)
 	update := pipe.Written[0].(*agent.UpdateData)
 	assert.Len(update.Unset, 0)
