@@ -83,7 +83,7 @@ func handleBuiltinField(field issueTypeField) (sdk.WorkProjectCapabilityIssueMut
 			Description: sdk.StringPointer("The description of the issue."),
 			Name:        "Description",
 			RefID:       "description",
-			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeString,
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeTextbox,
 		}, true, nil
 	case "priority":
 		return sdk.WorkProjectCapabilityIssueMutationFields{
