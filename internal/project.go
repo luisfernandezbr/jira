@@ -235,7 +235,7 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 	return mutFields, nil
 }
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
+func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (*projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
 	// Delete old project capability state
 	state.Delete(projectCapabilityStateKeyPrefixLegacy + project.ID)
@@ -269,9 +269,12 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 	capability.Resolutions = true
 	capability.Sprints = true
 	capability.StoryPoints = true
-	capability.IssueMutationFields, err = createMutationFields(createMeta)
-	if err != nil {
-		return nil, err
+	if createMeta != nil {
+		// NOTE: sometimes projects don't have this, need to investigate further
+		capability.IssueMutationFields, err = createMutationFields(*createMeta)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if err := state.SetWithExpires(key, 1, time.Hour*24*30); err != nil {
 		return nil, err
