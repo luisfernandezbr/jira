@@ -229,3 +229,45 @@ type customFieldQueryResult struct {
 	Key  string `json:"key"` // this is only on cloud and not server
 	Name string `json:"name"`
 }
+
+type issueCreateMeta struct {
+	// Expand   string `json:"expand"`
+	Projects []projectIssueCreateMeta `json:"projects"`
+}
+
+type projectIssueCreateMeta struct {
+	ID         string                 `json:"id"`
+	Key        string                 `json:"key"`
+	Name       string                 `json:"name"`
+	Issuetypes []createMetaIssueTypes `json:"issuetypes"`
+}
+
+type createMetaIssueTypes struct {
+	ID               string                    `json:"id"`
+	Description      string                    `json:"description"`
+	IconURL          string                    `json:"iconUrl"`
+	Name             string                    `json:"name"`
+	UntranslatedName string                    `json:"untranslatedName"`
+	Subtask          bool                      `json:"subtask"`
+	Expand           string                    `json:"expand"`
+	Fields           map[string]issueTypeField `json:"fields"`
+}
+
+type issueTypeField struct {
+	Required        bool                 `json:"required"`
+	Schema          issueTypeFieldSchema `json:"schema"`
+	Name            string               `json:"name"`
+	Key             string               `json:"key"`
+	HasDefaultValue bool                 `json:"hasDefaultValue"`
+	AllowedValues   json.RawMessage      `json:"allowedValues,omitempty"`
+}
+
+type issueTypeFieldSchema struct {
+	Type   string `json:"type"`
+	System string `json:"system"`
+}
+
+type allowedValueComponent struct {
+	RefID string `json:"id"`
+	Name  string `json:"name"`
+}

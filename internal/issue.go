@@ -616,7 +616,7 @@ func (m *issueIDManager) getRefIDsFromKeys(keys []string) ([]string, error) {
 				m.stats.incComment()
 			}
 			m.stats.incIssue()
-			if rerr := m.i.checkForRateLimit(m.control, m.control.CustomerID(), err, resp.Headers); rerr != nil {
+			if rerr := m.i.checkForRateLimit(m.logger, m.control, m.control.CustomerID(), err, resp.Headers); rerr != nil {
 				return nil, rerr
 			}
 		}
@@ -651,7 +651,119 @@ func setIssueExpand(qs url.Values) {
 	qs.Set("expand", "changelog,fields,comments,transitions")
 }
 
+func getRefID(val sdk.MutationFieldValue) (string, error) {
+	nameID, err := val.AsNameRefID()
+	if err != nil {
+		return "", fmt.Errorf("error decoding %s field as NameRefID: %w", val.Type.String(), err)
+	}
+	if nameID.RefID == nil {
+		return "", errors.New("ref_id was omitted")
+	}
+	return *nameID.RefID, nil
+}
+
+func makeCreateMutation(logger sdk.Logger, projectRefID string, fields []sdk.MutationFieldValue) (*mutationRequest, error) {
+	if projectRefID == "" {
+		return nil, errors.New("project ref id cannot be empty")
+	}
+	createMutation := newMutation()
+	createMutation.Fields["project"] = idValue{projectRefID}
+	for _, fieldVal := range fields {
+		var notFound bool
+		// First: try to handle the fields that are built in
+		switch fieldVal.RefID {
+		case "issuetype":
+			issueType, err := getRefID(fieldVal)
+			if err != nil {
+				return nil, fmt.Errorf("error decoding issue type field: %w", err)
+			}
+			createMutation.Fields["issuetype"] = idValue{issueType}
+		case "summary":
+			title, err := fieldVal.AsString()
+			if err != nil {
+				return nil, fmt.Errorf("error decoding title field: %w", err)
+			}
+			createMutation.Fields["summary"] = title
+		case "description":
+			description, err := fieldVal.AsString()
+			if err != nil {
+				return nil, fmt.Errorf("error decoding description field: %w", err)
+			}
+			createMutation.Fields["description"] = adf.Node{
+				Type:    "doc",
+				Version: 1,
+				Content: []adf.Node{
+					{
+						Type: "paragraph",
+						Content: []adf.Node{
+							{
+								Text: description,
+								Type: "text",
+							},
+						},
+					},
+				},
+			}
+		case "assignee":
+			assigneeRefID, err := getRefID(fieldVal)
+			if err != nil {
+				return nil, fmt.Errorf("error decoding assignee refID: %w", err)
+			}
+			createMutation.Fields["assignee"] = idValue{assigneeRefID}
+		case "priority":
+			priorityRefID, err := getRefID(fieldVal)
+			if err != nil {
+				return nil, fmt.Errorf("error decoding priority refID: %w", err)
+			}
+			createMutation.Fields["priority"] = idValue{priorityRefID}
+			// TODO(robin): components, labels
+		default:
+			notFound = true
+		}
+		if notFound {
+			// Second: try to dynamically handle any other fields
+			switch fieldVal.Type {
+			case sdk.WorkProjectCapabilityIssueMutationFieldsTypeNumber:
+				num, err := fieldVal.AsNumber()
+				if err != nil {
+					return nil, fmt.Errorf("error decoding number field: %w", err)
+				}
+				createMutation.Fields[fieldVal.RefID] = num
+			case sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, sdk.WorkProjectCapabilityIssueMutationFieldsTypeTextbox:
+				str, err := fieldVal.AsString()
+				if err != nil {
+					return nil, fmt.Errorf("error decoding string field: %w", err)
+				}
+				createMutation.Fields[fieldVal.RefID] = str
+			case sdk.WorkProjectCapabilityIssueMutationFieldsTypeEpic:
+				nrid, err := fieldVal.AsNameRefID()
+				if err != nil {
+					return nil, fmt.Errorf("error decoding epic link: %w", err)
+				}
+				if nrid.Name != nil {
+					return nil, fmt.Errorf("linked epic was omitted")
+				}
+				createMutation.Fields[fieldVal.RefID] = *nrid.Name
+				// TODO(robin): sprint, string array
+			}
+		}
+	}
+	return &createMutation, nil
+}
+
 func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueCreateMutation) (*sdk.MutationResponse, error) {
+	if len(event.Fields) == 0 {
+		return i.createIssueLegacy(logger, mutation, authConfig, event)
+	}
+	// only ProjectRefID and Fields will be available
+	createMutation, err := makeCreateMutation(logger, event.ProjectRefID, event.Fields)
+	if err != nil {
+		return nil, err
+	}
+	return i.execCreateMutation(logger, mutation.CustomerID(), authConfig, *createMutation)
+}
+
+func (i *JiraIntegration) createIssueLegacy(logger sdk.Logger, mutation sdk.Mutation, authConfig authConfig, event *sdk.WorkIssueCreateMutation) (*sdk.MutationResponse, error) {
 	createMutation := newMutation()
 	if event.Type == nil {
 		return nil, errors.New("issue type is required")
@@ -662,8 +774,7 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if event.ProjectRefID == "" {
 		return nil, errors.New("project ref id cannot be empty")
 	}
-	reporterRefID := mutation.User().RefID
-	if reporterRefID == "" {
+	if mutation.User().RefID == "" {
 		return nil, errors.New("no ref_id found for requesting user")
 	}
 	createMutation.Fields["summary"] = event.Title
@@ -719,22 +830,26 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 	if len(event.Labels) > 0 {
 		createMutation.Fields["labels"] = event.Labels
 	}
+	return i.execCreateMutation(logger, mutation.CustomerID(), authConfig, createMutation)
+}
+
+func (i *JiraIntegration) execCreateMutation(logger sdk.Logger, customerID string, authConfig authConfig, createMutation mutationRequest) (*sdk.MutationResponse, error) {
 	theurl := sdk.JoinURL(authConfig.APIURL, "/rest/api/3/issue")
 	client := i.httpmanager.New(theurl, nil)
 	resp, err := client.Post(sdk.StringifyReader(createMutation), nil, authConfig.Middleware...)
 	if err != nil {
-		sdk.LogError(logger, "error creating an issue", "err", err, "body", string(resp.Body), "customer_id", mutation.CustomerID(), "request", sdk.Stringify(createMutation))
+		sdk.LogError(logger, "error creating an issue", "err", err, "body", string(resp.Body), "request", sdk.Stringify(createMutation))
 		return nil, fmt.Errorf("mutation failed: %s", getJiraErrorMessage(err))
 	}
 	var respStruct struct {
 		RefID string `json:"id"`
 		Key   string `json:"key"`
 	}
-	sdk.LogDebug(logger, "created issue", "result", string(resp.Body), "customer_id", mutation.CustomerID())
+	sdk.LogDebug(logger, "created issue", "result", string(resp.Body))
 	// create a remote link from this issue back to Pinpoint
 	if err := json.Unmarshal(resp.Body, &respStruct); err == nil {
-		issueid := sdk.NewWorkIssueID(mutation.CustomerID(), respStruct.RefID, refType)
-		sdk.LogDebug(logger, "making issue remote link", "key", respStruct.Key, "ref_id", respStruct.RefID, "customer_id", mutation.CustomerID(), "id", issueid)
+		issueid := sdk.NewWorkIssueID(customerID, respStruct.RefID, refType)
+		sdk.LogDebug(logger, "making issue remote link", "key", respStruct.Key, "ref_id", respStruct.RefID, "id", issueid)
 		env := os.Getenv("PP_ENV")
 		urlprefix := "https://app.pinpoint.com/issue/"
 		if env == "edge" {
@@ -762,6 +877,7 @@ func (i *JiraIntegration) createIssue(logger sdk.Logger, mutation sdk.Mutation, 
 			URL:      sdk.StringPointer(issueURL(authConfig.WebsiteURL, respStruct.Key)),
 		}, nil
 	}
+	sdk.LogError(logger, "error decoding create resp", "err", err)
 	return nil, fmt.Errorf("unknown error creating issue")
 }
 

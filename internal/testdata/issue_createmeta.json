@@ -1,0 +1,2183 @@
+{
+  "expand": "projects",
+  "projects": [
+    {
+      "expand": "issuetypes",
+      "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+      "id": "10639",
+      "key": "GOLD",
+      "name": "Gold Miners",
+      "avatarUrls": {
+        "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+        "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+        "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+        "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+      },
+      "issuetypes": [
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10101",
+          "id": "10101",
+          "description": "A task that needs to be done.",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10318&avatarType=issuetype",
+          "name": "Task",
+          "untranslatedName": "Task",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10101",
+                  "id": "10101",
+                  "description": "A task that needs to be done.",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10318&avatarType=issuetype",
+                  "name": "Task",
+                  "subtask": false,
+                  "avatarId": 10318
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10102",
+          "id": "10102",
+          "description": "The sub-task of the issue",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10316&avatarType=issuetype",
+          "name": "Sub-task",
+          "untranslatedName": "Sub-task",
+          "subtask": true,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10102",
+                  "id": "10102",
+                  "description": "The sub-task of the issue",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10316&avatarType=issuetype",
+                  "name": "Sub-task",
+                  "subtask": true,
+                  "avatarId": 10316
+                }
+              ]
+            },
+            "parent": {
+              "required": true,
+              "schema": {
+                "type": "issuelink",
+                "system": "parent"
+              },
+              "name": "Parent",
+              "key": "parent",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10100",
+          "id": "10100",
+          "description": "A user story. Created by JIRA Software - do not edit or delete.",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&avatarType=issuetype",
+          "name": "Story",
+          "untranslatedName": "Story",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10100",
+                  "id": "10100",
+                  "description": "A user story. Created by JIRA Software - do not edit or delete.",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&avatarType=issuetype",
+                  "name": "Story",
+                  "subtask": false,
+                  "avatarId": 10315
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10103",
+          "id": "10103",
+          "description": "A problem which impairs or prevents the functions of the product.",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+          "name": "Bug",
+          "untranslatedName": "Bug",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10103",
+                  "id": "10103",
+                  "description": "A problem which impairs or prevents the functions of the product.",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10303&avatarType=issuetype",
+                  "name": "Bug",
+                  "subtask": false,
+                  "avatarId": 10303
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "environment": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "environment"
+              },
+              "name": "Environment",
+              "key": "environment",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "versions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "versions"
+              },
+              "name": "Affects versions",
+              "key": "versions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10000",
+          "id": "10000",
+          "description": "A big user story that needs to be broken down. Created by JIRA Software - do not edit or delete.",
+          "iconUrl": "https://pinpt-hq.atlassian.net/images/icons/issuetypes/epic.svg",
+          "name": "Epic",
+          "untranslatedName": "Epic",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10000",
+                  "id": "10000",
+                  "description": "A big user story that needs to be broken down. Created by JIRA Software - do not edit or delete.",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/images/icons/issuetypes/epic.svg",
+                  "name": "Epic",
+                  "subtask": false
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10003": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-label",
+                "customId": 10003
+              },
+              "name": "Epic Name",
+              "key": "customfield_10003",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10200",
+          "id": "10200",
+          "description": "",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10322&avatarType=issuetype",
+          "name": "Enhancement",
+          "untranslatedName": "Enhancement",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10200",
+                  "id": "10200",
+                  "description": "",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10322&avatarType=issuetype",
+                  "name": "Enhancement",
+                  "subtask": false,
+                  "avatarId": 10322
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10352",
+          "id": "10352",
+          "description": "Used for research spikes, outcome should be follow-on stories. ",
+          "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10300&avatarType=issuetype",
+          "name": "Spike",
+          "untranslatedName": "Spike",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "system": "summary"
+              },
+              "name": "Summary",
+              "key": "summary",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": {
+                "type": "issuetype",
+                "system": "issuetype"
+              },
+              "name": "Issue Type",
+              "key": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/issuetype/10352",
+                  "id": "10352",
+                  "description": "Used for research spikes, outcome should be follow-on stories. ",
+                  "iconUrl": "https://pinpt-hq.atlassian.net/secure/viewavatar?size=medium&avatarId=10300&avatarType=issuetype",
+                  "name": "Spike",
+                  "subtask": false,
+                  "avatarId": 10300
+                }
+              ]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Components",
+              "key": "components",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "description": {
+              "required": false,
+              "schema": {
+                "type": "string",
+                "system": "description"
+              },
+              "name": "Description",
+              "key": "description",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "project": {
+              "required": true,
+              "schema": {
+                "type": "project",
+                "system": "project"
+              },
+              "name": "Project",
+              "key": "project",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/project/10639",
+                  "id": "10639",
+                  "key": "GOLD",
+                  "name": "Gold Miners",
+                  "projectTypeKey": "software",
+                  "simplified": false,
+                  "avatarUrls": {
+                    "48x48": "https://pinpt-hq.atlassian.net/secure/projectavatar?pid=10639&avatarId=10993",
+                    "24x24": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=small&s=small&pid=10639&avatarId=10993",
+                    "16x16": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=10639&avatarId=10993",
+                    "32x32": "https://pinpt-hq.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=10639&avatarId=10993"
+                  },
+                  "projectCategory": {
+                    "self": "https://pinpt-hq.atlassian.net/rest/api/3/projectCategory/10001",
+                    "id": "10001",
+                    "description": "",
+                    "name": "Development"
+                  }
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": {
+                "type": "user",
+                "system": "reporter"
+              },
+              "name": "Reporter",
+              "key": "reporter",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/search?query=",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix versions",
+              "key": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": [
+                "set",
+                "add",
+                "remove"
+              ],
+              "allowedValues": []
+            },
+            "priority": {
+              "required": false,
+              "schema": {
+                "type": "priority",
+                "system": "priority"
+              },
+              "name": "Priority",
+              "key": "priority",
+              "hasDefaultValue": true,
+              "operations": [
+                "set"
+              ],
+              "allowedValues": [
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/1",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-critical.png",
+                  "name": "Critical",
+                  "id": "1"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/2",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-high.png",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/3",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-medium.png",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/4",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-low.png",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                  "name": "Not Prioritized",
+                  "id": "5"
+                },
+                {
+                  "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/10000",
+                  "iconUrl": "https://pinpoint.com/images/internal/priority-rollup.png",
+                  "name": "Rollup",
+                  "id": "10000"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://pinpt-hq.atlassian.net/rest/api/3/priority/5",
+                "iconUrl": "https://pinpoint.com/images/internal/priority-null.png",
+                "name": "Not Prioritized",
+                "id": "5"
+              }
+            },
+            "customfield_10520": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10520
+              },
+              "name": "HubSpot ticket count (Hub ID: 4470349)",
+              "key": "customfield_10520",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "key": "labels",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add",
+                "set",
+                "remove"
+              ]
+            },
+            "customfield_10006": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10006
+              },
+              "name": "Epic Link",
+              "key": "customfield_10006",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "customfield_10107": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "json",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10107
+              },
+              "name": "Sprint",
+              "key": "customfield_10107",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            },
+            "attachment": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "attachment",
+                "system": "attachment"
+              },
+              "name": "Attachment",
+              "key": "attachment",
+              "hasDefaultValue": false,
+              "operations": []
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "key": "issuelinks",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "add"
+              ]
+            },
+            "assignee": {
+              "required": false,
+              "schema": {
+                "type": "user",
+                "system": "assignee"
+              },
+              "name": "Assignee",
+              "key": "assignee",
+              "autoCompleteUrl": "https://pinpt-hq.atlassian.net/rest/api/3/user/assignable/search?project=GOLD&query=",
+              "hasDefaultValue": false,
+              "operations": [
+                "set"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

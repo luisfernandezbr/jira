@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/pinpt/agent/v4/sdk"
@@ -28,12 +31,220 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 	return project, nil
 }
 
-const projectCapabilityStateKeyPrefix = "project_capability_"
+const (
+	projectCapabilityStateKeyPrefixLegacy = "project_capability_"
+	projectCapabilityStateKeyPrefix       = "project_capability2_"
+)
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, historical bool) (*sdk.WorkProjectCapability, error) {
+// its a float so that we can insert stuff betwen ints
+var builtInFieldOrder = map[string]float32{
+	"issuetype":   0,
+	"summary":     1,
+	"description": 2,
+	"priority":    3,
+	"assignee":    4,
+	"parent":      5,
+	"components":  6,
+}
+
+type mutationFieldsSortable []sdk.WorkProjectCapabilityIssueMutationFields
+
+var _ sort.Interface = (*mutationFieldsSortable)(nil)
+
+func (m mutationFieldsSortable) Len() int      { return len(m) }
+func (m mutationFieldsSortable) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
+func (m mutationFieldsSortable) Less(i, j int) bool {
+	iVal, iisbuiltin := builtInFieldOrder[m[i].RefID]
+	jVal, jisbuiltin := builtInFieldOrder[m[j].RefID]
+	if iisbuiltin && jisbuiltin {
+		return iVal < jVal
+	}
+	return iisbuiltin && !jisbuiltin
+}
+
+func handleBuiltinField(field issueTypeField) (sdk.WorkProjectCapabilityIssueMutationFields, bool, error) {
+	switch field.Key {
+	case "issuetype":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The type of issue."),
+			Name:        "Issue Type",
+			RefID:       "issuetype",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssueType,
+		}, true, nil
+	case "summary":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The title for this issue"),
+			Name:        "Summary",
+			RefID:       "summary",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeString,
+		}, true, nil
+	case "description":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The description of the issue."),
+			Name:        "Description",
+			RefID:       "description",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeTextbox,
+		}, true, nil
+	case "priority":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The priority for the issue."),
+			Name:        "Priority",
+			RefID:       "priority",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssuePriority,
+		}, true, nil
+	case "assignee":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The assignee for the issue."),
+			Name:        "Assignee",
+			RefID:       "assignee",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeUser,
+		}, true, nil
+	case "parent":
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("The parent of the issue, should not be another Sub-Task."),
+			Name:        "Parent",
+			RefID:       "parent",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssue,
+		}, true, nil
+	case "components":
+		if string(field.AllowedValues) == "[]" {
+			break
+		}
+		var vals []sdk.WorkProjectCapabilityIssueMutationFieldsValues
+		var components []allowedValueComponent
+		if err := json.Unmarshal(field.AllowedValues, &components); err != nil {
+			return sdk.WorkProjectCapabilityIssueMutationFields{}, false, fmt.Errorf("error decoding components: %w", err)
+		}
+		for _, component := range components {
+			vals = append(vals, sdk.WorkProjectCapabilityIssueMutationFieldsValues{
+				RefID: &component.RefID,
+				Name:  &component.Name,
+			})
+		}
+		if len(vals) == 0 {
+			break
+		}
+		return sdk.WorkProjectCapabilityIssueMutationFields{
+			Description: sdk.StringPointer("Components for the issue."),
+			Name:        "Components",
+			RefID:       "components",
+			Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeStringArray,
+			Values:      vals,
+		}, true, nil
+	default:
+		// try matching by name
+		switch field.Name {
+		case "Epic Link":
+			return sdk.WorkProjectCapabilityIssueMutationFields{
+				Description: sdk.StringPointer("The epic this issue is part of"),
+				Name:        field.Name,
+				RefID:       field.Key,
+				Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeEpic,
+			}, true, nil
+		case "Epic Name":
+			return sdk.WorkProjectCapabilityIssueMutationFields{
+				Description: sdk.StringPointer("The short name for this epic"),
+				Name:        field.Name,
+				RefID:       field.Key,
+				Type:        sdk.WorkProjectCapabilityIssueMutationFieldsTypeString,
+			}, true, nil
+		}
+	}
+	return sdk.WorkProjectCapabilityIssueMutationFields{}, false, nil
+}
+
+func convertSchemaType(schemaType string) (sdk.WorkProjectCapabilityIssueMutationFieldsType, bool) {
+	switch schemaType {
+	case "string":
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, true
+	case "number":
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeNumber, true
+	case "issuelink":
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssue, true
+	}
+	return 0, false
+}
+
+var excludedFields = map[string]bool{
+	"project":  true,
+	"reporter": true, // using a user's tokens implies a reporter
+}
+
+func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectCapabilityIssueMutationFields, error) {
+	existingFields := make(map[string]*sdk.WorkProjectCapabilityIssueMutationFields)
+	for _, issueType := range createMeta.Issuetypes {
+		typeRefID := issueType.ID
+		for _, field := range issueType.Fields {
+			fieldRefID := field.Key
+			if excludedFields[fieldRefID] {
+				continue
+			}
+			existing := existingFields[fieldRefID]
+			if existing != nil {
+				// if we have already found this field append this type to it
+				if field.Required {
+					existing.RequiredByTypes = append(existing.RequiredByTypes, typeRefID)
+				}
+				existing.AvailableForTypes = append(existing.AvailableForTypes, typeRefID)
+			} else {
+				// first time encountering this field, check if its a builtin
+				newField, isBuiltInField, err := handleBuiltinField(field)
+				if err != nil {
+					return nil, err
+				}
+				if field.Required {
+					newField.RequiredByTypes = []string{typeRefID}
+				} else {
+					newField.RequiredByTypes = make([]string, 0)
+				}
+				newField.AvailableForTypes = []string{typeRefID}
+				if isBuiltInField {
+					existingFields[fieldRefID] = &newField
+				} else {
+					// new non-builtin field
+					if field.Required {
+						fieldType, ok := convertSchemaType(field.Schema.Type)
+						if !ok {
+							return nil, fmt.Errorf("unexpected required field %s of type %s", field.Name, field.Schema.Type)
+						}
+						existingFields[fieldRefID] = &sdk.WorkProjectCapabilityIssueMutationFields{
+							RequiredByTypes:   []string{typeRefID},
+							AvailableForTypes: []string{typeRefID},
+							Name:              field.Name,
+							RefID:             field.Key,
+							Type:              fieldType,
+						}
+					}
+					// ignore non required fields
+				}
+			}
+		}
+	}
+	issueCount := len(createMeta.Issuetypes)
+	var mutFields []sdk.WorkProjectCapabilityIssueMutationFields
+	for _, field := range existingFields {
+		if len(field.RequiredByTypes) == issueCount {
+			field.AlwaysRequired = true
+		}
+		if field == nil {
+			continue
+		}
+		mutFields = append(mutFields, *field)
+	}
+	sort.Sort(mutationFieldsSortable(mutFields))
+	return mutFields, nil
+}
+
+func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
+	// Delete old project capability state
+	state.Delete(projectCapabilityStateKeyPrefixLegacy + project.ID)
 	if !historical && state.Exists(key) {
 		return nil, nil
+	}
+	createMeta, err := getCreateMeta()
+	if err != nil {
+		return nil, err
 	}
 	var capability sdk.WorkProjectCapability
 	capability.CustomerID = project.CustomerID
@@ -58,6 +269,10 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 	capability.Resolutions = true
 	capability.Sprints = true
 	capability.StoryPoints = true
+	capability.IssueMutationFields, err = createMutationFields(createMeta)
+	if err != nil {
+		return nil, err
+	}
 	if err := state.SetWithExpires(key, 1, time.Hour*24*30); err != nil {
 		return nil, err
 	}

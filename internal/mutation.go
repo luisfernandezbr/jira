@@ -43,7 +43,7 @@ func newMutation() mutationRequest {
 
 // Mutation is called when a mutation request is received on behalf of the integration
 func (i *JiraIntegration) Mutation(mutation sdk.Mutation) (*sdk.MutationResponse, error) {
-	logger := sdk.LogWith(i.logger, "customer_id", mutation.CustomerID(), "id", mutation.ID(), "action", mutation.Action(), "model", mutation.Model())
+	logger := sdk.LogWith(mutation.Logger(), "id", mutation.ID(), "action", mutation.Action(), "model", mutation.Model())
 	sdk.LogInfo(logger, "mutation request received")
 	user := mutation.User()
 	var c sdk.Config // copy in the config for the user
@@ -51,7 +51,7 @@ func (i *JiraIntegration) Mutation(mutation sdk.Mutation) (*sdk.MutationResponse
 	c.BasicAuth = user.BasicAuth
 	c.OAuth2Auth = user.OAuth2Auth
 	c.OAuth1Auth = user.OAuth1Auth
-	authConfig, err := i.createAuthConfigFromConfig(mutation, c)
+	authConfig, err := i.createAuthConfigFromConfig(logger, mutation, c)
 	if err != nil {
 		return nil, fmt.Errorf("error creating auth config: %w", err)
 	}

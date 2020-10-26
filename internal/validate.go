@@ -28,7 +28,7 @@ type projectSearchResult struct {
 // Validate will perform pre-installation operations on behalf of the UI
 func (i *JiraIntegration) Validate(validate sdk.Validate) (map[string]interface{}, error) {
 	config := validate.Config()
-	logger := sdk.LogWith(i.logger)
+	logger := validate.Logger()
 	sdk.LogDebug(logger, "Validate", "config", config)
 	found, action := config.GetString("action")
 	if !found {

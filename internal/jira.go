@@ -9,7 +9,6 @@ import (
 // JiraIntegration is an integration for Jira
 // easyjson:skip
 type JiraIntegration struct {
-	logger      sdk.Logger
 	config      sdk.Config
 	manager     sdk.Manager
 	httpmanager sdk.HTTPClientManager
@@ -21,11 +20,10 @@ var _ sdk.Integration = (*JiraIntegration)(nil)
 
 // Start is called when the integration is starting up
 func (i *JiraIntegration) Start(logger sdk.Logger, config sdk.Config, manager sdk.Manager) error {
-	i.logger = sdk.LogWith(logger, "pkg", "jira")
 	i.config = config
 	i.manager = manager
 	i.httpmanager = manager.HTTPManager()
-	sdk.LogInfo(i.logger, "starting")
+	sdk.LogInfo(logger, "starting")
 	return nil
 }
 
@@ -35,7 +33,7 @@ func (i *JiraIntegration) Enroll(instance sdk.Instance) error {
 	if err != nil {
 		return err
 	}
-	if err := i.installWebHookIfNecessary(i.logger, instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
+	if err := i.installWebHookIfNecessary(instance.Logger(), instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
 		return err
 	}
 	return nil
@@ -47,14 +45,14 @@ func (i *JiraIntegration) Dismiss(instance sdk.Instance) error {
 	if err != nil {
 		return err
 	}
-	if err := i.uninstallWebHookIfNecessary(i.logger, instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
+	if err := i.uninstallWebHookIfNecessary(instance.Logger(), instance.Config(), instance.State(), authConfig, instance.CustomerID(), instance.IntegrationInstanceID()); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Stop is called when the integration is shutting down for cleanup
-func (i *JiraIntegration) Stop() error {
-	sdk.LogInfo(i.logger, "stopping")
+func (i *JiraIntegration) Stop(logger sdk.Logger) error {
+	sdk.LogInfo(logger, "stopping")
 	return nil
 }
