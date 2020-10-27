@@ -223,11 +223,14 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 	issueCount := len(createMeta.Issuetypes)
 	var mutFields []sdk.WorkProjectCapabilityIssueMutationFields
 	for _, field := range existingFields {
+		if field == nil {
+			continue
+		}
 		if len(field.RequiredByTypes) == issueCount {
 			field.AlwaysRequired = true
 		}
-		if field == nil {
-			continue
+		if len(field.AvailableForTypes) == issueCount {
+			field.AlwaysAvailable = true
 		}
 		mutFields = append(mutFields, *field)
 	}
