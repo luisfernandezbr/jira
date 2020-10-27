@@ -307,6 +307,10 @@ func (i *JiraIntegration) fetchIssueTransitions(logger sdk.Logger, control sdk.C
 	var resp issueTransitionSource
 	r, err := client.Get(&resp, append(authConfig.Middleware, sdk.WithGetQueryParameters(params))...)
 	if err := i.checkForRateLimit(logger, control, customerID, err, r.Headers); err != nil {
+		if r.StatusCode == http.StatusNotFound {
+			sdk.LogWarn(logger, "transitions endpoint returned 404 for issue", "error_body", string(r.Body), "issue", issueRefID)
+			return nil, nil
+		}
 		return nil, err
 	}
 	return makeTransitions("", resp.Transitions), nil
