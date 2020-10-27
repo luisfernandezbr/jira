@@ -224,15 +224,16 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 			}
 			if project.Active {
 				// do this out here so we dont need the state in createProjectCapability
-				getCreateMeta := func() (projectIssueCreateMeta, error) {
+				getCreateMeta := func() (*projectIssueCreateMeta, error) {
 					meta, err := i.fetchIssueCreateMeta(state, []string{project.RefID})
 					if err != nil {
-						return projectIssueCreateMeta{}, err
+						return nil, err
 					}
 					if len(meta) == 0 {
-						return projectIssueCreateMeta{}, fmt.Errorf("no create meta found for project %s", project.RefID)
+						return nil, nil
 					}
-					return meta[0], nil
+					createMeta := meta[0]
+					return &createMeta, nil
 				}
 				capability, err := i.createProjectCapability(state.export.State(), p, project, getCreateMeta, state.historical)
 				if err != nil {
