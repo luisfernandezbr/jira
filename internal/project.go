@@ -32,8 +32,8 @@ func (p project) ToModel(customerID string, integrationInstanceID string, websit
 }
 
 const (
-	projectCapabilityStateKeyPrefixLegacy = "project_capability_"
-	projectCapabilityStateKeyPrefix       = "project_capability2_"
+	projectCapabilityStateKeyPrefixLegacy = "project_capability2_"
+	projectCapabilityStateKeyPrefix       = "project_capability3_"
 )
 
 // its a float so that we can insert stuff betwen ints
