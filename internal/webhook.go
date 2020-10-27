@@ -252,7 +252,9 @@ func (i *JiraIntegration) webhookUpdateIssue(logger sdk.Logger, webhook sdk.WebH
 		if err != nil {
 			return fmt.Errorf("error fetching new transitions: %w", err)
 		}
-		val.Set.Transitions = &transitions
+		if transitions != nil {
+			val.Set.Transitions = &transitions
+		}
 	}
 
 	update := sdk.NewWorkIssueUpdate(customerID, integrationInstanceID, changelog.Issue.ID, refType, val)
