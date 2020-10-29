@@ -235,7 +235,7 @@ func (i *JiraIntegration) fetchProjectsPaginated(state *state) ([]string, error)
 					createMeta := meta[0]
 					return &createMeta, nil
 				}
-				capability, err := i.createProjectCapability(state.export.State(), p, project, getCreateMeta, state.historical)
+				capability, err := i.createProjectCapability(state.logger, state.export.State(), p, project, getCreateMeta, state.historical)
 				if err != nil {
 					return nil, err
 				}

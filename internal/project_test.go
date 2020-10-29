@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"testing"
 
@@ -130,4 +131,38 @@ func TestCreateThing(t *testing.T) {
 	assert.Equal("10000", fields[i].AvailableForTypes[0])
 	assert.False(fields[i].AlwaysRequired)
 
+}
+
+func TestCantMakeMutationFields(t *testing.T) {
+	assert := assert.New(t)
+	buf := loadFile("testdata/issue_createmeta.json")
+	var resp issueCreateMeta
+	assert.NoError(json.Unmarshal(buf, &resp))
+	p := projectIssueCreateMeta{
+		Issuetypes: []createMetaIssueTypes{
+			{
+				ID: "Task",
+				Fields: map[string]issueTypeField{
+					"summary": {
+						Required:        true,
+						Schema:          issueTypeFieldSchema{Type: "string", System: "summary"},
+						Name:            "Summary",
+						Key:             "summary",
+						HasDefaultValue: false,
+					},
+					"customfield_10520": {
+						Required:        true,
+						Schema:          issueTypeFieldSchema{Type: "any", System: "wahtever"},
+						Name:            "Enviornment",
+						Key:             "env",
+						HasDefaultValue: false,
+					},
+				},
+			},
+		},
+	}
+	fields, err := createMutationFields(p)
+	assert.EqualError(err, "error converting required field Enviornment of type any: field was unsupported")
+	assert.True(errors.Is(err, errUnsupportedField))
+	assert.Empty(fields)
 }

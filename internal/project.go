@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -153,22 +154,24 @@ func handleBuiltinField(field issueTypeField) (sdk.WorkProjectCapabilityIssueMut
 	return sdk.WorkProjectCapabilityIssueMutationFields{}, false, nil
 }
 
-func convertSchemaType(schemaType string) (sdk.WorkProjectCapabilityIssueMutationFieldsType, bool) {
+func convertSchemaType(schemaType string) (sdk.WorkProjectCapabilityIssueMutationFieldsType, error) {
 	switch schemaType {
 	case "string":
-		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, true
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeString, nil
 	case "number":
-		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeNumber, true
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeNumber, nil
 	case "issuelink":
-		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssue, true
+		return sdk.WorkProjectCapabilityIssueMutationFieldsTypeWorkIssue, nil
 	}
-	return 0, false
+	return 0, errUnsupportedField
 }
 
 var excludedFields = map[string]bool{
 	"project":  true,
 	"reporter": true, // using a user's tokens implies a reporter
 }
+
+var errUnsupportedField = errors.New("field was unsupported")
 
 func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectCapabilityIssueMutationFields, error) {
 	existingFields := make(map[string]*sdk.WorkProjectCapabilityIssueMutationFields)
@@ -203,9 +206,9 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 				} else {
 					// new non-builtin field
 					if field.Required {
-						fieldType, ok := convertSchemaType(field.Schema.Type)
-						if !ok {
-							return nil, fmt.Errorf("unexpected required field %s of type %s", field.Name, field.Schema.Type)
+						fieldType, err := convertSchemaType(field.Schema.Type)
+						if err != nil {
+							return nil, fmt.Errorf("error converting required field %s of type %s: %w", field.Name, field.Schema.Type, err)
 						}
 						existingFields[fieldRefID] = &sdk.WorkProjectCapabilityIssueMutationFields{
 							RequiredByTypes:   []string{typeRefID},
@@ -238,7 +241,7 @@ func createMutationFields(createMeta projectIssueCreateMeta) ([]sdk.WorkProjectC
 	return mutFields, nil
 }
 
-func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (*projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
+func (i *JiraIntegration) createProjectCapability(logger sdk.Logger, state sdk.State, jiraProject project, project *sdk.WorkProject, getCreateMeta func() (*projectIssueCreateMeta, error), historical bool) (*sdk.WorkProjectCapability, error) {
 	key := projectCapabilityStateKeyPrefix + project.ID
 	// Delete old project capability state
 	state.Delete(projectCapabilityStateKeyPrefixLegacy + project.ID)
@@ -276,7 +279,11 @@ func (i *JiraIntegration) createProjectCapability(state sdk.State, jiraProject p
 		// NOTE: sometimes projects don't have this, need to investigate further
 		capability.IssueMutationFields, err = createMutationFields(*createMeta)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, errUnsupportedField) {
+				sdk.LogWarn(logger, "project had an unsupported field, disabling issue mutations", "err", err)
+			} else {
+				return nil, err
+			}
 		}
 	}
 	if err := state.SetWithExpires(key, 1, time.Hour*24*30); err != nil {
