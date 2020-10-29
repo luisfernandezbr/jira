@@ -360,6 +360,10 @@ github.com/pinpt/agent/v4 v4.0.27-0.20201027003403-680a1d299a97 h1:EQlaA8erc64YZ
 github.com/pinpt/agent/v4 v4.0.27-0.20201027003403-680a1d299a97/go.mod h1:pv9YuiBfGQ8dydrwoiMGFpZ/i/dVupP+zvFWwiN1FIE=
 github.com/pinpt/agent/v4 v4.0.28 h1:eUW/1pRkLlHJNYqOi4Uc+l1Whk6hKVXq0mffnCGAY7o=
 github.com/pinpt/agent/v4 v4.0.28/go.mod h1:pv9YuiBfGQ8dydrwoiMGFpZ/i/dVupP+zvFWwiN1FIE=
+github.com/pinpt/agent/v4 v4.0.31 h1:U/wgM7ugjONJGbp8EpaUQPD9onqfv2AhycswfdE2z7k=
+github.com/pinpt/agent/v4 v4.0.31/go.mod h1:pv9YuiBfGQ8dydrwoiMGFpZ/i/dVupP+zvFWwiN1FIE=
+github.com/pinpt/agent/v4 v4.0.34 h1:aY5izaTxYqwSau2Xs7v4EdR4ORms3fU0QB7q16Wl/H8=
+github.com/pinpt/agent/v4 v4.0.34/go.mod h1:vEy75FMZxYYzlSGAo/gl9mO911SCrxI0X1GixlXgwkM=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95 h1:Eo5GC829sI+VCBpkHtko3L+b094t94nEK4liSmVZmr0=
 github.com/pinpt/confluence v0.0.0-20201002160018-31b5a3a83f95/go.mod h1:vEZ93LbfGGT/02pZdVLcOu8vWUeaeaWzj8JeXrckE2E=
 github.com/pinpt/confluence v0.0.0-20201016182709-789d054e4ea9 h1:tMoblda38xArP5C5IwhNUlIug/i57QpNS4paJuVwzC8=
@@ -378,6 +382,8 @@ github.com/pinpt/integration-sdk v0.0.1246 h1:etXziosVo0xnGLCnH0hUsthV1qvWrhgWR6
 github.com/pinpt/integration-sdk v0.0.1246/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pinpt/integration-sdk v0.0.1261 h1:Ss8nY/st7w/ZfcypnQfTsjhIVU8Fz7NrU+zZRINeVVs=
 github.com/pinpt/integration-sdk v0.0.1261/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
+github.com/pinpt/integration-sdk v0.0.1262 h1:235K69qfK+x7kYIj0V6a5TmZIeO+GtuqCC56/OB6wKk=
+github.com/pinpt/integration-sdk v0.0.1262/go.mod h1:M3xXTd460Cr+ulMNcEI1/npfKIHTOvO98jySA9rGo88=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 h1:49lOXmGaUpV9Fz3gd7TFZY106KVlPVa5jcYD1gaQf98=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -586,6 +592,8 @@ golang.org/x/sys v0.0.0-20200817155316-9781c653f443/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13 h1:5jaG59Zhd+8ZXe8C+lgiAGqkOaZBruqrWclLkgAww34=
 golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20201029080932-201ba4db2418 h1:HlFl4V6pEMziuLXyRkm5BIYq1y1GAbb02pRlWvI54OM=
+golang.org/x/sys v0.0.0-20201029080932-201ba4db2418/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
 golang.org/x/text v0.3.3 h1:cokOdA+Jmi5PJGXLlLllQSgYigAEfHXJAERHVMaCc2k=
