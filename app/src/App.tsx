@@ -11,10 +11,10 @@ function App() {
 			tags: ['Issue Management'],
 			installed: false,
 			refType: 'jira',
-			icon: 'https://img.icons8.com/color/144/000000/jira.png',
+			icon: 'https://pinpoint.com/images/integrations/Jira.svg',
 			publisher: {
 				name: 'Pinpoint',
-				avatar: 'https://avatars0.githubusercontent.com/u/24400526?s=200&v=4',
+				avatar: 'https://pinpoint.com/logo/logomark/blue.png',
 				url: 'https://pinpoint.com'
 			},
 			uiURL: document.location.href,
