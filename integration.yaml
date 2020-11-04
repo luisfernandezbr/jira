@@ -1,7 +1,7 @@
 name: Jira
 ref_type: jira
 description: This is the official Atlassian Jira integration for Pinpoint
-avatar_url: https://img.icons8.com/color/240/000000/jira.png
+avatar_url: https://pinpoint.com/images/integrations/Jira.svg
 capabilities:
   - work.User
   - work.Project
