@@ -675,10 +675,10 @@ func (a *agileAPI) fetchBoard(refid string) (*boardDetail, error) {
 	var resp boardSource
 	response, err := client.Get(&resp, append(a.authConfig.Middleware)...)
 	if err != nil {
+		if response.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error fetching agile board: %w", err)
-	}
-	if response.StatusCode == http.StatusNotFound {
-		return nil, nil
 	}
 	b := toBoardDetail(a.customerID, resp)
 	return &b, nil
@@ -688,6 +688,9 @@ func (a *agileAPI) fetchOneSprint(sprintRefID int, boardRefID int) (*sdk.AgileSp
 	board, err := a.fetchBoard(strconv.Itoa(boardRefID))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching board: %w", err)
+	}
+	if board == nil {
+		return nil, fmt.Errorf("board (%d) not found", boardRefID)
 	}
 	cols, err := a.fetchBoardConfig(boardRefID)
 	if err != nil {
@@ -1061,7 +1064,8 @@ func fetchAndExportBoard(api *agileAPI, state sdk.State, pipe sdk.Pipe, customer
 		return fmt.Errorf("error fetching board details: %w", err)
 	}
 	if board == nil {
-		return fmt.Errorf("no such board: %s", boardRefID)
+		sdk.LogWarn(api.logger, "board does not exist", "board", boardRefID)
+		return nil
 	}
 	return exportBoard(api, state, pipe, customerID, integrationInstanceID, *board, false)
 }
