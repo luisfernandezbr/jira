@@ -421,6 +421,7 @@ const Integration = () => {
 			setState(State.Validate);
 		} else if (installed || accounts.current?.length > 0) {
 			console.log('JIRA: ay', config?.accounts)
+			setInstallEnabled(!installed);
 			setState(State.Projects);
 			if (installed && inupgrade) {
 				completeUpgrade();
