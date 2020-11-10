@@ -492,7 +492,7 @@ const Integration = () => {
 					}
 					currentConfig.current = newconfig;
 					accounts.current = [res.accounts as Account];
-					setInstallEnabled(Object.keys(newconfig.accounts).length > 0);
+					setInstallEnabled(false);
 					setState(State.Projects);
 					setConfig(currentConfig.current);
 				} catch (err) {
